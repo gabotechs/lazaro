@@ -1,4 +1,3 @@
-
 import argparse
 
 
@@ -22,4 +21,3 @@ def get_args() -> Args:
     if args is None:
         args = Args()
     return args
-
