@@ -20,7 +20,8 @@ class SpaceInvaders(Environment):
         return self.env.reset()
 
     def step(self, action: int) -> T.Tuple[np.ndarray, float, bool]:
-        return self.env.step(action)
+        s, r, f, _ = self.env.step(action)
+        return s, r, f
 
     def render(self) -> None:
         self.env.render()

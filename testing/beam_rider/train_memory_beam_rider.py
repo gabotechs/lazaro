@@ -5,7 +5,7 @@ import torch
 from dqn_memory_agent import DqnMemoryAgent, HyperParams
 from explorer import RandomExplorer, RandomExplorerParams
 from trainer import Trainer, TrainingParams
-from environments import SpaceInvaders
+from environments import BeamRider
 
 from testing.helpers import train
 
@@ -15,7 +15,7 @@ AGENT_PARAMS = HyperParams(lr=0.01, gamma=0.995, memory_len=2000)
 TRAINING_PARAMS = TrainingParams(learn_every=10, ensure_every=100, batch_size=64)
 
 
-env = SpaceInvaders()
+env: BeamRider = BeamRider()
 
 
 class CustomActionEstimator(torch.nn.Module):

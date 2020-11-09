@@ -3,19 +3,23 @@ import numpy as np
 import torch
 
 from dqn_memory_agent import DqnMemoryAgent, HyperParams
-from plotter import Plotter
 from explorer import RandomExplorer, RandomExplorerParams
 from environments import CartPole
-from trainer import Trainer, TrainingParams, TrainingProgress
+from trainer import Trainer, TrainingParams
+
+from testing.helpers import train
 
 EXPLORER_PARAMS = RandomExplorerParams(init_ep=1, final_ep=0.05, decay_ep=1-1e-3)
 AGENT_PARAMS = HyperParams(lr=0.01, gamma=0.995, memory_len=1000)
 TRAINING_PARAMS = TrainingParams(learn_every=1, ensure_every=10, batch_size=128)
 
 
-class CartPoleMemoryActionEstimator(torch.nn.Module):
+env = CartPole()
+
+
+class CustomActionEstimator(torch.nn.Module):
     def __init__(self, in_size: int, out_size: int):
-        super(CartPoleMemoryActionEstimator, self).__init__()
+        super(CustomActionEstimator, self).__init__()
         self.linear1 = torch.nn.Linear(in_size, in_size*10)
         self.relu1 = torch.nn.ReLU()
 
@@ -33,7 +37,7 @@ class CartPoleMemoryActionEstimator(torch.nn.Module):
 
     def to(self, device: str):
         self.device = device
-        return super(CartPoleMemoryActionEstimator, self).to(device)
+        return super(CustomActionEstimator, self).to(device)
 
     def forward(self, x: torch.Tensor, m: torch.Tensor = None) -> T.Tuple[torch.Tensor, torch.Tensor]:
         x = self.relu1(self.linear1(x))
@@ -42,49 +46,22 @@ class CartPoleMemoryActionEstimator(torch.nn.Module):
         return self.linear3(x), m_.clone().detach()
 
 
-def main():
-    env: CartPole = CartPole()
-    plotter: Plotter = Plotter()
+class CustomDqnAgent(DqnMemoryAgent):
+    def memory_init(self) -> torch.Tensor:
+        action_estimator: CustomActionEstimator = self.action_estimator
+        return action_estimator.init_memory()
 
-    class CartPoleDqnAgent(DqnMemoryAgent):
-        def memory_init(self) -> torch.Tensor:
-            action_estimator: CartPoleMemoryActionEstimator = self.action_estimator
-            return action_estimator.init_memory()
+    @staticmethod
+    def action_estimator_factory() -> torch.nn.Module:
+        return CustomActionEstimator(env.get_observation_space()[0], len(env.get_action_space()))
 
-        @staticmethod
-        def action_estimator_factory() -> torch.nn.Module:
-            return CartPoleMemoryActionEstimator(env.get_observation_space()[0], len(env.get_action_space()))
+    def preprocess(self, x: np.ndarray) -> torch.Tensor:
+        return torch.unsqueeze(torch.tensor(x, dtype=torch.float32), 0)
 
-        def preprocess(self, x: np.ndarray) -> torch.Tensor:
-            return torch.unsqueeze(torch.tensor(x, dtype=torch.float32), 0)
-
-        def postprocess(self, t: torch.Tensor) -> np.ndarray:
-            return np.array(t.squeeze(0))
-
-    agent: CartPoleDqnAgent = CartPoleDqnAgent(hp=AGENT_PARAMS, use_gpu=True)
-
-    explorer: RandomExplorer = RandomExplorer(EXPLORER_PARAMS)
-    trainer = Trainer(env, agent, explorer, TRAINING_PARAMS)
-
-    agent.set_infer_callback(lambda: explorer.decay())
-
-    reward_record: T.List[float] = []
-
-    def progress_callback(progress: TrainingProgress):
-        reward_record.append(progress.total_reward)
-
-        plotter.plot(reward_record)
-        print(
-            "lost! achieved "
-            "| tries:", progress.tries,
-            "| steps survived:", progress.steps_survived,
-            "| reward:", progress.total_reward,
-            "| epsilon:", round(explorer.ep, 2)
-        )
-
-    trainer.set_progress_callback(progress_callback)
-    trainer.train(lambda progress: progress.tries >= 1000)
+    def postprocess(self, t: torch.Tensor) -> np.ndarray:
+        return np.array(t.squeeze(0))
 
 
 if __name__ == "__main__":
-    main()
+    trainer = Trainer(env, CustomDqnAgent(AGENT_PARAMS, use_gpu=True), RandomExplorer(EXPLORER_PARAMS), TRAINING_PARAMS)
+    train(trainer)

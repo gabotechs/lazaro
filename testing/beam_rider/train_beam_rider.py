@@ -3,9 +3,9 @@ import numpy as np
 import torch
 
 from dqn_agent import DqnAgent, HyperParams
-from explorer import RandomExplorer, RandomExplorerParams
-from trainer import Trainer, TrainingParams
-from environments import SpaceInvaders
+from explorer import RandomExplorerParams, RandomExplorer
+from trainer import TrainingParams, Trainer
+from environments import BeamRider
 
 from testing.helpers import train
 
@@ -15,7 +15,7 @@ AGENT_PARAMS = HyperParams(lr=0.01, gamma=0.999, memory_len=5000)
 TRAINING_PARAMS = TrainingParams(learn_every=10, ensure_every=100, batch_size=64)
 
 
-env = SpaceInvaders()
+env = BeamRider()
 
 
 class CustomActionEstimator(torch.nn.Module):

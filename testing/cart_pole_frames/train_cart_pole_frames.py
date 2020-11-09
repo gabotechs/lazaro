@@ -4,22 +4,31 @@ import torch
 import torchvision
 
 from dqn_agent import DqnAgent, HyperParams
-from plotter import Plotter
 from explorer import RandomExplorer, RandomExplorerParams
-from trainer import Trainer, TrainingParams, TrainingProgress
+from trainer import Trainer, TrainingParams
 from environments import CartPoleFrames
+
+from testing.helpers import train
 
 
 EXPLORER_PARAMS = RandomExplorerParams(init_ep=1, final_ep=0.05, decay_ep=1-1e-3)
-AGENT_PARAMS = HyperParams(lr=0.01, gamma=0.999, memory_len=5000)
-TRAINING_PARAMS = TrainingParams(learn_every=1, ensure_every=10, batch_size=128)
+AGENT_PARAMS = HyperParams(lr=0.01, gamma=0.999, memory_len=1000)
+TRAINING_PARAMS = TrainingParams(learn_every=1, ensure_every=10, batch_size=32)
 
 
-class CartPoleFramesActionEstimator(torch.nn.Module):
+env = CartPoleFrames()
+
+
+class CustomActionEstimator(torch.nn.Module):
     def __init__(self, width: int, height: int, out_size: int):
-        super(CartPoleFramesActionEstimator, self).__init__()
-        w, h = 150, int(height*150/width)
-        self.transform = torchvision.transforms.Compose([torchvision.transforms.Resize((w, h))])
+        super(CustomActionEstimator, self).__init__()
+        w_, h_ = 150, int(height*150/width)
+        self.transform = torchvision.transforms.Compose([torchvision.transforms.Resize((w_, h_))])
+
+        w, h = width, height
+        self.downscale = torch.nn.MaxPool2d(kernel_size=2, stride=2)
+        w, h = self._conv_size_out((w, h), 2, 2)
+
         self.conv1 = torch.nn.Conv2d(3, 8, kernel_size=5, stride=2)
         w, h = self._conv_size_out((w, h), 5, 2)
         self.pool1 = torch.nn.MaxPool2d(kernel_size=2, stride=2)
@@ -50,10 +59,10 @@ class CartPoleFramesActionEstimator(torch.nn.Module):
         return (size[0] - (kernel_size - 1) - 1) // stride + 1, (size[1] - (kernel_size - 1) - 1) // stride + 1
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
-        layers = [self.transform,
-                  self.conv1, self.pool1, self.bn1, self.relu1,
-                  self.conv2, self.pool2, self.bn2, self.relu2,
-                  self.conv3, self.bn3, self.relu3]
+        layers = [self.downscale,
+                  self.conv1, self.pool1, self.relu1,
+                  self.conv2, self.pool2, self.relu2,
+                  self.conv3, self.relu3]
 
         for layer in layers:
             x = layer(x)
@@ -61,49 +70,23 @@ class CartPoleFramesActionEstimator(torch.nn.Module):
         return self.head(x.view(x.size()[0], -1))
 
 
-def main():
-    env: CartPoleFrames = CartPoleFrames()
-    plotter: Plotter = Plotter()
-
-    class SpaceInvadersDqnAgent(DqnAgent):
-        @staticmethod
-        def action_estimator_factory() -> torch.nn.Module:
-            return CartPoleFramesActionEstimator(
-                env.get_observation_space()[0],
-                env.get_observation_space()[1],
-                len(env.get_action_space())
-            )
-
-        def preprocess(self, x: np.ndarray) -> torch.Tensor:
-            return torch.unsqueeze(torch.tensor(x.transpose((2, 0, 1)), dtype=torch.float32) / 255, 0)
-
-        def postprocess(self, t: torch.Tensor) -> np.ndarray:
-            return np.array(t.squeeze(0))
-
-    agent: SpaceInvadersDqnAgent = SpaceInvadersDqnAgent(hp=AGENT_PARAMS, use_gpu=True)
-
-    explorer: RandomExplorer = RandomExplorer(EXPLORER_PARAMS)
-    trainer = Trainer(env, agent, explorer, TRAINING_PARAMS)
-
-    agent.set_infer_callback(lambda: explorer.decay())
-
-    reward_record: T.List[float] = []
-
-    def progress_callback(progress: TrainingProgress):
-        reward_record.append(progress.total_reward)
-
-        plotter.plot(reward_record, aliasing=.8)
-        print(
-            "lost! achieved "
-            "| tries:", progress.tries,
-            "| steps survived:", progress.steps_survived,
-            "| reward:", progress.total_reward,
-            "| epsilon:", round(explorer.ep, 2)
+class CustomDqnAgent(DqnAgent):
+    @staticmethod
+    def action_estimator_factory() -> torch.nn.Module:
+        return CustomActionEstimator(
+            env.get_observation_space()[0],
+            env.get_observation_space()[1],
+            len(env.get_action_space())
         )
 
-    trainer.set_progress_callback(progress_callback)
-    trainer.train(lambda progress: progress.tries >= 1000)
+    def preprocess(self, x: np.ndarray) -> torch.Tensor:
+        return torch.unsqueeze(torch.tensor(x.transpose((2, 0, 1)), dtype=torch.float32) / 255, 0)
+
+    def postprocess(self, t: torch.Tensor) -> np.ndarray:
+        return np.array(t.squeeze(0))
 
 
 if __name__ == "__main__":
-    main()
+    trainer = Trainer(env, CustomDqnAgent(AGENT_PARAMS, use_gpu=True), RandomExplorer(EXPLORER_PARAMS), TRAINING_PARAMS)
+    train(trainer)
+

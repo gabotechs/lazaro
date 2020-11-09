@@ -6,9 +6,9 @@ import numpy as np
 from .environment import Environment
 
 
-class CartPole(Environment):
+class BeamRider(Environment):
     def __init__(self):
-        self.env: gym.Env = gym.make("CartPole-v1")
+        self.env: gym.Env = gym.make("BeamRider-v0")
 
     def get_observation_space(self) -> T.Tuple[int]:
         return self.env.observation_space.shape
