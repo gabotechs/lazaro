@@ -2,10 +2,10 @@ import typing as T
 import numpy as np
 import torch
 
-from dqn_memory_agent import DqnMemoryAgent, HyperParams
-from explorer import RandomExplorer, RandomExplorerParams
+from agents.dqn_memory_agent import DqnMemoryAgent, HyperParams
+from explorers import RandomExplorer, RandomExplorerParams
 from environments import CartPole
-from trainer import Trainer, TrainingParams
+from trainers import Trainer, TrainingParams
 
 from testing.helpers import train
 

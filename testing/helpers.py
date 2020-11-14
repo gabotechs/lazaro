@@ -1,7 +1,7 @@
 import typing as T
 
 from plotter import Plotter
-from trainer import Trainer, TrainingProgress
+from trainers import Trainer, TrainingProgress
 
 
 def train(trainer: Trainer):

@@ -1,7 +1,7 @@
 import typing as T
-from explorer import RandomExplorer
-from dqn_agent import DqnAgent
-from dqn_memory_agent import DqnMemoryAgent
+from explorers import RandomExplorer
+from agents.dqn_agent import DqnAgent
+from agents.dqn_memory_agent import DqnMemoryAgent
 from .models import TrainingParams, TrainingProgress
 from environments import Environment
 

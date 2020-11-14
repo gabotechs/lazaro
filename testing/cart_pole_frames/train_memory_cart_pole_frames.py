@@ -3,9 +3,9 @@ import numpy as np
 import torch
 import torchvision
 
-from dqn_memory_agent import DqnMemoryAgent, HyperParams
-from explorer import RandomExplorer, RandomExplorerParams
-from trainer import Trainer, TrainingParams
+from agents.dqn_memory_agent import DqnMemoryAgent, HyperParams
+from explorers import RandomExplorer, RandomExplorerParams
+from trainers import Trainer, TrainingParams
 from environments import CartPoleFrames
 
 from testing.helpers import train

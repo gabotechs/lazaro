@@ -2,9 +2,9 @@ import typing as T
 import numpy as np
 import torch
 
-from dqn_agent import DqnAgent, HyperParams
-from explorer import RandomExplorerParams, RandomExplorer
-from trainer import TrainingParams, Trainer
+from agents.dqn_agent import DqnAgent, HyperParams
+from explorers import RandomExplorerParams, RandomExplorer
+from trainers import TrainingParams, Trainer
 from environments import BeamRider
 
 from testing.helpers import train

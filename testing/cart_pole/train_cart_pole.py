@@ -1,9 +1,9 @@
 import numpy as np
 import torch
 
-from dqn_agent import DqnAgent, HyperParams
-from explorer import RandomExplorer, RandomExplorerParams
-from trainer import Trainer, TrainingParams
+from agents.dqn_agent import DqnAgent, HyperParams
+from explorers import RandomExplorer, RandomExplorerParams
+from trainers import Trainer, TrainingParams
 from environments import CartPole
 
 from testing.helpers import train
