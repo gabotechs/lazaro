@@ -3,7 +3,7 @@ import numpy as np
 import torch
 import torchvision
 
-from agents.dqn_agent import DqnAgent, HyperParams
+from agents.dqn_agent import Agent, HyperParams
 from explorers import RandomExplorer, RandomExplorerParams
 from trainers import Trainer, TrainingParams
 from environments import CartPoleFrames
@@ -70,7 +70,7 @@ class CustomActionEstimator(torch.nn.Module):
         return self.head(x.view(x.size()[0], -1))
 
 
-class CustomDqnAgent(DqnAgent):
+class CustomDqnAgent(Agent):
     @staticmethod
     def action_estimator_factory() -> torch.nn.Module:
         return CustomActionEstimator(

@@ -27,3 +27,6 @@ class CartPoleFrames(Environment):
 
     def render(self) -> None:
         self.env.render()
+
+    def close(self) -> None:
+        self.env.close()

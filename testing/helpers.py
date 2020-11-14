@@ -1,12 +1,13 @@
 import typing as T
-
+from explorers import RandomExplorer
 from plotter import Plotter
 from trainers import Trainer, TrainingProgress
 
 
 def train(trainer: Trainer):
     plotter: Plotter = Plotter()
-    trainer.agent.set_infer_callback(lambda: trainer.explorer.decay())
+    explorer: RandomExplorer = trainer.explorer
+    trainer.agent.set_infer_callback(lambda: explorer.decay())
 
     reward_record: T.List[float] = []
 
@@ -19,7 +20,7 @@ def train(trainer: Trainer):
             "| tries:", progress.tries,
             "| steps survived:", progress.steps_survived,
             "| reward:", progress.total_reward,
-            "| epsilon:", round(trainer.explorer.ep, 2)
+            "| epsilon:", round(explorer.ep, 2)
         )
 
     trainer.set_progress_callback(progress_callback)

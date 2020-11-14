@@ -1,9 +1,10 @@
 import numpy as np
 from random import random, randrange
 from .models import RandomExplorerParams
+from .explorer import Explorer
 
 
-class RandomExplorer:
+class RandomExplorer(Explorer):
     def __init__(self, params: RandomExplorerParams):
         self.init_ep: float = params.init_ep
         self.final_ep: float = params.final_ep

@@ -23,3 +23,7 @@ class Environment(ABC):
     @abstractmethod
     def render(self) -> None:
         raise NotImplementedError()
+
+    @abstractmethod
+    def close(self) -> None:
+        raise NotImplementedError()

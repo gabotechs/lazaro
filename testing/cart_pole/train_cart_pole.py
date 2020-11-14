@@ -1,19 +1,18 @@
 import numpy as np
 import torch
 
-from agents.dqn_agent import DqnAgent, HyperParams
+from agents import DqnAgent, HyperParams
 from explorers import RandomExplorer, RandomExplorerParams
-from trainers import Trainer, TrainingParams
+from trainers import DqnTrainer, TrainingParams
+from replay_buffers import RandomReplayBuffer
 from environments import CartPole
 
 from testing.helpers import train
 
-EXPLORER_PARAMS = RandomExplorerParams(init_ep=1, final_ep=0.05, decay_ep=1-1e-3)
-AGENT_PARAMS = HyperParams(lr=0.01, gamma=0.995, memory_len=5000)
+EXPLORER_PARAMS = RandomExplorerParams(init_ep=1, final_ep=0.01, decay_ep=1-1e-3)
+AGENT_PARAMS = HyperParams(lr=0.01, gamma=0.995)
 TRAINING_PARAMS = TrainingParams(learn_every=1, ensure_every=10, batch_size=128)
-
-
-env = CartPole()
+MEMORY_LEN = 5000
 
 
 class CustomActionEstimator(torch.nn.Module):
@@ -36,7 +35,11 @@ class CustomActionEstimator(torch.nn.Module):
 class CustomDqnAgent(DqnAgent):
     @staticmethod
     def action_estimator_factory() -> torch.nn.Module:
-        return CustomActionEstimator(env.get_observation_space()[0], len(env.get_action_space()))
+        cart_pole = CartPole()
+        observation_space = cart_pole.get_observation_space()[0]
+        action_space = len(cart_pole.get_action_space())
+        cart_pole.close()
+        return CustomActionEstimator(observation_space, action_space)
 
     def preprocess(self, x: np.ndarray) -> torch.Tensor:
         return torch.unsqueeze(torch.tensor(x, dtype=torch.float32), 0)
@@ -46,5 +49,11 @@ class CustomDqnAgent(DqnAgent):
 
 
 if __name__ == "__main__":
-    trainer = Trainer(env, CustomDqnAgent(AGENT_PARAMS, use_gpu=True), RandomExplorer(EXPLORER_PARAMS), TRAINING_PARAMS)
+    trainer = DqnTrainer(
+        CartPole(),
+        CustomDqnAgent(AGENT_PARAMS, use_gpu=True),
+        RandomExplorer(EXPLORER_PARAMS),
+        RandomReplayBuffer(5000),
+        TRAINING_PARAMS
+    )
     train(trainer)
