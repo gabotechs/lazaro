@@ -1,4 +1,5 @@
 import typing as T
+import numpy as np
 from .trainer import Trainer
 from agents import DqnAgent
 from replay_buffers import ReplayBufferEntry
@@ -19,7 +20,7 @@ class DqnTrainer(Trainer):
         while True:
 
             estimated_rewards = self.agent.infer(s)
-            a = self.explorer.choose(estimated_rewards)
+            a = self.explorer.choose(estimated_rewards, lambda x: np.argmax(estimated_rewards).item())
             s_, r, final = self.env.step(a)
             self.replay_buffer.add(ReplayBufferEntry(s, s_, a, r, final))
             accumulated_reward += r

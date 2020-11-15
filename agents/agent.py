@@ -19,7 +19,7 @@ class Agent(ABC):
 
     @staticmethod
     @abstractmethod
-    def action_estimator_factory() -> torch.nn.Module:
+    def model_factory() -> torch.nn.Module:
         raise NotImplementedError()
 
     @abstractmethod
@@ -32,7 +32,6 @@ class Agent(ABC):
 
     @abstractmethod
     def infer(self, *args) -> T.Any:
-        self.infer_callback()
         raise NotImplementedError()
 
     @abstractmethod

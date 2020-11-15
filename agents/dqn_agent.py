@@ -1,4 +1,4 @@
-from abc import ABC, abstractmethod
+from abc import ABC
 import typing as T
 import torch
 import numpy as np
@@ -11,29 +11,19 @@ class DqnAgent(Agent, ABC):
     def __init__(self, hp: HyperParams, use_gpu: bool = True):
         super().__init__(hp, use_gpu)
 
-        self.action_estimator = self.action_estimator_factory().to(self.device)
-        self.action_evaluator = self.action_estimator_factory().to(self.device)
+        self.action_estimator = self.model_factory().to(self.device)
+        self.action_evaluator = self.model_factory().to(self.device)
         self.optimizer = torch.optim.RMSprop(self.action_estimator.parameters(), lr=hp.lr)
         self.loss_f = torch.nn.MSELoss().to(self.device)
         self.gamma = hp.gamma
-
-    @staticmethod
-    @abstractmethod
-    def action_estimator_factory() -> torch.nn.Module:
-        raise NotImplementedError()
-
-    @abstractmethod
-    def preprocess(self, x: np.ndarray) -> torch.Tensor:
-        raise NotImplementedError()
-
-    @abstractmethod
-    def postprocess(self, t: torch.Tensor) -> np.ndarray:
-        raise NotImplementedError()
 
     def infer(self, x: np.ndarray) -> np.ndarray:
         self.infer_callback()
         with torch.no_grad():
             return self.postprocess(self.action_estimator.forward(self.preprocess(x).to(self.device)).cpu())
+
+    def postprocess(self, t: torch.Tensor) -> np.ndarray:
+        return np.array(t.squeeze(0))
 
     def ensure_learning(self) -> None:
         self.action_evaluator.load_state_dict(self.action_estimator.state_dict())

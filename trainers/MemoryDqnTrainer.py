@@ -1,4 +1,5 @@
 import typing as T
+import numpy as np
 from agents import DqnMemoryAgent
 from .trainer import Trainer
 from .models import TrainingProgress
@@ -19,7 +20,7 @@ class MemoryDqnTrainer(Trainer):
         reward_record: T.List[float] = []
         while True:
             estimated_rewards, m_ = self.agent.infer(s, m)
-            a = self.explorer.choose(estimated_rewards)
+            a = self.explorer.choose(estimated_rewards, lambda x: np.argmax(estimated_rewards).item())
             s_, r, final = self.env.step(a)
             self.replay_buffer.add(MemoryReplayBufferEntry(s, m, s_, a, r, final))
             m = m_

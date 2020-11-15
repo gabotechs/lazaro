@@ -1,13 +1,14 @@
 import typing as T
-from explorers import RandomExplorer
+from explorers import Explorer, RandomExplorer
 from plotter import Plotter
 from trainers import Trainer, TrainingProgress
 
 
 def train(trainer: Trainer):
     plotter: Plotter = Plotter()
-    explorer: RandomExplorer = trainer.explorer
-    trainer.agent.set_infer_callback(lambda: explorer.decay())
+    explorer: T.Union[RandomExplorer, None] = trainer.explorer
+    if isinstance(explorer, RandomExplorer):
+        trainer.agent.set_infer_callback(lambda: explorer.decay())
 
     reward_record: T.List[float] = []
 
@@ -20,8 +21,9 @@ def train(trainer: Trainer):
             "| tries:", progress.tries,
             "| steps survived:", progress.steps_survived,
             "| reward:", progress.total_reward,
-            "| epsilon:", round(explorer.ep, 2)
+            ("| epsilon:", round(explorer.ep, 2)) if isinstance(explorer, RandomExplorer) else ""
         )
 
     trainer.set_progress_callback(progress_callback)
     trainer.train(lambda progress: progress.tries >= 1000)
+    input("press any key for ending: ")

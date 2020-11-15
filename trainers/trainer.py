@@ -11,7 +11,7 @@ class Trainer(ABC):
     def __init__(self,
                  env: Environment,
                  agent: Agent,
-                 explorer: Explorer,
+                 explorer: T.Union[Explorer, None],
                  replay_buffer: ReplayBuffer,
                  training_params: TrainingParams):
 

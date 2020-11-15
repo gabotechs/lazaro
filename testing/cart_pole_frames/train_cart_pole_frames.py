@@ -7,13 +7,15 @@ from agents.dqn_agent import Agent, HyperParams
 from explorers import RandomExplorer, RandomExplorerParams
 from trainers import Trainer, TrainingParams
 from environments import CartPoleFrames
+from replay_buffers import RandomReplayBuffer
 
 from testing.helpers import train
 
 
 EXPLORER_PARAMS = RandomExplorerParams(init_ep=1, final_ep=0.05, decay_ep=1-1e-3)
-AGENT_PARAMS = HyperParams(lr=0.01, gamma=0.999, memory_len=1000)
+AGENT_PARAMS = HyperParams(lr=0.01, gamma=0.999)
 TRAINING_PARAMS = TrainingParams(learn_every=1, ensure_every=10, batch_size=32)
+MEMORY_LEN = 5000
 
 
 env = CartPoleFrames()
@@ -72,7 +74,7 @@ class CustomActionEstimator(torch.nn.Module):
 
 class CustomDqnAgent(Agent):
     @staticmethod
-    def action_estimator_factory() -> torch.nn.Module:
+    def model_factory() -> torch.nn.Module:
         return CustomActionEstimator(
             env.get_observation_space()[0],
             env.get_observation_space()[1],
@@ -82,11 +84,8 @@ class CustomDqnAgent(Agent):
     def preprocess(self, x: np.ndarray) -> torch.Tensor:
         return torch.unsqueeze(torch.tensor(x.transpose((2, 0, 1)), dtype=torch.float32) / 255, 0)
 
-    def postprocess(self, t: torch.Tensor) -> np.ndarray:
-        return np.array(t.squeeze(0))
-
 
 if __name__ == "__main__":
-    trainer = Trainer(env, CustomDqnAgent(AGENT_PARAMS, use_gpu=True), RandomExplorer(EXPLORER_PARAMS), TRAINING_PARAMS)
+    trainer = Trainer(env, CustomDqnAgent(AGENT_PARAMS, use_gpu=True), RandomExplorer(EXPLORER_PARAMS), RandomReplayBuffer(MEMORY_LEN), TRAINING_PARAMS)
     train(trainer)
 

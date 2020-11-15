@@ -78,9 +78,6 @@ class CustomDqnAgent(DqnMemoryAgent):
     def preprocess(self, x: np.ndarray) -> torch.Tensor:
         return torch.unsqueeze(torch.tensor(x.transpose((2, 0, 1)), dtype=torch.float32) / 255, 0)
 
-    def postprocess(self, t: torch.Tensor) -> np.ndarray:
-        return np.array(t.squeeze(0))
-
 
 if __name__ == "__main__":
     trainer = Trainer(env, CustomDqnAgent(AGENT_PARAMS, use_gpu=True), RandomExplorer(EXPLORER_PARAMS), TRAINING_PARAMS)

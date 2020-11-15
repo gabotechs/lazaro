@@ -51,7 +51,7 @@ class CustomActionEstimator(torch.nn.Module):
 
 class CustomDqnAgent(Agent):
     @staticmethod
-    def action_estimator_factory() -> torch.nn.Module:
+    def model_factory() -> torch.nn.Module:
         return CustomActionEstimator(
             env.get_observation_space()[0],
             env.get_observation_space()[1],

@@ -51,7 +51,7 @@ class CustomActionEstimator(torch.nn.Module):
 
 class CustomDqnAgent(Agent):
     @staticmethod
-    def action_estimator_factory() -> torch.nn.Module:
+    def model_factory() -> torch.nn.Module:
         return CustomActionEstimator(
             env.get_observation_space()[0],
             env.get_observation_space()[1],
@@ -60,9 +60,6 @@ class CustomDqnAgent(Agent):
 
     def preprocess(self, x: np.ndarray) -> torch.Tensor:
         return torch.unsqueeze(torch.tensor(x.transpose((2, 0, 1)), dtype=torch.float32) / 255, 0)
-
-    def postprocess(self, t: torch.Tensor) -> np.ndarray:
-        return np.array(t.squeeze(0))
 
 
 if __name__ == "__main__":

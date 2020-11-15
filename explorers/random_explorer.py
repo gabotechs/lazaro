@@ -1,3 +1,4 @@
+import typing as T
 import numpy as np
 from random import random, randrange
 from .models import RandomExplorerParams
@@ -16,8 +17,8 @@ class RandomExplorer(Explorer):
         if self.ep > self.final_ep:
             self.ep *= self.decay_ep
 
-    def choose(self, estimated_rewards: np.ndarray) -> int:
+    def choose(self, estimated_rewards: np.ndarray, f: T.Callable[[np.ndarray], int]) -> int:
         if random() > self.ep:
-            return np.argmax(estimated_rewards).item()
+            return f(estimated_rewards)
         else:
             return randrange(0, len(estimated_rewards))
