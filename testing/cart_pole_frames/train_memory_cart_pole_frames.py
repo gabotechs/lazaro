@@ -4,7 +4,7 @@ import torch
 import torchvision
 
 from agents.dqn_memory_agent import DqnMemoryAgent, HyperParams
-from explorers import RandomExplorer, RandomExplorerParams
+from agents.explorers import RandomExplorer, RandomExplorerParams
 from trainers import Trainer, TrainingParams
 from environments import CartPoleFrames
 

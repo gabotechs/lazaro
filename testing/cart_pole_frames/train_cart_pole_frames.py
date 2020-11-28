@@ -4,10 +4,10 @@ import torch
 import torchvision
 
 from agents.dqn_agent import Agent, HyperParams
-from explorers import RandomExplorer, RandomExplorerParams
+from agents.explorers import RandomExplorer, RandomExplorerParams
 from trainers import Trainer, TrainingParams
 from environments import CartPoleFrames
-from replay_buffers import RandomReplayBuffer
+from agents.replay_buffers import RandomReplayBuffer
 
 from testing.helpers import train
 

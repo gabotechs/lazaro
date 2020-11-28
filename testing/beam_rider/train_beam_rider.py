@@ -3,7 +3,7 @@ import numpy as np
 import torch
 
 from agents import Agent, HyperParams
-from explorers import RandomExplorerParams, RandomExplorer
+from agents.explorers import RandomExplorerParams, RandomExplorer
 from trainers import TrainingParams, Trainer
 from environments import BeamRider
 

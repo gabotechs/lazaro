@@ -1,16 +1,15 @@
 import numpy as np
 import torch
 
-from agents import ActorCriticAgent, HyperParams
-from trainers import ActorCriticTrainer, TrainingParams
-from replay_buffers import RandomReplayBuffer
+from agents import ActorCriticAgent, ACHyperParams, TrainingParams
+from agents.replay_buffers import RandomReplayBuffer
 from environments import CartPole
 
 from testing.helpers import train
 
-AGENT_PARAMS = HyperParams(lr=0.01, gamma=0.99)
-TRAINING_PARAMS = TrainingParams(learn_every=1, ensure_every=10, batch_size=128)
-MEMORY_LEN = 5000
+AGENT_PARAMS = ACHyperParams(c_lr=0.001, a_lr=0.0001, gamma=0.995)
+TRAINING_PARAMS = TrainingParams(learn_every=1, ensure_every=10, batch_size=128, finish_condition=lambda x: False)
+MEMORY_LEN = 1000
 
 env = CartPole()
 
@@ -22,10 +21,10 @@ class CustomActionEstimator(torch.nn.Module):
         self.linear1 = torch.nn.Linear(in_size, in_size*10)
         self.relu1 = torch.nn.ReLU()
 
-        self.linear2 = torch.nn.Linear(in_size*10, out_size*10)
+        self.linear2 = torch.nn.Linear(in_size*10, out_size*100)
         self.relu2 = torch.nn.ReLU()
 
-        self.linear3 = torch.nn.Linear(out_size*10, out_size)
+        self.linear3 = torch.nn.Linear(out_size*100, out_size)
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         x = self.relu1(self.linear1(x))
@@ -43,11 +42,5 @@ class CustomActorCriticAgent(ActorCriticAgent):
 
 
 if __name__ == "__main__":
-    trainer = ActorCriticTrainer(
-        CartPole(),
-        CustomActorCriticAgent(AGENT_PARAMS, use_gpu=True),
-        None,
-        RandomReplayBuffer(5000),
-        TRAINING_PARAMS
-    )
-    train(trainer)
+    agent = CustomActorCriticAgent(AGENT_PARAMS, TRAINING_PARAMS, None, RandomReplayBuffer(MEMORY_LEN), use_gpu=True)
+    train(agent, env)

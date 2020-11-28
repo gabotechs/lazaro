@@ -3,7 +3,7 @@ import numpy as np
 import torch
 
 from agents.dqn_memory_agent import DqnMemoryAgent, HyperParams
-from explorers import RandomExplorer, RandomExplorerParams
+from agents.explorers import RandomExplorer, RandomExplorerParams
 from environments import CartPole
 from trainers import Trainer, TrainingParams
 

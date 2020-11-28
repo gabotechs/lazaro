@@ -1,6 +1,6 @@
 from abc import ABC, abstractmethod
 import typing as T
-from replay_buffers.models import ReplayBufferEntry, MemoryReplayBufferEntry
+from .models import ReplayBufferEntry, MemoryReplayBufferEntry
 from _collections import deque
 
 

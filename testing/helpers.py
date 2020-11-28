@@ -1,14 +1,16 @@
 import typing as T
-from explorers import Explorer, RandomExplorer
+
+from agents import Agent, TrainingProgress
+from agents.explorers import Explorer, RandomExplorer
+from environments import Environment
 from plotter import Plotter
-from trainers import Trainer, TrainingProgress
 
 
-def train(trainer: Trainer):
+def train(agent: Agent, env: Environment):
     plotter: Plotter = Plotter()
-    explorer: T.Union[RandomExplorer, None] = trainer.explorer
+    explorer: T.Union[Explorer, RandomExplorer, None] = agent.explorer
     if isinstance(explorer, RandomExplorer):
-        trainer.agent.set_infer_callback(lambda: explorer.decay())
+        agent.set_infer_callback(lambda: explorer.decay())
 
     reward_record: T.List[float] = []
 
@@ -24,6 +26,6 @@ def train(trainer: Trainer):
             ("| epsilon:", round(explorer.ep, 2)) if isinstance(explorer, RandomExplorer) else ""
         )
 
-    trainer.set_progress_callback(progress_callback)
-    trainer.train(lambda progress: progress.tries >= 1000)
+    agent.set_progress_callback(progress_callback)
+    agent.train(env)
     input("press any key for ending: ")
