@@ -1,4 +1,34 @@
-from .types import *
+import typing as T
+
+
+class EvolvingInt:
+    def __init__(self, value: int, min_limit: int, max_limit: int, mutation_factor: float):
+        if value > max_limit:
+            value = max_limit
+        elif value < min_limit:
+            value = min_limit
+        self.value: int = value
+        self.min_limit: int = min_limit
+        self.max_limit: int = max_limit
+        self.mutation_factor: float = mutation_factor
+
+
+class EvolvingFloat:
+    def __init__(self, value: float, min_limit: float, max_limit: float, mutation_factor: float):
+        if value > max_limit:
+            value = max_limit
+        elif value < min_limit:
+            value = min_limit
+        self.value: float = value
+        self.min_limit: float = min_limit
+        self.max_limit: float = max_limit
+        self.mutation_factor: float = mutation_factor
+
+
+class EvolvingBool:
+    def __init__(self, value: bool, mutation_factor: float):
+        self.value: float = value
+        self.mutation_factor: float = mutation_factor
 
 
 class EvolutionerParams:
@@ -6,6 +36,9 @@ class EvolutionerParams:
         self.workers: int = workers
         self.generation_size: int = generation_size
         self.max_allowed_mutation: float = max_allowed_mutation
+
+
+T_EParams = T.Dict[str, T.Union[EvolvingInt, EvolvingBool, EvolvingFloat]]
 
 
 class EvolutionProgress:

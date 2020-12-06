@@ -31,9 +31,8 @@ class Agent(ABC):
     def set_progress_callback(self, cbk: T.Callable[[TrainingProgress], None]):
         self.progress_callback = cbk
 
-    @staticmethod
     @abstractmethod
-    def model_factory() -> torch.nn.Module:
+    def model_factory(self) -> torch.nn.Module:
         raise NotImplementedError()
 
     @abstractmethod

@@ -24,10 +24,10 @@ class Critic(torch.nn.Module):
     def __init__(self, model: torch.nn.Module):
         super(Critic, self).__init__()
         self.model = model
-        if not hasattr(self.model, "out_size"):
-            AttributeError("model returned from .model_factory() must have the attribute .out_size being "
-                           "an integer determining the output size (action space) of the network")
-        self.linear = torch.nn.Linear(self.model.out_size, 1)
+        last_layer = list(model.modules())[-1]
+        if not isinstance(last_layer, torch.nn.Linear):
+            ValueError("the model you have created must have a torch.nn.Linear in the last layer")
+        self.linear = torch.nn.Linear(last_layer.out_features, 1)
 
     def forward(self, x):
         x = self.model(x)
@@ -75,7 +75,8 @@ class ActorCriticAgent(Agent, ABC):
         state_values: torch.Tensor = self.critic(batch_s)
 
         advantages: torch.Tensor = (batch_r - state_values.clone().detach()).squeeze(1)
-        chosen_action_log_probabilities: torch.Tensor = torch.stack([torch.distributions.Categorical(p).log_prob(a) for p, a in zip(action_probabilities, batch_a)])
+        chosen_action_log_probabilities: torch.Tensor = torch.stack(
+            [torch.distributions.Categorical(p).log_prob(a) for p, a in zip(action_probabilities, batch_a)])
         actor_loss: torch.Tensor = (-chosen_action_log_probabilities * advantages).mean()
         critic_loss: torch.Tensor = self.loss_f(state_values, batch_r)
 

@@ -33,8 +33,7 @@ class CustomActionEstimator(torch.nn.Module):
 
 
 class CustomActorCriticAgent(ActorCriticAgent):
-    @staticmethod
-    def model_factory() -> torch.nn.Module:
+    def model_factory(self) -> torch.nn.Module:
         return CustomActionEstimator(env.get_observation_space()[0], len(env.get_action_space()))
 
     def preprocess(self, x: np.ndarray) -> torch.Tensor:
