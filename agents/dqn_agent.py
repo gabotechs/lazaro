@@ -6,13 +6,15 @@ import numpy as np
 from environments import Environment
 from agents.explorers import Explorer
 from agents.replay_buffers import ReplayBufferEntry, ReplayBuffer
-from .models import HyperParams, TrainingParams, TrainingProgress
+from .models import DqnHyperParams, TrainingParams, TrainingProgress
 from .agent import Agent
 
 
 class DqnAgent(Agent, ABC):
+    hp: DqnHyperParams
+
     def __init__(self,
-                 hp: HyperParams,
+                 hp: DqnHyperParams,
                  tp: TrainingParams,
                  explorer: T.Union[Explorer, None],
                  replay_buffer: ReplayBuffer,
@@ -56,7 +58,7 @@ class DqnAgent(Agent, ABC):
     def train(self, env: Environment) -> None:
         s = env.reset()
         i = 0
-        tries = 0
+        episode = 1
         steps_survived = 0
         accumulated_reward = 0
         max_reward: T.Union[None, float] = None
@@ -69,23 +71,23 @@ class DqnAgent(Agent, ABC):
             accumulated_reward += r
             s = s_
 
-            if i % self.tp.learn_every == 0 and i != 0:
+            if i % self.tp.learn_every == 0 and i != 0 and len(self.replay_buffer) >= self.tp.batch_size:
                 batch = self.replay_buffer.sample(self.tp.batch_size)
                 self.learn(batch)
 
-            if i % self.tp.ensure_every == 0:
+            if i % self.hp.ensure_every == 0:
                 self.ensure_learning()
 
             if final:
-                tries += 1
-                tp = TrainingProgress(tries, steps_survived, accumulated_reward)
+                tp = TrainingProgress(episode, steps_survived, accumulated_reward)
                 reward_record.append(accumulated_reward)
                 max_reward = accumulated_reward if max_reward is None or accumulated_reward > max_reward else max_reward
                 if self.progress_callback:
                     self.progress_callback(tp)
-                if self.tp.finish_condition(tp):
+                if episode >= self.tp.episodes:
                     return
 
+                episode += 1
                 accumulated_reward = 0
                 steps_survived = 0
                 s = env.reset()

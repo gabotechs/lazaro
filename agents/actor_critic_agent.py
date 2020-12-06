@@ -35,6 +35,8 @@ class Critic(torch.nn.Module):
 
 
 class ActorCriticAgent(Agent, ABC):
+    hp: ACHyperParams
+
     def __init__(self,
                  hp: ACHyperParams,
                  tp: TrainingParams,
@@ -46,7 +48,7 @@ class ActorCriticAgent(Agent, ABC):
         self.actor = self.build_actor(self.model_factory()).to(self.device)
         self.critic = self.build_critic(self.model_factory()).to(self.device)
         self.actor_optimizer = torch.optim.Adam(self.actor.parameters(), lr=hp.a_lr)
-        self.critic_optimizer = torch.optim.Adam(self.critic.parameters(), lr=hp.lr)
+        self.critic_optimizer = torch.optim.Adam(self.critic.parameters(), lr=hp.c_lr)
         self.loss_f = torch.nn.MSELoss().to(self.device)
 
     @staticmethod
@@ -90,10 +92,9 @@ class ActorCriticAgent(Agent, ABC):
     def train(self, env: Environment) -> None:
         s = env.reset()
         i = 0
-        tries = 0
+        episode = 1
         steps_survived = 0
         accumulated_reward = 0
-        accumulated_reward_record: T.List[float] = []
         steps_record: T.List[ReplayBufferEntry] = []
         while True:
             estimated_rewards = self.infer(s)
@@ -121,16 +122,15 @@ class ActorCriticAgent(Agent, ABC):
                     step.r = (step.r - mean) / (std + eps)
                     self.replay_buffer.add(step)
 
-                tries += 1
-                tp = TrainingProgress(tries, steps_survived, accumulated_reward)
-                accumulated_reward_record.append(accumulated_reward)
+                tp = TrainingProgress(episode, steps_survived, accumulated_reward)
                 if self.progress_callback:
                     self.progress_callback(tp)
-                if self.tp.finish_condition(tp):
+                if episode >= self.tp.episodes:
                     return
 
                 accumulated_reward = 0
                 steps_survived = 0
+                episode += 1
                 steps_record.clear()
                 s = env.reset()
 

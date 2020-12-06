@@ -2,17 +2,18 @@ import typing as T
 import numpy as np
 import torch
 
-from agents.dqn_memory_agent import DqnMemoryAgent, HyperParams
+from agents.dqn_memory_agent import DqnMemoryAgent, DqnHyperParams
+from agents.replay_buffers import RandomReplayBuffer
 from agents.explorers import RandomExplorer, RandomExplorerParams
-from environments import CartPole
-from trainers import Trainer, TrainingParams
+from agents import TrainingParams
 
+from environments import CartPole
 from testing.helpers import train
 
 EXPLORER_PARAMS = RandomExplorerParams(init_ep=1, final_ep=0.05, decay_ep=1-1e-3)
-AGENT_PARAMS = HyperParams(lr=0.01, gamma=0.995, memory_len=1000)
-TRAINING_PARAMS = TrainingParams(learn_every=1, ensure_every=10, batch_size=128)
-
+AGENT_PARAMS = DqnHyperParams(lr=0.01, gamma=0.995, ensure_every=10)
+TRAINING_PARAMS = TrainingParams(learn_every=1, batch_size=128, episodes=50)
+MEMORY_LEN = 5000
 
 env = CartPole()
 
@@ -27,17 +28,12 @@ class CustomActionEstimator(torch.nn.Module):
         self.relu2 = torch.nn.ReLU()
 
         self.hidden_size = out_size*10
-        self.device: str = "cpu"
         self.gru = torch.nn.GRUCell(out_size*10, self.hidden_size)
 
         self.linear3 = torch.nn.Linear(self.hidden_size, out_size)
 
     def init_memory(self, batch_size: int = 1) -> torch.Tensor:
-        return torch.zeros((batch_size, self.hidden_size), dtype=torch.float32).to(self.device)
-
-    def to(self, device: str):
-        self.device = device
-        return super(CustomActionEstimator, self).to(device)
+        return torch.zeros((batch_size, self.hidden_size), dtype=torch.float32)
 
     def forward(self, x: torch.Tensor, m: torch.Tensor = None) -> T.Tuple[torch.Tensor, torch.Tensor]:
         x = self.relu1(self.linear1(x))
@@ -51,8 +47,7 @@ class CustomDqnAgent(DqnMemoryAgent):
         action_estimator: CustomActionEstimator = self.action_estimator
         return action_estimator.init_memory()
 
-    @staticmethod
-    def action_estimator_factory() -> torch.nn.Module:
+    def model_factory(self) -> torch.nn.Module:
         return CustomActionEstimator(env.get_observation_space()[0], len(env.get_action_space()))
 
     def preprocess(self, x: np.ndarray) -> torch.Tensor:
@@ -60,5 +55,10 @@ class CustomDqnAgent(DqnMemoryAgent):
 
 
 if __name__ == "__main__":
-    trainer = Trainer(env, CustomDqnAgent(AGENT_PARAMS, use_gpu=True), RandomExplorer(EXPLORER_PARAMS), TRAINING_PARAMS)
-    train(trainer)
+    agent = CustomDqnAgent(
+        AGENT_PARAMS,
+        TRAINING_PARAMS,
+        RandomExplorer(EXPLORER_PARAMS),
+        RandomReplayBuffer(MEMORY_LEN),
+        use_gpu=True)
+    train(agent, env)

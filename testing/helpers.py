@@ -20,7 +20,7 @@ def train(agent: Agent, env: Environment):
         plotter.plot(reward_record, aliasing=.8)
         print(
             "lost! achieved "
-            "| tries:", progress.tries,
+            "| episode:", progress.tries,
             "| steps survived:", progress.steps_survived,
             "| reward:", progress.total_reward,
             ("| epsilon:", round(explorer.ep, 2)) if isinstance(explorer, RandomExplorer) else ""
