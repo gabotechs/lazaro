@@ -2,7 +2,7 @@ import typing as T
 import numpy as np
 import torch
 
-from agents.dqn_agent import Agent, HyperParams
+from agents.agents.dqn_agent import Agent, HyperParams
 from agents.explorers import RandomExplorer, RandomExplorerParams
 from trainers import Trainer, TrainingParams
 from environments import SpaceInvaders

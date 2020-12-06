@@ -2,7 +2,7 @@ import typing as T
 import numpy as np
 import torch
 
-from agents.dqn_memory_agent import DqnMemoryAgent, DqnHyperParams
+from agents.agents.dqn_memory_agent import DqnMemoryAgent, DqnHyperParams
 from agents.replay_buffers import RandomReplayBuffer
 from agents.explorers import RandomExplorer, RandomExplorerParams
 from agents import TrainingParams
