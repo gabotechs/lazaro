@@ -1,38 +1,48 @@
-import typing as T
+from dataclasses import dataclass
 
 
 class HyperParams:
     pass
 
 
+@dataclass
+class MDqnHyperParams(HyperParams):
+    a_lr: float
+    m_lr: float
+    ensure_every: int
+    gamma: float
+
+
+@dataclass
 class DqnHyperParams(HyperParams):
-    def __init__(self, lr: float, gamma: float, ensure_every: int):
-        self.lr: float = lr
-        self.ensure_every: int = ensure_every
-        self.gamma: float = gamma
+    lr: float
+    ensure_every: int
+    gamma: float
 
 
+@dataclass
 class ACHyperParams(HyperParams):
-    def __init__(self, a_lr: float, c_lr: float, gamma: float):
-        self.c_lr: float = c_lr
-        self.a_lr: float = a_lr
-        self.gamma: float = gamma
+    c_lr: float
+    a_lr: float
+    gamma: float
 
 
+@dataclass
 class TrainingProgress:
-    def __init__(self, tries: int, steps_survived: int, total_reward: float):
-        self.tries: int = tries
-        self.steps_survived: int = steps_survived
-        self.total_reward: float = total_reward
+    tries: int
+    steps_survived: int
+    total_reward: float
 
 
+@dataclass
 class TrainingParams:
-    def __init__(self,
-                 learn_every: int,
-                 batch_size: int,
-                 episodes: int):
-        self.learn_every: int = learn_every
-        self.batch_size: int = batch_size
-        self.episodes: int = episodes
+    learn_every: int
+    batch_size: int
+    episodes: int
 
 
+@dataclass
+class MDqnTrainingParams(TrainingParams):
+    memory_batch_size: int
+    memory_learn_every: int
+    memory_clear_after_learn: bool

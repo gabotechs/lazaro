@@ -61,8 +61,6 @@ class DqnAgent(Agent, ABC):
         episode = 1
         steps_survived = 0
         accumulated_reward = 0
-        max_reward: T.Union[None, float] = None
-        reward_record: T.List[float] = []
         while True:
             estimated_rewards = self.infer(s)
             a = self.explorer.choose(estimated_rewards, lambda x: np.argmax(estimated_rewards).item())
@@ -80,8 +78,6 @@ class DqnAgent(Agent, ABC):
 
             if final:
                 tp = TrainingProgress(episode, steps_survived, accumulated_reward)
-                reward_record.append(accumulated_reward)
-                max_reward = accumulated_reward if max_reward is None or accumulated_reward > max_reward else max_reward
                 if self.progress_callback:
                     self.progress_callback(tp)
                 if episode >= self.tp.episodes:

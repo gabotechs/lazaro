@@ -10,7 +10,7 @@ from testing.helpers import train
 
 EXPLORER_PARAMS = RandomExplorerParams(init_ep=1, final_ep=0.01, decay_ep=1-1e-3)
 AGENT_PARAMS = DqnHyperParams(lr=0.01, gamma=0.995, ensure_every=10)
-TRAINING_PARAMS = TrainingParams(learn_every=1, batch_size=128, episodes=50)
+TRAINING_PARAMS = TrainingParams(learn_every=1, batch_size=128, episodes=500)
 MEMORY_LEN = 5000
 
 

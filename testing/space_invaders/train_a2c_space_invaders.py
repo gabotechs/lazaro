@@ -9,7 +9,7 @@ from environments import SpaceInvaders
 from testing.helpers import train
 
 AGENT_PARAMS = ACHyperParams(c_lr=0.001, a_lr=0.0001, gamma=0.995)
-TRAINING_PARAMS = TrainingParams(learn_every=10, ensure_every=10, batch_size=128, finish_condition=lambda x: False)
+TRAINING_PARAMS = TrainingParams(learn_every=10, batch_size=128, episodes=40)
 MEMORY_LEN = 1000
 
 env = SpaceInvaders()
