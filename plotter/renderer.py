@@ -30,6 +30,6 @@ class Renderer:
         if not self.fig:
             self.init()
         self.ax[index].imshow(img)
-        self.ax[index].set_title(title, loc="left")
+        self.ax[index].set_title(title, loc="left", y=0.1)
         self.ax[index].set_axis_off()
         self.fig.canvas.draw()
