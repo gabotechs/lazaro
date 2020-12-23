@@ -45,8 +45,8 @@ class ActorCriticAgent(Agent, ABC):
                  use_gpu: bool = True):
         super(ActorCriticAgent, self).__init__(hp, tp, explorer, replay_buffer, use_gpu)
 
-        self.actor = self.build_actor(self.model_factory()).to(self.device)
-        self.critic = self.build_critic(self.model_factory()).to(self.device)
+        self.actor = self.build_actor(self.model_factory().to(self.device)).to(self.device)
+        self.critic = self.build_critic(self.model_factory().to(self.device)).to(self.device)
         self.actor_optimizer = torch.optim.Adam(self.actor.parameters(), lr=hp.a_lr)
         self.critic_optimizer = torch.optim.Adam(self.critic.parameters(), lr=hp.c_lr)
         self.loss_f = torch.nn.MSELoss().to(self.device)

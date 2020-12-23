@@ -23,7 +23,7 @@ class DqnAgent(Agent, ABC):
 
         self.action_estimator = self.model_factory().to(self.device)
         self.action_evaluator = self.model_factory().to(self.device)
-        self.optimizer = torch.optim.RMSprop(self.action_estimator.parameters(), lr=hp.lr)
+        self.optimizer = torch.optim.Adam(self.action_estimator.parameters(), lr=hp.lr)
         self.loss_f = torch.nn.MSELoss().to(self.device)
 
     def infer(self, x: np.ndarray) -> np.ndarray:
