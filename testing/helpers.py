@@ -8,8 +8,6 @@ from plotter import Plotter
 
 def train(agent: AnyAgent, env: Environment):
     plotter: Plotter = Plotter()
-    explorer: T.Union[AnyExplorer, None] = agent.explorer
-    replay_buffer: AnyReplayBuffer = agent.replay_buffer
 
     reward_record: T.List[float] = []
 
@@ -22,8 +20,8 @@ def train(agent: AnyAgent, env: Environment):
             "| episode:", progress.tries,
             "| steps survived:", progress.steps_survived,
             "| reward:", progress.total_reward,
-            ("| epsilon:", round(explorer.ep, 2)) if isinstance(explorer, RandomExplorer) else "",
-            ("| beta:", round(replay_buffer.beta, 2) if isinstance(replay_buffer, NStepsPrioritizedReplayBuffer) else "")
+            ("| epsilon:", round(agent.explorer.ep, 2)) if isinstance(agent.explorer, RandomExplorer) else "",
+            ("| beta:", round(agent.replay_buffer.beta, 2) if isinstance(agent.replay_buffer, NStepsPrioritizedReplayBuffer) else "")
         )
 
     agent.add_progress_callback(progress_callback)

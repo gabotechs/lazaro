@@ -21,12 +21,10 @@ class NStepsReplayBuffer(ReplayBuffer, ABC):
         for transition in reversed(list(self.n_step_buffer)[:-1]):
             r, s_, final = transition.r, transition.s_, transition.final
             if self.accumulate_rewards:
-                ac_r = r + self.rp.gamma * ac_r * (1 - int(final))
+                ac_r = r + self.rp.gamma * ac_r
 
             if final:
-                if not self.accumulate_rewards:
-                    ac_r = r
-                ac_s_, ac_final = (s_, final)
+                ac_s_, ac_final, ac_r = (s_, final, r)
 
         return ReplayBufferEntry(first_entry.s, ac_s_, first_entry.a, ac_r, ac_final)
 

@@ -2,14 +2,15 @@ import numpy as np
 import torch
 
 from agents import ActorCriticAgent, ACHyperParams, TrainingParams
-from agents.replay_buffers import RandomReplayBuffer
+from agents.replay_buffers import NStepsPrioritizedReplayBuffer, NStepPrioritizedReplayBufferParams
 from environments import CartPole
 
 from testing.helpers import train
 
-AGENT_PARAMS = ACHyperParams(c_lr=0.001, a_lr=0.0001, gamma=0.995)
-TRAINING_PARAMS = TrainingParams(learn_every=1, batch_size=128, episodes=50)
-MEMORY_LEN = 1000
+AGENT_PARAMS = ACHyperParams(c_lr=0.01, a_lr=0.001, gamma=0.995)
+TRAINING_PARAMS = TrainingParams(learn_every=1, batch_size=128, episodes=5000)
+REPLAY_BUFFER_PARAMS = NStepPrioritizedReplayBufferParams(max_len=5000, gamma=AGENT_PARAMS.gamma, n_step=3, alpha=0.6,
+                                                          init_beta=0.4, final_beta=1.0, increase_beta=1+1e-3)
 
 env = CartPole()
 
@@ -41,5 +42,5 @@ class CustomActorCriticAgent(ActorCriticAgent):
 
 
 if __name__ == "__main__":
-    agent = CustomActorCriticAgent(AGENT_PARAMS, TRAINING_PARAMS, None, RandomReplayBuffer(MEMORY_LEN), use_gpu=True)
+    agent = CustomActorCriticAgent(AGENT_PARAMS, TRAINING_PARAMS, None, NStepsPrioritizedReplayBuffer(REPLAY_BUFFER_PARAMS))
     train(agent, env)
