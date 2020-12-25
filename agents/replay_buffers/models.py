@@ -1,17 +1,45 @@
+from dataclasses import dataclass
+import typing as T
 import numpy as np
 import torch
 
 
+@dataclass
 class ReplayBufferEntry:
-    def __init__(self, s: np.ndarray, s_: np.ndarray, a: int, r: float, final: bool):
-        self.s: np.ndarray = s
-        self.s_: np.ndarray = s_
-        self.a: int = a
-        self.r: float = r
-        self.final: bool = final
+    s: np.ndarray
+    s_: np.ndarray
+    a: int
+    r: float
+    final: bool
+    index: T.Union[None, int] = None
+    weight: int = 1
 
 
+@dataclass
 class MemoryReplayBufferEntry(ReplayBufferEntry):
-    def __init__(self, s: np.ndarray, m: torch.Tensor, s_: np.ndarray, a: int, r: float, final: bool):
-        super(MemoryReplayBufferEntry, self).__init__(s, s_, a, r, final)
-        self.m: torch.Tensor = m
+    m: torch.Tensor = None
+
+
+@dataclass
+class ReplayBufferParams:
+    max_len: int
+
+
+@dataclass
+class NStepReplayBufferParams(ReplayBufferParams):
+    n_step: int
+    gamma: float
+
+
+@dataclass
+class PrioritizedReplayBufferParams(ReplayBufferParams):
+    alpha: float
+    init_beta: float
+    final_beta: float
+    increase_beta: float
+
+
+@dataclass
+class NStepPrioritizedReplayBufferParams(NStepReplayBufferParams, PrioritizedReplayBufferParams):
+    pass
+

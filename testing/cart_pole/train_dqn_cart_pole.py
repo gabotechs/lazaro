@@ -3,7 +3,7 @@ import torch
 
 from agents import DqnAgent, DqnHyperParams, TrainingParams
 from agents.explorers import RandomExplorer, RandomExplorerParams
-from agents.replay_buffers import NStepsRandomReplayBuffer
+from agents.replay_buffers import NStepsPrioritizedReplayBuffer, NStepPrioritizedReplayBufferParams
 from environments import CartPole
 
 from testing.helpers import train
@@ -11,8 +11,8 @@ from testing.helpers import train
 EXPLORER_PARAMS = RandomExplorerParams(init_ep=1, final_ep=0.01, decay_ep=1-1e-3)
 AGENT_PARAMS = DqnHyperParams(lr=0.01, gamma=0.995, ensure_every=10)
 TRAINING_PARAMS = TrainingParams(learn_every=1, batch_size=128, episodes=500)
-MEMORY_LEN = 5000
-N_STEPS = 3
+REPLAY_BUFFER_PARAMS = NStepPrioritizedReplayBufferParams(max_len=5000, gamma=AGENT_PARAMS.gamma, n_step=3, alpha=0.6,
+                                                          init_beta=0.4, final_beta=1.0, increase_beta=1+1e-3)
 
 
 env = CartPole()
@@ -48,7 +48,7 @@ if __name__ == "__main__":
         AGENT_PARAMS,
         TRAINING_PARAMS,
         RandomExplorer(EXPLORER_PARAMS),
-        NStepsRandomReplayBuffer(MEMORY_LEN, N_STEPS, AGENT_PARAMS.gamma),
+        NStepsPrioritizedReplayBuffer(REPLAY_BUFFER_PARAMS),
         use_gpu=True
     )
     train(agent, env)

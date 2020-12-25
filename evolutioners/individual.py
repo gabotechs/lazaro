@@ -21,7 +21,7 @@ class Individual:
 
     def life(self, dump_file: str = "") -> T.List[float]:
         prev_func = self.agent.progress_callback
-        self.agent.set_progress_callback(lambda x: self._on_progress(x, prev_func))
+        self.agent.add_progress_callback(lambda x: self._on_progress(x, prev_func))
         self.agent.train(self.env)
         self.env.close()
         if dump_file != "":

@@ -1,16 +1,17 @@
 import typing as T
+from abc import ABC
 from collections import deque
 
-from .random_replay_buffer import RandomReplayBuffer
-from .models import ReplayBufferEntry
+from .replay_buffer import ReplayBuffer
+from .models import ReplayBufferEntry, NStepReplayBufferParams
 
 
-class NStepsRandomReplayBuffer(RandomReplayBuffer):
-    def __init__(self, max_len: int, n_step: int, gamma: float):
-        super().__init__(max_len)
-        self.n_step_buffer: T.Deque[ReplayBufferEntry] = deque(maxlen=n_step)
-        self.n_step: int = n_step
-        self.gamma: float = gamma
+class NStepsReplayBuffer(ReplayBuffer, ABC):
+    def __init__(self, rp: NStepReplayBufferParams):
+        super().__init__(rp)
+        self.rp: NStepReplayBufferParams = rp
+        self.n_step_buffer: T.Deque[ReplayBufferEntry] = deque(maxlen=self.rp.n_step)
+        self.accumulate_rewards: bool = True
 
     def _get_n_step_info(self) -> ReplayBufferEntry:
         first_entry = self.n_step_buffer[0]
@@ -19,16 +20,21 @@ class NStepsRandomReplayBuffer(RandomReplayBuffer):
 
         for transition in reversed(list(self.n_step_buffer)[:-1]):
             r, s_, final = transition.r, transition.s_, transition.final
-            ac_r = r + self.gamma * ac_r * (1 - int(final))
+            if self.accumulate_rewards:
+                ac_r = r + self.rp.gamma * ac_r * (1 - int(final))
+
             if final:
+                if not self.accumulate_rewards:
+                    ac_r = r
                 ac_s_, ac_final = (s_, final)
 
         return ReplayBufferEntry(first_entry.s, ac_s_, first_entry.a, ac_r, ac_final)
 
-    def add(self, entry: T.Union[ReplayBufferEntry]) -> None:
+    def add(self, entry: T.Union[ReplayBufferEntry]) -> bool:
         self.n_step_buffer.append(entry)
-        if len(self.n_step_buffer) < self.n_step:
-            return
+        if len(self.n_step_buffer) < self.rp.n_step:
+            return False
 
         n_step_entry = self._get_n_step_info()
-        super(NStepsRandomReplayBuffer, self).add(n_step_entry)
+        super(NStepsReplayBuffer, self).add(n_step_entry)
+        return True

@@ -2,10 +2,10 @@ from abc import ABC
 import typing as T
 import torch
 import numpy as np
-from agents.explorers import Explorer
+from ..explorers import AnyExplorer
 from environments import Environment
-from agents.replay_buffers import ReplayBuffer, ReplayBufferEntry
-from .models import ACHyperParams, TrainingProgress, TrainingParams
+from ..replay_buffers import AnyReplayBuffer, NStepsRandomReplayBuffer, NStepsPrioritizedReplayBuffer, ReplayBufferEntry
+from .models import ACHyperParams, TrainingProgress, TrainingParams, LearningStep
 from .agent import Agent
 
 
@@ -40,8 +40,8 @@ class ActorCriticAgent(Agent, ABC):
     def __init__(self,
                  hp: ACHyperParams,
                  tp: TrainingParams,
-                 explorer: T.Union[Explorer, None],
-                 replay_buffer: ReplayBuffer,
+                 explorer: T.Union[AnyExplorer, None],
+                 replay_buffer: AnyReplayBuffer,
                  use_gpu: bool = True):
         super(ActorCriticAgent, self).__init__(hp, tp, explorer, replay_buffer, use_gpu)
 
@@ -49,7 +49,9 @@ class ActorCriticAgent(Agent, ABC):
         self.critic = self.build_critic(self.model_factory().to(self.device)).to(self.device)
         self.actor_optimizer = torch.optim.Adam(self.actor.parameters(), lr=hp.a_lr)
         self.critic_optimizer = torch.optim.Adam(self.critic.parameters(), lr=hp.c_lr)
-        self.loss_f = torch.nn.MSELoss().to(self.device)
+        self.loss_f = torch.nn.MSELoss(reduction="none").to(self.device)
+        if isinstance(self.replay_buffer, (NStepsPrioritizedReplayBuffer, NStepsRandomReplayBuffer)):
+            self.replay_buffer.accumulate_rewards = False
 
     @staticmethod
     def build_actor(model: torch.nn.Module):
@@ -63,8 +65,8 @@ class ActorCriticAgent(Agent, ABC):
         return np.array(t.squeeze(0))
 
     def infer(self, x: np.ndarray) -> np.ndarray:
-        if self.infer_callback:
-            self.infer_callback()
+        for cbk in self.infer_callbacks:
+            cbk()
         with torch.no_grad():
             return self.postprocess(self.actor.forward(self.preprocess(x).to(self.device)).cpu())
 
@@ -72,6 +74,7 @@ class ActorCriticAgent(Agent, ABC):
         batch_s = torch.cat([self.preprocess(m.s) for m in batch], 0).to(self.device).requires_grad_(True)
         batch_a = torch.tensor([m.a for m in batch], device=self.device)
         batch_r = torch.tensor([[m.r] for m in batch], dtype=torch.float32, device=self.device)
+        batch_weights = torch.tensor([m.weight for m in batch], device=self.device)
 
         action_probabilities: torch.Tensor = self.actor(batch_s)
         state_values: torch.Tensor = self.critic(batch_s)
@@ -79,17 +82,20 @@ class ActorCriticAgent(Agent, ABC):
         advantages: torch.Tensor = (batch_r - state_values.clone().detach()).squeeze(1)
         chosen_action_log_probabilities: torch.Tensor = torch.stack(
             [torch.distributions.Categorical(p).log_prob(a) for p, a in zip(action_probabilities, batch_a)])
-        actor_loss: torch.Tensor = (-chosen_action_log_probabilities * advantages).mean()
-        critic_loss: torch.Tensor = self.loss_f(state_values, batch_r)
-
+        actor_loss: torch.Tensor = (-chosen_action_log_probabilities * advantages * batch_weights).mean()
+        element_wise_critic_loss: torch.Tensor = self.loss_f(state_values, batch_r)
+        critic_loss = (element_wise_critic_loss * batch_weights).mean()
         self.actor_optimizer.zero_grad()
         self.critic_optimizer.zero_grad()
         actor_loss.backward()
         critic_loss.backward()
         self.actor_optimizer.step()
         self.critic_optimizer.step()
+        for cbk in self.learning_callbacks:
+            cbk(LearningStep(batch, [v.item() for v in state_values], [v.item() for v in batch_r]))
 
     def train(self, env: Environment) -> None:
+        self.hook_callbacks()
         s = env.reset()
         i = 0
         episode = 1
@@ -123,8 +129,8 @@ class ActorCriticAgent(Agent, ABC):
                     self.replay_buffer.add(step)
 
                 tp = TrainingProgress(episode, steps_survived, accumulated_reward)
-                if self.progress_callback:
-                    self.progress_callback(tp)
+                for cbk in self.progress_callbacks:
+                    cbk(tp)
                 if episode >= self.tp.episodes:
                     return
 

@@ -5,8 +5,8 @@ import random
 import numpy as np
 
 from environments import Environment
-from agents.explorers import Explorer
-from agents.replay_buffers import MemoryReplayBufferEntry, ReplayBuffer
+from agents.explorers import AnyExplorer
+from agents.replay_buffers import MemoryReplayBufferEntry, AnyReplayBuffer
 from .models import MDqnHyperParams, TrainingProgress, MDqnTrainingParams
 from .agent import Agent
 
@@ -18,8 +18,8 @@ class DqnMemoryAgent(Agent, ABC):
     def __init__(self,
                  hp: MDqnHyperParams,
                  tp: MDqnTrainingParams,
-                 explorer: T.Union[Explorer, None],
-                 replay_buffer: ReplayBuffer,
+                 explorer: T.Union[AnyExplorer, None],
+                 replay_buffer: AnyReplayBuffer,
                  use_gpu: bool = True):
         super(DqnMemoryAgent, self).__init__(hp, tp, explorer, replay_buffer, use_gpu)
 
