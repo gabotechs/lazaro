@@ -45,13 +45,6 @@ class TrainingParams:
 
 
 @dataclass
-class MDqnTrainingParams(TrainingParams):
-    memory_batch_size: int
-    memory_learn_every: int
-    memory_clear_after_learn: bool
-
-
-@dataclass
 class LearningStep:
     batch: T.List[ReplayBufferEntry]
     x: T.List[float]
