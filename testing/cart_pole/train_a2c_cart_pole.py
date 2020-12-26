@@ -1,15 +1,16 @@
 import numpy as np
 import torch
+import torch.nn.functional as F
 
-from agents import ActorCriticAgent, ACHyperParams, TrainingParams
+from agents import AdvantageActorCriticAgent, ACHyperParams, TrainingParams
 from agents.replay_buffers import NStepsPrioritizedReplayBuffer, NStepPrioritizedReplayBufferParams
 from environments import CartPole
 
 from testing.helpers import train
 
-AGENT_PARAMS = ACHyperParams(c_lr=0.01, a_lr=0.001, gamma=0.995)
-TRAINING_PARAMS = TrainingParams(learn_every=1, batch_size=128, episodes=5000)
-REPLAY_BUFFER_PARAMS = NStepPrioritizedReplayBufferParams(max_len=5000, gamma=AGENT_PARAMS.gamma, n_step=3, alpha=0.6,
+AGENT_PARAMS = ACHyperParams(c_lr=0.01, a_lr=0.001, gamma=0.99)
+TRAINING_PARAMS = TrainingParams(learn_every=1, batch_size=32, episodes=5000)
+REPLAY_BUFFER_PARAMS = NStepPrioritizedReplayBufferParams(max_len=500, gamma=AGENT_PARAMS.gamma, n_step=10, alpha=0.6,
                                                           init_beta=0.4, final_beta=1.0, increase_beta=1+1e-3)
 
 env = CartPole()
@@ -20,20 +21,16 @@ class CustomActionEstimator(torch.nn.Module):
         super(CustomActionEstimator, self).__init__()
         self.out_size = out_size
         self.linear1 = torch.nn.Linear(in_size, in_size*10)
-        self.relu1 = torch.nn.ReLU()
-
-        self.linear2 = torch.nn.Linear(in_size*10, out_size*100)
-        self.relu2 = torch.nn.ReLU()
-
-        self.linear3 = torch.nn.Linear(out_size*100, out_size)
+        self.linear2 = torch.nn.Linear(in_size*10, out_size*10)
+        self.linear3 = torch.nn.Linear(out_size*10, out_size)
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
-        x = self.relu1(self.linear1(x))
-        x = self.relu2(self.linear2(x))
+        x = F.relu(self.linear1(x))
+        x = F.relu(self.linear2(x))
         return self.linear3(x)
 
 
-class CustomActorCriticAgent(ActorCriticAgent):
+class CustomActorCriticAgent(AdvantageActorCriticAgent):
     def model_factory(self) -> torch.nn.Module:
         return CustomActionEstimator(env.get_observation_space()[0], len(env.get_action_space()))
 
