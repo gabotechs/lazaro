@@ -4,30 +4,26 @@ from dataclasses import dataclass
 from ..replay_buffers import ReplayBufferEntry
 
 
-class HyperParams:
-    pass
-
-
 @dataclass
-class MDqnHyperParams(HyperParams):
-    a_lr: float
-    m_lr: float
-    ensure_every: int
+class HyperParams:
     gamma: float
 
 
 @dataclass
 class DqnHyperParams(HyperParams):
     lr: float
+
+
+@dataclass
+class DoubleDqnHyperParams(DqnHyperParams):
+    lr: float
     ensure_every: int
-    gamma: float
 
 
 @dataclass
 class ACHyperParams(HyperParams):
     c_lr: float
     a_lr: float
-    gamma: float
 
 
 @dataclass
@@ -42,6 +38,13 @@ class TrainingParams:
     learn_every: int
     batch_size: int
     episodes: int
+
+
+@dataclass
+class TrainingStep:
+    i: int
+    steps_survived: int
+    episode: int
 
 
 @dataclass

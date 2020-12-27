@@ -13,7 +13,7 @@ TRAINING_PARAMS = TrainingParams(learn_every=1, batch_size=16, episodes=300)
 REPLAY_BUFFER_PARAMS = NStepPrioritizedReplayBufferParams(max_len=1000, gamma=AGENT_PARAMS.gamma, n_step=5, alpha=0.6,
                                                           init_beta=0.4, final_beta=1.0, increase_beta=1+1e-4)
 
-USE_MONTE_CARLO = True
+USE_MONTE_CARLO = False
 
 AgentParentClass = MonteCarloAdvantageActorCriticAgent if USE_MONTE_CARLO else AdvantageActorCriticAgent
 env = CartPole()

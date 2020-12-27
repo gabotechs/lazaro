@@ -1,5 +1,16 @@
+import typing as T
+from dataclasses import dataclass
+
+
+@dataclass
 class RandomExplorerParams:
-    def __init__(self, init_ep: float, final_ep: float, decay_ep: float):
-        self.init_ep: float = init_ep
-        self.final_ep: float = final_ep
-        self.decay_ep: float = decay_ep
+    init_ep: float
+    final_ep: float
+    decay_ep: float
+
+
+@dataclass
+class NoisyExplorerParams:
+    layers: T.List[int]
+    reset_noise_every: int
+    std_init: float

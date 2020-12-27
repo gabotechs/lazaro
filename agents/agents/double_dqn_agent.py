@@ -6,31 +6,24 @@ import numpy as np
 from environments import Environment
 from ..explorers import AnyExplorer
 from ..replay_buffers import ReplayBufferEntry, AnyReplayBuffer
-from .models import DqnHyperParams, TrainingParams, TrainingProgress, LearningStep
-from .agent import Agent
+from .models import DoubleDqnHyperParams, TrainingParams, TrainingProgress, LearningStep, TrainingStep
+from .dqn_agent import DqnAgent
 
 
-class DqnAgent(Agent, ABC):
-    hp: DqnHyperParams
+class DoubleDqnAgent(DqnAgent, ABC):
+    hp: DoubleDqnHyperParams
 
     def __init__(self,
-                 hp: DqnHyperParams,
+                 hp: DoubleDqnHyperParams,
                  tp: TrainingParams,
                  explorer: T.Union[AnyExplorer, None],
                  replay_buffer: AnyReplayBuffer,
                  use_gpu: bool = True):
-        super(DqnAgent, self).__init__(hp, tp, explorer, replay_buffer, use_gpu)
+        super(DoubleDqnAgent, self).__init__(hp, tp, explorer, replay_buffer, use_gpu)
+        self.action_evaluator = self.model_factory().to(self.device).eval()
 
-        self.action_estimator = self.model_factory().to(self.device)
-        self.optimizer = torch.optim.Adam(self.action_estimator.parameters(), lr=hp.lr)
-        self.loss_f = torch.nn.MSELoss(reduction="none").to(self.device)
-
-    def infer(self, x: np.ndarray) -> np.ndarray:
-        with torch.no_grad():
-            return self.postprocess(self.action_estimator.forward(self.preprocess(x).to(self.device)).cpu())
-
-    def postprocess(self, t: torch.Tensor) -> np.ndarray:
-        return np.array(t.squeeze(0))
+    def ensure_learning(self) -> None:
+        self.action_evaluator.load_state_dict(self.action_estimator.state_dict())
 
     def learn(self, batch: T.List[ReplayBufferEntry]) -> None:
         batch_s = torch.cat([self.preprocess(m.s) for m in batch], 0).to(self.device).requires_grad_(True)
@@ -41,7 +34,7 @@ class DqnAgent(Agent, ABC):
         batch_weights = torch.tensor([m.weight for m in batch], device=self.device)
         actions_estimated_values: torch.Tensor = self.action_estimator(batch_s)
         with torch.no_grad():
-            actions_expected_values: torch.Tensor = self.action_estimator(batch_s_)
+            actions_expected_values: torch.Tensor = self.action_evaluator(batch_s_)
 
         x = torch.stack([t_s[t_a] for t_s, t_a in zip(actions_estimated_values, batch_a)])
         y = torch.max(actions_expected_values, 1)[0] * self.hp.gamma * batch_finals + batch_r
@@ -67,9 +60,15 @@ class DqnAgent(Agent, ABC):
             accumulated_reward += r
             s = s_
 
+            for cbk in self.step_callbacks:
+                cbk(TrainingStep(i, steps_survived, episode))
+
             if i % self.tp.learn_every == 0 and i != 0 and len(self.replay_buffer) >= self.tp.batch_size:
                 batch = self.replay_buffer.sample(self.tp.batch_size)
                 self.learn(batch)
+
+            if i % self.hp.ensure_every == 0:
+                self.ensure_learning()
 
             if final:
                 tp = TrainingProgress(episode, steps_survived, accumulated_reward)

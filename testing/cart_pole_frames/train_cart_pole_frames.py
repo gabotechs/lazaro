@@ -4,7 +4,7 @@ import torch
 import torch.nn.functional as F
 from _collections import deque
 
-from agents.agents.dqn_agent import DqnAgent, TrainingParams, DqnHyperParams
+from agents.agents.dqn_agent import DoubleDqnAgent, TrainingParams, DqnHyperParams
 from agents.explorers import RandomExplorer, RandomExplorerParams
 from environments import CartPoleFrames
 from agents.replay_buffers import RandomReplayBuffer
@@ -131,7 +131,7 @@ class CustomActionEstimator(torch.nn.Module):
         return self.head(F.relu(self.union(F.relu(torch.cat([x1.reshape(batch_size, -1), m], dim=1)))))
 
 
-class CustomMDqnAgent(DqnAgent):
+class CustomMDoubleDqnAgent(DoubleDqnAgent):
     def model_factory(self) -> torch.nn.Module:
         return CustomActionEstimator(
             env.get_observation_space()[0]-180-100,
@@ -144,5 +144,5 @@ class CustomMDqnAgent(DqnAgent):
 
 
 if __name__ == "__main__":
-    agent = CustomMDqnAgent(AGENT_PARAMS, TRAINING_PARAMS, RandomExplorer(EXPLORER_PARAMS), RandomReplayBuffer(MEMORY_LEN))
+    agent = CustomMDoubleDqnAgent(AGENT_PARAMS, TRAINING_PARAMS, RandomExplorer(EXPLORER_PARAMS), RandomReplayBuffer(MEMORY_LEN))
     train(agent, env)
