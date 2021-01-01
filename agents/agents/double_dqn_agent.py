@@ -44,8 +44,7 @@ class DoubleDqnAgent(DqnAgent, ABC):
         self.optimizer.zero_grad()
         loss.backward()
         self.optimizer.step()
-        for cbk in self.learning_callbacks:
-            cbk(LearningStep(batch, [v.item() for v in x], [v.item() for v in y]))
+        self.call_learn_callbacks(LearningStep(batch, [v.item() for v in x], [v.item() for v in y]))
 
     def train(self, env: Environment) -> None:
         s = env.reset()
@@ -62,24 +61,20 @@ class DoubleDqnAgent(DqnAgent, ABC):
             accumulated_reward += r
             s = s_
 
-            for cbk in self.step_callbacks:
-                cbk(TrainingStep(i, steps_survived, episode))
+            self.call_step_callbacks(TrainingStep(i, steps_survived, episode))
 
             if i % self.tp.learn_every == 0 and i != 0 and len(self.replay_buffer) >= self.tp.batch_size:
                 batch = self.replay_buffer.sample(self.tp.batch_size)
                 self.learn(batch)
                 if not is_healthy:
                     is_healthy = True
-                    for cbk in self.healthy_callbacks:
-                        cbk()
+                    self.call_healthy_callbacks()
 
             if i % self.hp.ensure_every == 0:
                 self.ensure_learning()
 
             if final:
-                tp = TrainingProgress(episode, steps_survived, accumulated_reward)
-                for cbk in self.progress_callbacks:
-                    cbk(tp)
+                self.call_progress_callbacks(TrainingProgress(episode, steps_survived, accumulated_reward))
                 if episode >= self.tp.episodes:
                     return
 

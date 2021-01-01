@@ -5,4 +5,5 @@ torchvision
 matplotlib
 pycairo
 cairocffi
+coloredlogs
 

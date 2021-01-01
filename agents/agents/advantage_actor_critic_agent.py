@@ -2,10 +2,11 @@ from abc import ABC
 import typing as T
 import torch
 import numpy as np
+
 from ..explorers import AnyExplorer
 from environments import Environment
-from ..replay_buffers import AnyReplayBuffer, NStepsRandomReplayBuffer, NStepsPrioritizedReplayBuffer, ReplayBufferEntry
-from .models import ACHyperParams, TrainingProgress, TrainingParams, LearningStep
+from ..replay_buffers import AnyReplayBuffer, ReplayBufferEntry
+from .models import ACHyperParams, TrainingProgress, TrainingParams, LearningStep, TrainingStep
 from .agent import Agent
 
 
@@ -38,12 +39,13 @@ class AdvantageActorCriticAgent(Agent, ABC):
     hp: ACHyperParams
 
     def __init__(self,
+                 action_space: int,
                  hp: ACHyperParams,
                  tp: TrainingParams,
                  explorer: T.Union[AnyExplorer, None],
                  replay_buffer: AnyReplayBuffer,
                  use_gpu: bool = True):
-        super(AdvantageActorCriticAgent, self).__init__(hp, tp, explorer, replay_buffer, use_gpu)
+        super(AdvantageActorCriticAgent, self).__init__(action_space, hp, tp, explorer, replay_buffer, use_gpu)
 
         self.actor = self.build_actor(self.model_factory().to(self.device)).to(self.device)
         self.critic = self.build_critic(self.model_factory().to(self.device)).to(self.device)
@@ -63,8 +65,6 @@ class AdvantageActorCriticAgent(Agent, ABC):
         return np.array(t.squeeze(0))
 
     def infer(self, x: np.ndarray) -> np.ndarray:
-        for cbk in self.infer_callbacks:
-            cbk()
         with torch.no_grad():
             return self.postprocess(self.actor.forward(self.preprocess(x).to(self.device)).cpu())
 
@@ -94,11 +94,9 @@ class AdvantageActorCriticAgent(Agent, ABC):
         critic_loss.backward()
         self.actor_optimizer.step()
         self.critic_optimizer.step()
-        for cbk in self.learning_callbacks:
-            cbk(LearningStep(batch, [v.item() for v in state_values], [v.item() for v in estimated_q_value]))
+        self.call_learn_callbacks(LearningStep(batch, [v.item() for v in state_values], [v.item() for v in estimated_q_value]))
 
     def train(self, env: Environment) -> None:
-        self.hook_callbacks()
         s = env.reset()
         i = 0
         episode = 1
@@ -114,18 +112,17 @@ class AdvantageActorCriticAgent(Agent, ABC):
             accumulated_reward += r
             s = s_
 
+            self.call_step_callbacks(TrainingStep(i, steps_survived, episode))
+
             if i % self.tp.learn_every == 0 and i != 0 and len(self.replay_buffer) >= self.tp.batch_size:
                 batch = self.replay_buffer.sample(self.tp.batch_size)
                 self.learn(batch)
                 if not is_healthy:
                     is_healthy = True
-                    for cbk in self.healthy_callbacks:
-                        cbk()
+                    self.call_healthy_callbacks()
 
             if final:
-                tp = TrainingProgress(episode, steps_survived, accumulated_reward)
-                for cbk in self.progress_callbacks:
-                    cbk(tp)
+                self.call_progress_callbacks(TrainingProgress(episode, steps_survived, accumulated_reward))
                 if episode >= self.tp.episodes:
                     return
 

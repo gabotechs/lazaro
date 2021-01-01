@@ -4,7 +4,7 @@ import torch
 import numpy as np
 from environments import Environment
 from ..replay_buffers import ReplayBufferEntry, NStepsPrioritizedReplayBuffer, NStepsRandomReplayBuffer
-from .models import TrainingProgress, LearningStep
+from .models import TrainingProgress, LearningStep, TrainingStep
 from .advantage_actor_critic_agent import AdvantageActorCriticAgent
 
 
@@ -30,8 +30,7 @@ class MonteCarloAdvantageActorCriticAgent(AdvantageActorCriticAgent, ABC):
         critic_loss.backward()
         self.actor_optimizer.step()
         self.critic_optimizer.step()
-        for cbk in self.learning_callbacks:
-            cbk(LearningStep(batch, [v.item() for v in state_values], [v.item() for v in batch_rt]))
+        self.call_learn_callbacks(LearningStep(batch, [v.item() for v in state_values], [v.item() for v in batch_rt]))
 
     def train(self, env: Environment) -> None:
         if isinstance(self.replay_buffer, (NStepsPrioritizedReplayBuffer, NStepsRandomReplayBuffer)):
@@ -52,13 +51,14 @@ class MonteCarloAdvantageActorCriticAgent(AdvantageActorCriticAgent, ABC):
             accumulated_reward += r
             s = s_
 
+            self.call_step_callbacks(TrainingStep(i, steps_survived, episode))
+
             if i % self.tp.learn_every == 0 and i != 0 and len(self.replay_buffer) >= self.tp.batch_size:
                 batch = self.replay_buffer.sample(self.tp.batch_size)
                 self.learn(batch)
                 if not is_healthy:
                     is_healthy = True
-                    for cbk in self.healthy_callbacks:
-                        cbk()
+                    self.call_healthy_callbacks()
 
             if final:
                 discounted_r = 0
@@ -73,9 +73,7 @@ class MonteCarloAdvantageActorCriticAgent(AdvantageActorCriticAgent, ABC):
                     step.r = (step.r - mean) / (std + eps)
                     self.replay_buffer.add(step)
 
-                tp = TrainingProgress(episode, steps_survived, accumulated_reward)
-                for cbk in self.progress_callbacks:
-                    cbk(tp)
+                self.call_progress_callbacks(TrainingProgress(episode, steps_survived, accumulated_reward))
                 if episode >= self.tp.episodes:
                     return
 
