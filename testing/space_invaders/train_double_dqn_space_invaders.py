@@ -12,7 +12,7 @@ from plotter import Renderer
 
 from testing.helpers import train
 
-FRAME_HISTORY = 3
+FRAME_HISTORY = 2
 PLOT_INTERNAL_STATES_EVERY = 0
 
 
@@ -60,12 +60,12 @@ class CustomActionEstimator(torch.nn.Module):
         self.conv1_renderer = Renderer("conv1", (int(FILTERS_1 / 4), 4))
 
         FILTERS_2 = 32
-        self.conv2 = torch.nn.Conv2d(FILTERS_1, FILTERS_2, kernel_size=4, stride=2)
+        self.conv2 = torch.nn.Conv2d(FILTERS_1, FILTERS_2, kernel_size=4, stride=3)
         w, h = self._conv_size_out((w, h), self.conv2.kernel_size[0], self.conv2.stride[0])
         self.conv2_renderer = Renderer("conv2", (int(FILTERS_2 / 8), 8))
 
         FILTERS_3 = 32
-        self.conv3 = torch.nn.Conv2d(FILTERS_2, FILTERS_3, kernel_size=3, stride=1)
+        self.conv3 = torch.nn.Conv2d(FILTERS_2, FILTERS_3, kernel_size=3, stride=2)
         w, h = self._conv_size_out((w, h), self.conv3.kernel_size[0], self.conv3.stride[0])
         self.conv3_renderer = Renderer("conv3", (int(FILTERS_3 / 8), 8))
 
