@@ -5,7 +5,7 @@ from agents import TrainingProgress
 from plotter import Plotter
 
 
-PATH = "/home/gabriel/trader/OpenAITraining/data/DoubleDqnAgent/2021-01-01/13:28:38"
+PATH = "/home/gabriel/trader/OpenAITraining/data/DoubleDqnAgent/2021-01-01/14:49:05"
 
 
 if __name__ == '__main__':
@@ -16,6 +16,6 @@ if __name__ == '__main__':
     for checkpoint in sorted(os.listdir(checkpoints_folder)):
         loaded_checkpoint: TrainingProgress = TrainingProgress(**json.load(open(os.path.join(checkpoints_folder, checkpoint))))
         reward_record.append(loaded_checkpoint.total_reward)
-        plotter.plot(reward_record, 0)
+        plotter.plot(reward_record, 0.9)
 
     input("press a key to end: ")

@@ -4,8 +4,8 @@ import torch
 import torch.nn.functional as F
 import numpy as np
 
-from .explorer import Explorer
-from .models import NoisyExplorerParams
+from .base.explorer import Explorer
+from .base.models import NoisyExplorerParams
 
 
 class NoisyLinear(torch.nn.Module):

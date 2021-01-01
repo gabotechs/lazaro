@@ -8,10 +8,10 @@ import time
 import numpy as np
 
 from environments import Environment
-from agents.explorers import AnyExplorer, RandomExplorer, NoisyExplorer
-from agents.replay_buffers import AnyReplayBuffer, ReplayBufferEntry, NStepsPrioritizedReplayBuffer
+from ...explorers import AnyExplorer, RandomExplorer, NoisyExplorer
+from ...replay_buffers import AnyReplayBuffer, ReplayBufferEntry, NStepsPrioritizedReplayBuffer
 from .models import HyperParams, TrainingProgress, TrainingParams, LearningStep, TrainingStep
-from ..explorers.noisy_explorer import NoisyLinear
+from ...explorers.noisy_explorer import NoisyLinear
 from logger import get_logger
 
 
@@ -75,7 +75,7 @@ class Agent(ABC):
             self.add_healthy_callback(init_save_callback)
 
             def checkpoint_save_callback(training_progress: TrainingProgress):
-                self.log.info("save callback triggered")
+                self.log.debug("save callback triggered")
                 if self.save_path is None:
                     raise ValueError("save path is None, agent has not been initialized correctly")
                 folder_checkpoints = os.path.join(self.save_path, "checkpoints")
@@ -84,7 +84,7 @@ class Agent(ABC):
 
                 folder_checkpoints_checkpoint = os.path.join(folder_checkpoints, str(time.time())+".json")
                 json.dump(training_progress.__dict__, open(folder_checkpoints_checkpoint, "w"))
-                self.log.info("checkpoint saved correctly")
+                self.log.debug("checkpoint saved correctly")
 
             self.add_progress_callback(checkpoint_save_callback)
             self.log.info("progress callbacks linked correctly")

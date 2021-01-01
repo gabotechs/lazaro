@@ -3,5 +3,5 @@ from .random_replay_buffer import RandomReplayBuffer
 from .latests_replay_buffer import LatestReplayBuffer
 from .n_steps_random_replay_buffer import NStepsRandomReplayBuffer
 from .n_steps_priorized_replay_buffer import NStepsPrioritizedReplayBuffer
-from .models import ReplayBufferEntry, MemoryReplayBufferEntry, NStepReplayBufferParams, NStepPrioritizedReplayBufferParams
+from .base.models import ReplayBufferEntry, MemoryReplayBufferEntry, NStepReplayBufferParams, NStepPrioritizedReplayBufferParams
 AnyReplayBuffer = T.Union[RandomReplayBuffer, LatestReplayBuffer, NStepsRandomReplayBuffer, NStepsPrioritizedReplayBuffer]

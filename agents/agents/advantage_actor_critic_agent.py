@@ -6,8 +6,8 @@ import numpy as np
 from ..explorers import AnyExplorer
 from environments import Environment
 from ..replay_buffers import AnyReplayBuffer, ReplayBufferEntry
-from .models import ACHyperParams, TrainingProgress, TrainingParams, LearningStep, TrainingStep
-from .agent import Agent
+from agents.agents.base.models import ACHyperParams, TrainingProgress, TrainingParams, LearningStep, TrainingStep
+from agents.agents.base.agent import Agent
 
 
 class Actor(torch.nn.Module):

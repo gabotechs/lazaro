@@ -1,7 +1,7 @@
 import typing as T
 from dataclasses import dataclass
 
-from ..replay_buffers import ReplayBufferEntry
+from agents.replay_buffers import ReplayBufferEntry
 
 
 @dataclass

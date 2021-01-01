@@ -7,8 +7,8 @@ from environments import Environment
 from ..explorers import AnyExplorer
 from ..explorers.noisy_explorer import NoisyLinear, NoisyExplorer
 from ..replay_buffers import ReplayBufferEntry, AnyReplayBuffer
-from .models import DqnHyperParams, TrainingParams, TrainingProgress, LearningStep, TrainingStep
-from .agent import Agent
+from .base.models import DqnHyperParams, TrainingParams, TrainingProgress, LearningStep, TrainingStep
+from .base.agent import Agent
 
 
 class DqnNetwork(torch.nn.Module):

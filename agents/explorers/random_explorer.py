@@ -1,8 +1,8 @@
 import typing as T
 import numpy as np
 from random import random, randrange
-from .models import RandomExplorerParams
-from .explorer import Explorer
+from agents.explorers.base.models import RandomExplorerParams
+from agents.explorers.base.explorer import Explorer
 
 
 class RandomExplorer(Explorer):

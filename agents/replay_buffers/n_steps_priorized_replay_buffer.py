@@ -3,8 +3,8 @@ import typing as T
 import random
 
 from .segment_trees import SumSegmentTree, MinSegmentTree
-from .n_steps_replay_buffer import NStepsReplayBuffer
-from .models import ReplayBufferEntry, NStepPrioritizedReplayBufferParams
+from .base.n_steps_replay_buffer import NStepsReplayBuffer
+from .base.models import ReplayBufferEntry, NStepPrioritizedReplayBufferParams
 
 
 class NStepsPrioritizedReplayBuffer(NStepsReplayBuffer, ABC):

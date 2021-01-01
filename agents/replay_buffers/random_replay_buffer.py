@@ -1,5 +1,5 @@
 import random
-from .replay_buffer import ReplayBuffer
+from .base.replay_buffer import ReplayBuffer
 
 
 class RandomReplayBuffer(ReplayBuffer):

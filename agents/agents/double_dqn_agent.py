@@ -6,7 +6,7 @@ import numpy as np
 from environments import Environment
 from ..explorers import AnyExplorer
 from ..replay_buffers import ReplayBufferEntry, AnyReplayBuffer
-from .models import DoubleDqnHyperParams, TrainingParams, TrainingProgress, LearningStep, TrainingStep
+from .base.models import DoubleDqnHyperParams, TrainingParams, TrainingProgress, LearningStep, TrainingStep
 from .dqn_agent import DqnAgent
 
 

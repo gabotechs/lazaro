@@ -133,10 +133,10 @@ class CustomDoubleDqnAgent(DoubleDqnAgent):
         return torch.unsqueeze(torch.tensor(x.transpose((0, 3, 1, 2)), dtype=torch.float32) / 255, 0)
 
 
-EXPLORER_PARAMS = NoisyExplorerParams(extra_layers=[], std_init=0.5, reset_noise_every=10)
+EXPLORER_PARAMS = NoisyExplorerParams(extra_layers=[100], std_init=0.5, reset_noise_every=1)
 AGENT_PARAMS = DoubleDqnHyperParams(lr=0.01, gamma=0.99, ensure_every=100)
-TRAINING_PARAMS = TrainingParams(learn_every=5, batch_size=64, episodes=10000)
-REPLAY_BUFFER_PARAMS = NStepPrioritizedReplayBufferParams(max_len=10000, gamma=AGENT_PARAMS.gamma, n_step=10, alpha=0.6,
+TRAINING_PARAMS = TrainingParams(learn_every=2, batch_size=64, episodes=10000)
+REPLAY_BUFFER_PARAMS = NStepPrioritizedReplayBufferParams(max_len=10000, gamma=AGENT_PARAMS.gamma, n_step=5, alpha=0.6,
                                                           init_beta=0.4, final_beta=1.0, increase_beta=1+1e-5)
 
 if __name__ == "__main__":

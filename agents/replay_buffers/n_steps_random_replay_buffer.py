@@ -1,4 +1,4 @@
-from .n_steps_replay_buffer import NStepsReplayBuffer
+from .base.n_steps_replay_buffer import NStepsReplayBuffer
 from .random_replay_buffer import RandomReplayBuffer
 
 
