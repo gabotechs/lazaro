@@ -5,25 +5,56 @@ import numpy as np
 
 from environments import Environment
 from ..explorers import AnyExplorer
+from ..explorers.noisy_explorer import NoisyLinear, NoisyExplorer
 from ..replay_buffers import ReplayBufferEntry, AnyReplayBuffer
 from .models import DqnHyperParams, TrainingParams, TrainingProgress, LearningStep
 from .agent import Agent
+
+
+class DqnNetwork(torch.nn.Module):
+    def __init__(self, model: torch.nn.Module, action_space: int, last_layer_factory: T.Callable[[int, int], torch.nn.Module]):
+        super(DqnNetwork, self).__init__()
+        self.model = model
+        last_layer = list(model.modules())[-1]
+        if not isinstance(last_layer, (torch.nn.Linear, NoisyLinear)):
+            raise ValueError("the model you have created must have a torch.nn.Linear or "
+                             "agents.explorers.noisy_explorer.NoisyLinear in the last layer")
+
+        if last_layer.out_features == action_space:
+            print("WARNING: detected same number of features in the output of the model than the action space")
+
+        self.head = last_layer_factory(last_layer.out_features, action_space)
+
+    def forward(self, x: torch.Tensor) -> torch.Tensor:
+        x = self.model(x)
+        return self.head(x)
 
 
 class DqnAgent(Agent, ABC):
     hp: DqnHyperParams
 
     def __init__(self,
+                 action_space: int,
                  hp: DqnHyperParams,
                  tp: TrainingParams,
                  explorer: T.Union[AnyExplorer, None],
                  replay_buffer: AnyReplayBuffer,
                  use_gpu: bool = True):
-        super(DqnAgent, self).__init__(hp, tp, explorer, replay_buffer, use_gpu)
+        super(DqnAgent, self).__init__(action_space, hp, tp, explorer, replay_buffer, use_gpu)
 
-        self.action_estimator = self.model_factory().to(self.device)
+        self.action_estimator = self.build_model().to(self.device)
         self.optimizer = torch.optim.Adam(self.action_estimator.parameters(), lr=hp.lr)
         self.loss_f = torch.nn.MSELoss(reduction="none").to(self.device)
+
+    def build_model(self) -> torch.nn.Module:
+        model = super(DqnAgent, self).build_model()
+        return DqnNetwork(
+            model,
+            self.action_space,
+            lambda in_features, out_features: NoisyLinear(in_features, out_features, self.explorer.ep.std_init)
+            if isinstance(self.explorer, NoisyExplorer) else
+            torch.nn.Linear(in_features, out_features)
+        )
 
     def infer(self, x: np.ndarray) -> np.ndarray:
         with torch.no_grad():
@@ -59,6 +90,7 @@ class DqnAgent(Agent, ABC):
         episode = 1
         steps_survived = 0
         accumulated_reward = 0
+        is_healthy = False
         while True:
             estimated_rewards = self.infer(s)
             a = self.explorer.choose(estimated_rewards, lambda x: np.argmax(estimated_rewards).item())
@@ -70,6 +102,10 @@ class DqnAgent(Agent, ABC):
             if i % self.tp.learn_every == 0 and i != 0 and len(self.replay_buffer) >= self.tp.batch_size:
                 batch = self.replay_buffer.sample(self.tp.batch_size)
                 self.learn(batch)
+                if not is_healthy:
+                    is_healthy = True
+                    for cbk in self.healthy_callbacks:
+                        cbk()
 
             if final:
                 tp = TrainingProgress(episode, steps_survived, accumulated_reward)

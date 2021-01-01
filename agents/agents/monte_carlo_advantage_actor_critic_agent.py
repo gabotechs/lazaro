@@ -34,7 +34,6 @@ class MonteCarloAdvantageActorCriticAgent(AdvantageActorCriticAgent, ABC):
             cbk(LearningStep(batch, [v.item() for v in state_values], [v.item() for v in batch_rt]))
 
     def train(self, env: Environment) -> None:
-        self.hook_callbacks()
         if isinstance(self.replay_buffer, (NStepsPrioritizedReplayBuffer, NStepsRandomReplayBuffer)):
             self.replay_buffer.accumulate_rewards = False
         s = env.reset()
@@ -43,6 +42,7 @@ class MonteCarloAdvantageActorCriticAgent(AdvantageActorCriticAgent, ABC):
         steps_survived = 0
         accumulated_reward = 0
         steps_record: T.List[ReplayBufferEntry] = []
+        is_healthy = False
         while True:
             estimated_rewards = self.infer(s)
             def choosing_f(x): return torch.distributions.Categorical(torch.tensor(x)).sample().item()
@@ -55,6 +55,10 @@ class MonteCarloAdvantageActorCriticAgent(AdvantageActorCriticAgent, ABC):
             if i % self.tp.learn_every == 0 and i != 0 and len(self.replay_buffer) >= self.tp.batch_size:
                 batch = self.replay_buffer.sample(self.tp.batch_size)
                 self.learn(batch)
+                if not is_healthy:
+                    is_healthy = True
+                    for cbk in self.healthy_callbacks:
+                        cbk()
 
             if final:
                 discounted_r = 0

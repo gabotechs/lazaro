@@ -53,11 +53,6 @@ class ModelWithNoisyLayers(torch.nn.Module):
         self.model = model
         self.noisy_layers = torch.nn.Sequential(*noisy_layers)
 
-    def reset_noise(self):
-        for layer in self.modules():
-            if isinstance(layer, NoisyLinear):
-                layer.reset_noise()
-
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         x = self.model(x)
         x = self.noisy_layers(x)
@@ -68,15 +63,16 @@ class NoisyExplorer(Explorer):
     def __init__(self, ep: NoisyExplorerParams):
         self.ep: NoisyExplorerParams = ep
 
-    def wrap_model(self, model_factory: T.Callable[[], torch.nn.Module]) -> torch.nn.Module:
-        model = model_factory()
+    def wrap_model(self, model: torch.nn.Module) -> torch.nn.Module:
         last_layer = list(model.modules())[-1]
         if not isinstance(last_layer, torch.nn.Linear):
             raise ValueError("the model you have created must have a torch.nn.Linear in the last layer")
-        noisy_layers = [torch.nn.ReLU(), NoisyLinear(last_layer.out_features, self.ep.layers[0], self.ep.std_init)]
-        for i in range(1, len(self.ep.layers)):
+        if len(self.ep.extra_layers) == 0:
+            return model
+        noisy_layers = [NoisyLinear(last_layer.out_features, self.ep.extra_layers[0], self.ep.std_init)]
+        for i in range(1, len(self.ep.extra_layers)):
             noisy_layers.append(torch.nn.ReLU())
-            noisy_layers.append(NoisyLinear(self.ep.layers[i - 1], self.ep.layers[i], self.ep.std_init))
+            noisy_layers.append(NoisyLinear(self.ep.extra_layers[i - 1], self.ep.extra_layers[i], self.ep.std_init))
 
         return ModelWithNoisyLayers(model, noisy_layers)
 

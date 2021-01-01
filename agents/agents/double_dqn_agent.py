@@ -14,13 +14,14 @@ class DoubleDqnAgent(DqnAgent, ABC):
     hp: DoubleDqnHyperParams
 
     def __init__(self,
+                 action_space: int,
                  hp: DoubleDqnHyperParams,
                  tp: TrainingParams,
                  explorer: T.Union[AnyExplorer, None],
                  replay_buffer: AnyReplayBuffer,
                  use_gpu: bool = True):
-        super(DoubleDqnAgent, self).__init__(hp, tp, explorer, replay_buffer, use_gpu)
-        self.action_evaluator = self.model_factory().to(self.device).eval()
+        super(DoubleDqnAgent, self).__init__(action_space, hp, tp, explorer, replay_buffer, use_gpu)
+        self.action_evaluator = self.build_model().to(self.device).eval()
 
     def ensure_learning(self) -> None:
         self.action_evaluator.load_state_dict(self.action_estimator.state_dict())
@@ -52,6 +53,7 @@ class DoubleDqnAgent(DqnAgent, ABC):
         episode = 1
         steps_survived = 0
         accumulated_reward = 0
+        is_healthy = False
         while True:
             estimated_rewards = self.infer(s)
             a = self.explorer.choose(estimated_rewards, lambda x: np.argmax(estimated_rewards).item())
@@ -66,6 +68,10 @@ class DoubleDqnAgent(DqnAgent, ABC):
             if i % self.tp.learn_every == 0 and i != 0 and len(self.replay_buffer) >= self.tp.batch_size:
                 batch = self.replay_buffer.sample(self.tp.batch_size)
                 self.learn(batch)
+                if not is_healthy:
+                    is_healthy = True
+                    for cbk in self.healthy_callbacks:
+                        cbk()
 
             if i % self.hp.ensure_every == 0:
                 self.ensure_learning()

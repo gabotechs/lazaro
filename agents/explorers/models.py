@@ -11,6 +11,6 @@ class RandomExplorerParams:
 
 @dataclass
 class NoisyExplorerParams:
-    layers: T.List[int]
+    extra_layers: T.List[int]
     reset_noise_every: int
     std_init: float

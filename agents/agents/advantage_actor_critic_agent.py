@@ -26,7 +26,7 @@ class Critic(torch.nn.Module):
         self.model = model
         last_layer = list(model.modules())[-1]
         if not isinstance(last_layer, torch.nn.Linear):
-            ValueError("the model you have created must have a torch.nn.Linear in the last layer")
+            raise ValueError("the model you have created must have a torch.nn.Linear in the last layer")
         self.linear = torch.nn.Linear(last_layer.out_features, 1)
 
     def forward(self, x):
@@ -104,7 +104,7 @@ class AdvantageActorCriticAgent(Agent, ABC):
         episode = 1
         steps_survived = 0
         accumulated_reward = 0
-
+        is_healthy = False
         while True:
             estimated_rewards = self.infer(s)
             def choosing_f(x): return torch.distributions.Categorical(torch.tensor(x)).sample().item()
@@ -117,6 +117,10 @@ class AdvantageActorCriticAgent(Agent, ABC):
             if i % self.tp.learn_every == 0 and i != 0 and len(self.replay_buffer) >= self.tp.batch_size:
                 batch = self.replay_buffer.sample(self.tp.batch_size)
                 self.learn(batch)
+                if not is_healthy:
+                    is_healthy = True
+                    for cbk in self.healthy_callbacks:
+                        cbk()
 
             if final:
                 tp = TrainingProgress(episode, steps_survived, accumulated_reward)

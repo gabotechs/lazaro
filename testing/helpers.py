@@ -1,7 +1,7 @@
 import typing as T
 
-from agents import AnyAgent, TrainingProgress, AnyReplayBuffer, NStepsPrioritizedReplayBuffer
-from agents.explorers import AnyExplorer, RandomExplorer
+from agents import AnyAgent, TrainingProgress, NStepsPrioritizedReplayBuffer
+from agents.explorers import RandomExplorer
 from environments import Environment
 from plotter import Plotter
 
@@ -14,7 +14,7 @@ def train(agent: AnyAgent, env: Environment):
     def progress_callback(progress: TrainingProgress):
         reward_record.append(progress.total_reward)
 
-        plotter.plot(reward_record, aliasing=.8)
+        plotter.plot(reward_record, aliasing=.1)
         print(
             "lost! achieved "
             "| episode:", progress.tries,
