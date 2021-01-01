@@ -1,4 +1,5 @@
 import typing as T
+import json
 
 from agents import AnyAgent, TrainingProgress, NStepsPrioritizedReplayBuffer
 from agents.explorers import RandomExplorer
@@ -8,7 +9,7 @@ from plotter import Plotter
 
 def train(agent: AnyAgent, env: Environment):
     plotter: Plotter = Plotter()
-
+    print(json.dumps(agent.get_info(), indent=4))
     reward_record: T.List[float] = []
 
     def progress_callback(progress: TrainingProgress):
