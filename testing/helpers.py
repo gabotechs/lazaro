@@ -18,14 +18,10 @@ def train(agent: AnyAgent, env: Environment):
         reward_record.append(progress.total_reward)
 
         plotter.plot(reward_record, aliasing=.1)
-        print(
-            "lost! achieved "
-            "| episode:", progress.tries,
-            "| steps survived:", progress.steps_survived,
-            "| reward:", progress.total_reward,
-            ("| epsilon:", round(agent.explorer.epsilon, 2)) if isinstance(agent.explorer, RandomExplorer) else "",
-            ("| beta:", round(agent.replay_buffer.beta, 2) if isinstance(agent.replay_buffer, NStepsPrioritizedReplayBuffer) else "")
-        )
+        if isinstance(agent.explorer, RandomExplorer):
+            print("| epsilon:", round(agent.explorer.epsilon, 2))
+        if isinstance(agent.replay_buffer, NStepsPrioritizedReplayBuffer):
+            print("| beta:", round(agent.replay_buffer.beta, 2))
 
     agent.add_progress_callback(progress_callback)
     agent.train(env)

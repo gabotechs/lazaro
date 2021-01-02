@@ -58,7 +58,7 @@ class MonteCarloAdvantageActorCriticAgent(AdvantageActorCriticAgent, ABC):
                 self.learn(batch)
                 if not is_healthy:
                     is_healthy = True
-                    self.call_healthy_callbacks()
+                    self.call_healthy_callbacks(type(env).__name__)
 
             if final:
                 discounted_r = 0

@@ -35,7 +35,7 @@ class Agent(ABC):
         self.device: str = "cuda" if use_gpu else "cpu"
         self.use_gpu: bool = use_gpu
         self.save_progress: bool = save_progress
-        self.healthy_callbacks: T.List[T.Callable[[], None]] = []
+        self.healthy_callbacks: T.List[T.Callable[[str], None]] = []
         self.step_callbacks: T.List[T.Callable[[TrainingStep], None]] = []
         self.progress_callbacks: T.List[T.Callable[[TrainingProgress], None]] = []
         self.learning_callbacks: T.List[T.Callable[[LearningStep], None]] = []
@@ -51,7 +51,7 @@ class Agent(ABC):
         if self.save_progress:
             self.log.info("linking progress callbacks...")
 
-            def init_save_callback():
+            def init_save_callback(env_name: str):
                 self.log.info("initializing save callback triggered")
                 base = os.environ.get("SAVE_DIR", "data")
                 if base.endswith("/"):
@@ -61,7 +61,7 @@ class Agent(ABC):
                 today = str(datetime.datetime.now().date())
                 now = str(datetime.datetime.now().time().strftime("%H:%M:%S"))
                 folder = ""
-                for sub_folder in [base, agent, today, now]:
+                for sub_folder in [base, agent, env_name, today, now]:
                     folder = os.path.join(folder, sub_folder)
                     if not os.path.isdir(folder):
                         self.log.info(f"folder {folder} does not exists, creating it...")
@@ -77,7 +77,8 @@ class Agent(ABC):
             def checkpoint_save_callback(training_progress: TrainingProgress):
                 self.log.debug("save callback triggered")
                 if self.save_path is None:
-                    raise ValueError("save path is None, agent has not been initialized correctly")
+                    self.log.warning("save path is None, agent has not been initialized correctly")
+                    return
                 folder_checkpoints = os.path.join(self.save_path, "checkpoints")
                 if not os.path.isdir(folder_checkpoints):
                     os.mkdir(folder_checkpoints)
@@ -168,10 +169,10 @@ class Agent(ABC):
         self.learning_callbacks.append(cbk)
         self.log.info(f"added new learn callback, there are {len(self.learning_callbacks)} learn callbacks")
 
-    def call_healthy_callbacks(self):
+    def call_healthy_callbacks(self, env_name: str):
         self.log.debug("calling healthy callbacks...")
         for cbk in self.healthy_callbacks:
-            cbk()
+            cbk(env_name)
         self.log.debug("all healthy callbacks called")
 
     def call_step_callbacks(self, training_step: TrainingStep):

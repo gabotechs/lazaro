@@ -119,7 +119,7 @@ class AdvantageActorCriticAgent(Agent, ABC):
                 self.learn(batch)
                 if not is_healthy:
                     is_healthy = True
-                    self.call_healthy_callbacks()
+                    self.call_healthy_callbacks(type(env).__name__)
 
             if final:
                 self.call_progress_callbacks(TrainingProgress(episode, steps_survived, accumulated_reward))

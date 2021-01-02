@@ -33,7 +33,7 @@ class CustomDoubleDqnAgent(DoubleDqnAgent):
         return torch.unsqueeze(torch.tensor(x, dtype=torch.float32), 0)
 
 
-EXPLORER_PARAMS = NoisyExplorerParams(extra_layers=[], std_init=0.5, reset_noise_every=1)
+EXPLORER_PARAMS = NoisyExplorerParams(extra_layers=[20], std_init=0.5, reset_noise_every=1)
 AGENT_PARAMS = DoubleDqnHyperParams(lr=0.01, gamma=0.995, ensure_every=10)
 TRAINING_PARAMS = TrainingParams(learn_every=1, batch_size=128, episodes=500)
 REPLAY_BUFFER_PARAMS = NStepPrioritizedReplayBufferParams(max_len=5000, gamma=AGENT_PARAMS.gamma, n_step=10, alpha=0.6,
@@ -47,5 +47,4 @@ if __name__ == "__main__":
         NoisyExplorer(EXPLORER_PARAMS),
         NStepsPrioritizedReplayBuffer(REPLAY_BUFFER_PARAMS)
     )
-    print(agent.get_info())
     train(agent, env)
