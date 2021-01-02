@@ -11,7 +11,7 @@ from environments import SpaceInvadersRam
 
 from testing.helpers import train
 
-FRAME_HISTORY = 2
+FRAME_HISTORY = 4
 
 
 class CustomSpaceInvadersRam(SpaceInvadersRam):
@@ -46,30 +46,20 @@ class CustomActionEstimator(torch.nn.Module):
         super(CustomActionEstimator, self).__init__()
 
         self.linear1 = torch.nn.Linear(in_size, in_size * 10)
-        self.linear2 = torch.nn.Linear(in_size * 10, in_size * 10)
+        self.linear2 = torch.nn.Linear(self.linear1.out_features, in_size * 10)
 
-        HIDDEN_SIZE = 1000
 
-        self.hidden_size = HIDDEN_SIZE
-        self.gru = torch.nn.GRUCell(self.linear2.out_features, self.hidden_size)
-
-        UNION_SIZE = 512
-        self.union = torch.nn.Linear(self.linear2.out_features+self.hidden_size, UNION_SIZE)
-        self.head = torch.nn.Linear(UNION_SIZE, out_size)
-
-    def init_hidden_state(self, batch_size: int):
-        return torch.zeros((batch_size, self.hidden_size), dtype=torch.float32).to(self.gru.weight_hh.device.type)
+        self.gru = torch.nn.GRUCell(self.linear2.out_features, out_size)
+        self.linear3 = torch.nn.Linear(out_size, out_size)
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
-        batch_size = x.size()[0]
-        m = self.init_hidden_state(batch_size)
-        x1 = x[:, -1, ...]
+        m = None
         for i in range(x.size()[1]):
             x1 = F.relu(self.linear1(x[:, i, ...]))
             x1 = F.relu(self.linear2(x1))
             m = self.gru(x1, m)
 
-        return F.relu(self.head(F.relu(self.union(F.relu(torch.cat([x1, m], dim=1))))))
+        return F.relu(m)
 
 
 class CustomDoubleDqnAgent(DoubleDqnAgent):

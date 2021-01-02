@@ -6,4 +6,4 @@ matplotlib
 pycairo
 cairocffi
 coloredlogs
-
+pytest

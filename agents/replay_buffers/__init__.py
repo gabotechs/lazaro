@@ -2,6 +2,9 @@ import typing as T
 from .random_replay_buffer import RandomReplayBuffer
 from .latests_replay_buffer import LatestReplayBuffer
 from .n_steps_random_replay_buffer import NStepsRandomReplayBuffer
+from .priorized_replay_buffer import PrioritizedReplayBuffer
 from .n_steps_priorized_replay_buffer import NStepsPrioritizedReplayBuffer
-from .base.models import ReplayBufferEntry, MemoryReplayBufferEntry, NStepReplayBufferParams, NStepPrioritizedReplayBufferParams
-AnyReplayBuffer = T.Union[RandomReplayBuffer, LatestReplayBuffer, NStepsRandomReplayBuffer, NStepsPrioritizedReplayBuffer]
+from .base.models import ReplayBufferParams, ReplayBufferEntry, MemoryReplayBufferEntry, NStepReplayBufferParams, \
+    NStepPrioritizedReplayBufferParams, PrioritizedReplayBufferParams
+AnyReplayBuffer = T.Union[RandomReplayBuffer, LatestReplayBuffer, NStepsRandomReplayBuffer,
+                          NStepsPrioritizedReplayBuffer, PrioritizedReplayBuffer]
