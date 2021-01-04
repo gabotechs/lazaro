@@ -97,11 +97,11 @@ class CustomDoubleDqnAgent(DoubleDuelingDqnAgent):
 
 
 NOISY_EXPLORER_PARAMS = NoisyExplorerParams(extra_layers=[], std_init=0.5, reset_noise_every=1)
-RANDOM_EXPLORER_PARAMS = RandomExplorerParams(init_ep=1.0, final_ep=0.01, decay_ep=1-1e-3)
-AGENT_PARAMS = DoubleDqnHyperParams(lr=0.001, gamma=0.95, ensure_every=10)
-TRAINING_PARAMS = TrainingParams(learn_every=1, batch_size=32, episodes=5000)
+RANDOM_EXPLORER_PARAMS = RandomExplorerParams(init_ep=1.0, final_ep=0.01, decay_ep=1e-3)
+AGENT_PARAMS = DoubleDqnHyperParams(lr=0.01, gamma=0.95, ensure_every=10)
+TRAINING_PARAMS = TrainingParams(learn_every=1, batch_size=64, episodes=5000)
 REPLAY_BUFFER_PARAMS = NStepPrioritizedReplayBufferParams(max_len=5000, gamma=AGENT_PARAMS.gamma, n_step=3, alpha=0.6,
-                                                          init_beta=0.4, final_beta=1.0, increase_beta=1+1e-4)
+                                                          init_beta=0.4, final_beta=1.0, increase_beta=1e-4)
 
 if __name__ == "__main__":
     agent = CustomDoubleDqnAgent(

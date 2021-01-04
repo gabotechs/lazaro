@@ -19,7 +19,9 @@ class RandomExplorer(Explorer):
 
     def decay(self):
         if self.epsilon > self.ep.final_ep:
-            self.epsilon *= self.ep.decay_ep
+            self.epsilon -= self.ep.decay_ep
+        elif self.epsilon < self.ep.final_ep:
+            self.epsilon = self.ep.final_ep
 
     def choose(self, actions: T.List[float], f: T.Callable[[T.List[float]], int]) -> int:
         if random() > self.epsilon:

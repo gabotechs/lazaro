@@ -25,8 +25,8 @@ class PrioritizedReplayBuffer(ReplayBuffer):
 
     def increase_beta(self):
         if self.beta < self.rp.final_beta:
-            self.beta *= self.rp.increase_beta
-        else:
+            self.beta += self.rp.increase_beta
+        elif self.beta > self.rp.final_beta:
             self.beta = self.rp.final_beta
 
     def add(self, entry: T.Union[ReplayBufferEntry]) -> bool:
