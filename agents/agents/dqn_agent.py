@@ -32,6 +32,7 @@ class DqnNetwork(torch.nn.Module):
 
 class DqnAgent(Agent, ABC):
     hp: DqnHyperParams
+    network_class = DqnNetwork
 
     def __init__(self,
                  action_space: int,
@@ -48,13 +49,14 @@ class DqnAgent(Agent, ABC):
 
     def build_model(self) -> torch.nn.Module:
         model = super(DqnAgent, self).build_model()
-        return DqnNetwork(
-            model,
-            self.action_space,
-            lambda in_features, out_features: NoisyLinear(in_features, out_features, self.explorer.ep.std_init)
-            if isinstance(self.explorer, NoisyExplorer) else
-            torch.nn.Linear(in_features, out_features)
-        )
+
+        def last_layer_factory(in_features: int, out_features: int):
+            if isinstance(self.explorer, NoisyExplorer):
+                return NoisyLinear(in_features, out_features, self.explorer.ep.std_init)
+            else:
+                return torch.nn.Linear(in_features, out_features)
+
+        return self.network_class(model, self.action_space, last_layer_factory)
 
     def infer(self, x: np.ndarray) -> np.ndarray:
         with torch.no_grad():

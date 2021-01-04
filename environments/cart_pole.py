@@ -8,6 +8,7 @@ from .environment import Environment
 
 class CartPole(Environment):
     def __init__(self):
+        self.visualize: bool = True
         self.env: gym.Env = gym.make("CartPole-v1")
 
     def get_observation_space(self) -> T.Tuple[int]:
@@ -24,7 +25,8 @@ class CartPole(Environment):
         return s, r, f
 
     def render(self) -> None:
-        self.env.render()
+        if self.visualize:
+            self.env.render()
 
     def close(self) -> None:
         self.env.close()

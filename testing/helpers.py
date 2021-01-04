@@ -17,7 +17,7 @@ def train(agent: AnyAgent, env: Environment):
     def progress_callback(progress: TrainingProgress):
         reward_record.append(progress.total_reward)
 
-        plotter.plot(reward_record, aliasing=.1)
+        plotter.plot(reward_record, aliasing=0)
         if isinstance(agent.explorer, RandomExplorer):
             print("| epsilon:", round(agent.explorer.epsilon, 2))
         if isinstance(agent.replay_buffer, NStepsPrioritizedReplayBuffer):

@@ -5,7 +5,7 @@ from agents import TrainingProgress
 from plotter import Plotter
 
 
-PATH = "/home/gabriel/trader/OpenAITraining/data/DoubleDqnAgent/2021-01-01/14:49:05"
+PATH = "/home/gabriel/trader/OpenAITraining/data/DoubleDuelingDqnAgent/CustomCartPole/2021-01-04/19:58:17"
 
 
 if __name__ == '__main__':
