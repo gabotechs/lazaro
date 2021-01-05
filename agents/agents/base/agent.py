@@ -25,7 +25,8 @@ class Agent(ABC):
                  explorer: T.Union[AnyExplorer, None],
                  replay_buffer: AnyReplayBuffer,
                  use_gpu: bool = True,
-                 save_progress: bool = True):
+                 save_progress: bool = True,
+                 tensor_board_log: bool = True):
 
         self.log = get_logger(self.get_self_class_name())
         self.action_space = action_space
@@ -37,6 +38,7 @@ class Agent(ABC):
         self.device: str = "cuda" if use_gpu else "cpu"
         self.use_gpu: bool = use_gpu
         self.save_progress: bool = save_progress
+        self.tensor_board_log: bool = tensor_board_log
         self.healthy_callbacks: T.List[T.Callable[[Environment], None]] = []
         self.step_callbacks: T.List[T.Callable[[TrainingStep], None]] = []
         self.progress_callbacks: T.List[T.Callable[[TrainingProgress], None]] = []
@@ -49,10 +51,21 @@ class Agent(ABC):
         self.link_replay_buffer()
         self.link_explorer()
         self.link_saver()
+        self.link_tensor_board()
+
+    def link_tensor_board(self):
+        if self.tensor_board_log:
+            self.log.info("linking tensorboard callbacks...")
+
+            def log_progress(training_progress: TrainingProgress):
+                if self.summary_writer:
+                    self.summary_writer.add_scalar("episode reward", training_progress.total_reward, training_progress.tries)
+
+            self.add_progress_callback(log_progress)
 
     def link_saver(self):
         if self.save_progress:
-            self.log.info("linking progress callbacks...")
+            self.log.info("linking saving callbacks...")
 
             def init_save_callback(env: Environment):
                 self.log.info("initializing save callback triggered")
@@ -85,7 +98,7 @@ class Agent(ABC):
             def checkpoint_save_callback(training_progress: TrainingProgress):
                 self.log.debug("save callback triggered")
                 if self.save_path is None:
-                    self.log.warning("save path is None, agent has not been initialized correctly")
+                    self.log.warning("progress saving aborted, agent cannot be considered healthy yet")
                     return
                 folder_checkpoints = os.path.join(self.save_path, "checkpoints")
                 if not os.path.isdir(folder_checkpoints):
@@ -119,6 +132,13 @@ class Agent(ABC):
 
             self.add_step_callback(increase_prioritized_replay_buffer_beta)
 
+            if self.tensor_board_log:
+                def add_beta_to_tensorboard(training_progress: TrainingProgress):
+                    if self.summary_writer:
+                        self.summary_writer.add_scalar("prioritized replay buffer Beta", self.replay_buffer.beta, training_progress.tries)
+
+                self.add_progress_callback(add_beta_to_tensorboard)
+
             new_gamma = self.hp.gamma ** self.replay_buffer.rp.n_step
             self.log.info(f"refactoring gamma for {type(self.replay_buffer).__name__}: {self.gamma} -> {new_gamma}")
             self.gamma = new_gamma
@@ -135,6 +155,14 @@ class Agent(ABC):
                 self.explorer.decay()
 
             self.add_step_callback(decay_random_explorer_epsilon)
+
+            if self.tensor_board_log:
+                def add_epsilon_to_tensorboard(training_progress: TrainingProgress):
+                    if self.summary_writer:
+                        self.summary_writer.add_scalar("random explorer Epsilon", self.explorer.epsilon, training_progress.tries)
+
+                self.add_progress_callback(add_epsilon_to_tensorboard)
+
             self.log.info(f"{type(self.explorer).__name__} linked correctly")
 
         elif isinstance(self.explorer, NoisyExplorer):

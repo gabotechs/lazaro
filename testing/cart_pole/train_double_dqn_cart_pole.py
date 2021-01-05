@@ -1,4 +1,5 @@
 import numpy as np
+import os
 import typing as T
 from collections import deque
 import torch
@@ -9,7 +10,7 @@ from agents.explorers import NoisyExplorer, NoisyExplorerParams, RandomExplorer,
 from agents.replay_buffers import NStepsPrioritizedReplayBuffer, NStepPrioritizedReplayBufferParams
 from environments import CartPole
 
-from testing.helpers import train
+os.environ["LOG_LEVEL"] = "WARNING"
 
 
 class CustomCartPole(CartPole):
@@ -101,14 +102,14 @@ RANDOM_EXPLORER_PARAMS = RandomExplorerParams(init_ep=1.0, final_ep=0.01, decay_
 AGENT_PARAMS = DoubleDqnHyperParams(lr=0.01, gamma=0.95, ensure_every=10)
 TRAINING_PARAMS = TrainingParams(learn_every=1, batch_size=64, episodes=5000)
 REPLAY_BUFFER_PARAMS = NStepPrioritizedReplayBufferParams(max_len=5000, gamma=AGENT_PARAMS.gamma, n_step=3, alpha=0.6,
-                                                          init_beta=0.4, final_beta=1.0, increase_beta=1e-4)
+                                                          init_beta=0.4, final_beta=1.0, increase_beta=1e-5)
 
 if __name__ == "__main__":
     agent = CustomDoubleDqnAgent(
         len(env.get_action_space()),
         AGENT_PARAMS,
         TRAINING_PARAMS,
-        NoisyExplorer(NOISY_EXPLORER_PARAMS),
+        RandomExplorer(RANDOM_EXPLORER_PARAMS),
         NStepsPrioritizedReplayBuffer(REPLAY_BUFFER_PARAMS)
     )
-    train(agent, env)
+    agent.train(env)
