@@ -107,7 +107,7 @@ class DqnAgent(Agent, ABC):
                 self.learn(batch)
                 if not is_healthy:
                     is_healthy = True
-                    self.call_healthy_callbacks(type(env).__name__)
+                    self.call_healthy_callbacks(env)
 
             if final:
                 self.call_progress_callbacks(TrainingProgress(episode, steps_survived, accumulated_reward))

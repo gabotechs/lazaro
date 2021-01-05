@@ -68,7 +68,7 @@ class DoubleDqnAgent(DqnAgent, ABC):
                 self.learn(batch)
                 if not is_healthy:
                     is_healthy = True
-                    self.call_healthy_callbacks(type(env).__name__)
+                    self.call_healthy_callbacks(env)
 
             if i % self.hp.ensure_every == 0:
                 self.ensure_learning()

@@ -1,4 +1,5 @@
 from abc import ABC, abstractmethod
+import copy
 import typing as T
 import torch
 import os
@@ -13,6 +14,7 @@ from ...replay_buffers import AnyReplayBuffer, ReplayBufferEntry, NStepsPrioriti
 from .models import HyperParams, TrainingProgress, TrainingParams, LearningStep, TrainingStep
 from ...explorers.noisy_explorer import NoisyLinear
 from logger import get_logger
+from plotter import TensorBoard
 
 
 class Agent(ABC):
@@ -35,12 +37,13 @@ class Agent(ABC):
         self.device: str = "cuda" if use_gpu else "cpu"
         self.use_gpu: bool = use_gpu
         self.save_progress: bool = save_progress
-        self.healthy_callbacks: T.List[T.Callable[[str], None]] = []
+        self.healthy_callbacks: T.List[T.Callable[[Environment], None]] = []
         self.step_callbacks: T.List[T.Callable[[TrainingStep], None]] = []
         self.progress_callbacks: T.List[T.Callable[[TrainingProgress], None]] = []
         self.learning_callbacks: T.List[T.Callable[[LearningStep], None]] = []
         self.model_wrappers: T.List[T.Callable[[torch.nn.Module], torch.nn.Module]] = []
         self.save_path: T.Union[None, str] = None
+        self.summary_writer: T.Union[TensorBoard, None] = None
         self.reward_record: T.List[float] = []
         self.loss_record: T.List[float] = []
         self.link_replay_buffer()
@@ -51,7 +54,7 @@ class Agent(ABC):
         if self.save_progress:
             self.log.info("linking progress callbacks...")
 
-            def init_save_callback(env_name: str):
+            def init_save_callback(env: Environment):
                 self.log.info("initializing save callback triggered")
                 base = os.environ.get("SAVE_DIR", "data")
                 if base.endswith("/"):
@@ -61,13 +64,18 @@ class Agent(ABC):
                 today = str(datetime.datetime.now().date())
                 now = str(datetime.datetime.now().time().strftime("%H:%M:%S"))
                 folder = ""
-                for sub_folder in [base, agent, env_name, today, now]:
+                for sub_folder in [base, agent, type(env).__name__, today, now]:
                     folder = os.path.join(folder, sub_folder)
                     if not os.path.isdir(folder):
                         self.log.info(f"folder {folder} does not exists, creating it...")
                         os.mkdir(folder)
                 self.log.info(f"all save folders created: {folder}")
                 self.save_path = folder
+                self.summary_writer = TensorBoard(folder)
+                for attr, value in self.__dict__.items():
+                    if isinstance(value, torch.nn.Module) and not attr.startswith("loss"):
+                        self.summary_writer.add_graph(value, self.preprocess(env.last_s).to(self.device))
+                        break
                 agent_info_path = os.path.join(folder, "agent.json")
                 json.dump(self.get_info(), open(agent_info_path, "w"), indent=4)
                 self.log.info("agent.json created correctly")
@@ -153,7 +161,7 @@ class Agent(ABC):
         else:
             self.log.info(f"{type(self.explorer).__name__} explorer does not need linking")
 
-    def add_healthy_callback(self, cbk: T.Callable[[], None]):
+    def add_healthy_callback(self, cbk: T.Callable[[Environment], None]):
         self.healthy_callbacks.append(cbk)
         self.log.info(f"added new healthy callback, there are {len(self.healthy_callbacks)} healthy callbacks")
 
@@ -169,7 +177,7 @@ class Agent(ABC):
         self.learning_callbacks.append(cbk)
         self.log.info(f"added new learn callback, there are {len(self.learning_callbacks)} learn callbacks")
 
-    def call_healthy_callbacks(self, env_name: str):
+    def call_healthy_callbacks(self, env_name: Environment):
         self.log.debug("calling healthy callbacks...")
         for cbk in self.healthy_callbacks:
             cbk(env_name)

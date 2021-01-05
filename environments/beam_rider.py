@@ -19,7 +19,7 @@ class BeamRider(Environment):
     def reset(self) -> np.ndarray:
         return self.env.reset()
 
-    def step(self, action: int) -> T.Tuple[np.ndarray, float, bool]:
+    def do_step(self, action: int) -> T.Tuple[np.ndarray, float, bool]:
         s, r, f, _ = self.env.step(action)
         return s, r, f
 

@@ -33,8 +33,8 @@ class CustomCartPole(CartPole):
         self.frame_history.append(np.array([s[0], s[2]]))
         return np.array(self.frame_history)
 
-    def step(self, action: int) -> T.Tuple[np.ndarray, float, bool]:
-        s, r, f = super(CustomCartPole, self).step(action)
+    def do_step(self, action: int) -> T.Tuple[np.ndarray, float, bool]:
+        s, r, f = super(CustomCartPole, self).do_step(action)
         self.frame_history.append(np.array([s[0], s[2]]))
         return np.array(self.frame_history), r, f
 

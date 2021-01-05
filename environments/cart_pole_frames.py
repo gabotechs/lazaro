@@ -21,7 +21,7 @@ class CartPoleFrames(Environment):
         self.env.reset()
         return self.env.render(mode="rgb_array").copy()
 
-    def step(self, action: int) -> T.Tuple[np.ndarray, float, bool]:
+    def do_step(self, action: int) -> T.Tuple[np.ndarray, float, bool]:
         _, r, f, _ = self.env.step(action)
         return self.env.render(mode="rgb_array").copy(), r, f
 

@@ -7,3 +7,4 @@ pycairo
 cairocffi
 coloredlogs
 pytest
+tensorboard

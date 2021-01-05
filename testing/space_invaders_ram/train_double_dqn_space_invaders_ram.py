@@ -32,7 +32,7 @@ class CustomSpaceInvadersRam(SpaceInvadersRam):
         self.frame_history.append(s)
         return np.array(self.frame_history)
 
-    def step(self, action: int) -> T.Tuple[np.ndarray, float, bool]:
+    def do_step(self, action: int) -> T.Tuple[np.ndarray, float, bool]:
         s, r, f = super(CustomSpaceInvadersRam, self).step(action)
         self.frame_history.append(s)
         return np.array(self.frame_history), r, f
