@@ -98,7 +98,7 @@ class Agent(ABC):
             def checkpoint_save_callback(training_progress: TrainingProgress):
                 self.log.debug("save callback triggered")
                 if self.save_path is None:
-                    self.log.warning("progress saving aborted, agent cannot be considered healthy yet")
+                    self.log.info("progress saving aborted, agent cannot be considered healthy yet")
                     return
                 folder_checkpoints = os.path.join(self.save_path, "checkpoints")
                 if not os.path.isdir(folder_checkpoints):
