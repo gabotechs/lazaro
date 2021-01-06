@@ -1,5 +1,4 @@
 from abc import ABC, abstractmethod
-import copy
 import typing as T
 import torch
 import os
@@ -62,6 +61,30 @@ class Agent(ABC):
                     self.summary_writer.add_scalar("episode reward", training_progress.total_reward, training_progress.tries)
 
             self.add_progress_callback(log_progress)
+
+            modules: T.Dict[torch.nn.Module, T.Dict] = {}
+            modules_names: T.List[str] = []
+
+            def forward_hook(module: torch.nn.Module, x: T.Tuple[torch.Tensor], y: torch.Tensor):
+                if len(modules_names) == 0:
+                    for attr, value in self.__dict__.items():
+                        if isinstance(value, torch.nn.Module) and not attr.startswith("loss"):
+                            modules_names.append(attr)
+                if module not in modules:
+                    modules[module] = {"name": modules_names[len(modules)], "times": 0, "renders": 0}
+                if self.summary_writer and y.shape[0] > 1:
+                    if modules[module]["times"] % 1000 == 0:
+                        self.summary_writer.add_embedding(y,
+                                                          tag=modules[module]["name"],
+                                                          global_step=modules[module]["renders"])
+                        modules[module]["renders"] += 1
+                    modules[module]["times"] += 1
+
+            def model_wrapper(model: torch.nn.Module):
+                model.register_forward_hook(forward_hook)
+                return model
+
+            self.model_wrappers.append(model_wrapper)
 
     def link_saver(self):
         if self.save_progress:

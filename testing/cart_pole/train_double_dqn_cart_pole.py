@@ -68,7 +68,7 @@ class CustomActionEstimator(torch.nn.Module):
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         m = None
         states = []
-        for i in range(x.size()[1]):
+        for i in range(x.shape[1]):
             ctx_x = F.relu(self.ctx_linear_1(x[:, i, ...]))
             m = self.ctx_gru(ctx_x, m)
             states.append(m)
@@ -78,7 +78,7 @@ class CustomActionEstimator(torch.nn.Module):
 
         attn_m = None
         attn_weights = []
-        for i in range(x.size()[1]):
+        for i in range(x.shape[1]):
             attn_m = self.attn_gru(in_x, attn_m)
             attn_w = self.attn_condenser(attn_m)
             attn_weights.append(attn_w)

@@ -10,8 +10,6 @@ from agents.replay_buffers import NStepsPrioritizedReplayBuffer, NStepPrioritize
 from environments import SpaceInvaders
 from plotter import Renderer
 
-from testing.helpers import train
-
 FRAME_HISTORY = 2
 PLOT_INTERNAL_STATES_EVERY = 0
 
@@ -100,11 +98,11 @@ class CustomActionEstimator(torch.nn.Module):
             renderer.render(filter_index, title, frame)
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
-        batch_size = x.size()[0]
+        batch_size = x.shape[0]
         is_normal_forward = batch_size == 1
         m = self.init_hidden_state(batch_size)
         x1 = x[:, -1, ...]
-        for i in range(x.size()[1]):
+        for i in range(x.shape[1]):
             x1 = self.max_pool(x[:, i, ...])
             x1 = F.relu(self.conv1(x1))
             if is_normal_forward and PLOT_INTERNAL_STATES_EVERY and self._forward_count % PLOT_INTERNAL_STATES_EVERY == 0 and i == x.size()[1]-1:
