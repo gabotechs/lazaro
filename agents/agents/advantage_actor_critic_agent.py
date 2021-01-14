@@ -122,8 +122,8 @@ class AdvantageActorCriticAgent(Agent, ABC):
                     self.call_healthy_callbacks(env)
 
             if final:
-                self.call_progress_callbacks(TrainingProgress(episode, steps_survived, accumulated_reward))
-                if episode >= self.tp.episodes:
+                must_exit = self.call_progress_callbacks(TrainingProgress(episode, steps_survived, accumulated_reward))
+                if episode >= self.tp.episodes or must_exit:
                     return
 
                 accumulated_reward = 0

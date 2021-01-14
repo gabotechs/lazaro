@@ -73,8 +73,8 @@ class MonteCarloAdvantageActorCriticAgent(AdvantageActorCriticAgent, ABC):
                     step.r = (step.r - mean) / (std + eps)
                     self.replay_buffer.add(step)
 
-                self.call_progress_callbacks(TrainingProgress(episode, steps_survived, accumulated_reward))
-                if episode >= self.tp.episodes:
+                must_exit = self.call_progress_callbacks(TrainingProgress(episode, steps_survived, accumulated_reward))
+                if episode >= self.tp.episodes or must_exit:
                     return
 
                 accumulated_reward = 0

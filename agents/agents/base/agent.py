@@ -40,7 +40,7 @@ class Agent(ABC):
         self.tensor_board_log: bool = tensor_board_log
         self.healthy_callbacks: T.List[T.Callable[[Environment], None]] = []
         self.step_callbacks: T.List[T.Callable[[TrainingStep], None]] = []
-        self.progress_callbacks: T.List[T.Callable[[TrainingProgress], None]] = []
+        self.progress_callbacks: T.List[T.Callable[[TrainingProgress], bool]] = []
         self.learning_callbacks: T.List[T.Callable[[LearningStep], None]] = []
         self.model_wrappers: T.List[T.Callable[[torch.nn.Module], torch.nn.Module]] = []
         self.save_path: T.Union[None, str] = None
@@ -59,6 +59,7 @@ class Agent(ABC):
             def log_progress(training_progress: TrainingProgress):
                 if self.summary_writer:
                     self.summary_writer.add_scalar("episode reward", training_progress.total_reward, training_progress.tries)
+                return False
 
             self.add_progress_callback(log_progress)
 
@@ -107,11 +108,12 @@ class Agent(ABC):
                         os.mkdir(folder)
                 self.log.info(f"all save folders created: {folder}")
                 self.save_path = folder
-                self.summary_writer = TensorBoard(folder)
-                for attr, value in self.__dict__.items():
-                    if isinstance(value, torch.nn.Module) and not attr.startswith("loss"):
-                        self.summary_writer.add_graph(value, self.preprocess(env.last_s).to(self.device))
-                        break
+                if self.tensor_board_log:
+                    self.summary_writer = TensorBoard(folder)
+                    for attr, value in self.__dict__.items():
+                        if isinstance(value, torch.nn.Module) and not attr.startswith("loss"):
+                            self.summary_writer.add_graph(value, self.preprocess(env.last_s).to(self.device))
+                            break
                 agent_info_path = os.path.join(folder, "agent.json")
                 json.dump(self.get_info(), open(agent_info_path, "w"), indent=4)
                 self.log.info("agent.json created correctly")
@@ -130,6 +132,7 @@ class Agent(ABC):
                 folder_checkpoints_checkpoint = os.path.join(folder_checkpoints, str(time.time())+".json")
                 json.dump(training_progress.__dict__, open(folder_checkpoints_checkpoint, "w"))
                 self.log.debug("checkpoint saved correctly")
+                return False
 
             self.add_progress_callback(checkpoint_save_callback)
             self.log.info("progress callbacks linked correctly")
@@ -159,6 +162,7 @@ class Agent(ABC):
                 def add_beta_to_tensorboard(training_progress: TrainingProgress):
                     if self.summary_writer:
                         self.summary_writer.add_scalar("prioritized replay buffer Beta", self.replay_buffer.beta, training_progress.tries)
+                    return False
 
                 self.add_progress_callback(add_beta_to_tensorboard)
 
@@ -180,9 +184,10 @@ class Agent(ABC):
             self.add_step_callback(decay_random_explorer_epsilon)
 
             if self.tensor_board_log:
-                def add_epsilon_to_tensorboard(training_progress: TrainingProgress):
+                def add_epsilon_to_tensorboard(training_progress: TrainingProgress) -> bool:
                     if self.summary_writer:
                         self.summary_writer.add_scalar("random explorer Epsilon", self.explorer.epsilon, training_progress.tries)
+                    return False
 
                 self.add_progress_callback(add_epsilon_to_tensorboard)
 
@@ -220,7 +225,7 @@ class Agent(ABC):
         self.step_callbacks.append(cbk)
         self.log.info(f"added new step callback, there are {len(self.step_callbacks)} step callbacks")
 
-    def add_progress_callback(self, cbk: T.Callable[[TrainingProgress], None]):
+    def add_progress_callback(self, cbk: T.Callable[[TrainingProgress], bool]):
         self.progress_callbacks.append(cbk)
         self.log.info(f"added new progress callback, there are {len(self.progress_callbacks)} progress callbacks")
 
@@ -241,12 +246,17 @@ class Agent(ABC):
             cbk(training_step)
         self.log.debug("all step callbacks called")
 
-    def call_progress_callbacks(self, training_progress: TrainingProgress):
+    def call_progress_callbacks(self, training_progress: TrainingProgress) -> bool:
         self.log.info(f"new training progress: {training_progress.__dict__}")
         self.log.debug("calling progress callbacks...")
-        for cbk in self.progress_callbacks:
-            cbk(training_progress)
+        must_exit = False
+        for i, cbk in enumerate(self.progress_callbacks):
+            may_exit = cbk(training_progress)
+            if may_exit:
+                must_exit = True
+                self.log.warning(f"progress callback {i} said that training should end")
         self.log.debug("all progress callbacks called")
+        return must_exit
 
     def call_learn_callbacks(self, learning_step: LearningStep):
         self.log.debug(f"new learning step")

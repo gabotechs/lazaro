@@ -19,8 +19,12 @@ class DoubleDqnAgent(DqnAgent, ABC):
                  tp: TrainingParams,
                  explorer: T.Union[AnyExplorer, None],
                  replay_buffer: AnyReplayBuffer,
-                 use_gpu: bool = True):
-        super(DoubleDqnAgent, self).__init__(action_space, hp, tp, explorer, replay_buffer, use_gpu)
+                 use_gpu: bool = True,
+                 save_progress: bool = True,
+                 tensor_board_log: bool = True):
+        super(DoubleDqnAgent, self).__init__(action_space, hp, tp, explorer, replay_buffer,
+                                             use_gpu, save_progress, tensor_board_log)
+
         self.action_evaluator = self.build_model().to(self.device).eval()
 
     def ensure_learning(self) -> None:
@@ -74,8 +78,8 @@ class DoubleDqnAgent(DqnAgent, ABC):
                 self.ensure_learning()
 
             if final:
-                self.call_progress_callbacks(TrainingProgress(episode, steps_survived, accumulated_reward))
-                if episode >= self.tp.episodes:
+                must_exit = self.call_progress_callbacks(TrainingProgress(episode, steps_survived, accumulated_reward))
+                if episode >= self.tp.episodes or must_exit:
                     return
 
                 episode += 1

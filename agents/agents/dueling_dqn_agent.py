@@ -19,13 +19,13 @@ class DuelingDqnNetwork(torch.nn.Module):
             print("WARNING: detected same number of features in the output of the model than the action space")
 
         self.value = torch.nn.Sequential(
-            last_layer_factory(last_layer.out_features, last_layer.out_features),
-            torch.nn.ReLU(),
+            # last_layer_factory(last_layer.out_features, last_layer.out_features),
+            # torch.nn.ReLU(),
             last_layer_factory(last_layer.out_features, 1)
         )
         self.advantage = torch.nn.Sequential(
-            last_layer_factory(last_layer.out_features, last_layer.out_features),
-            torch.nn.ReLU(),
+            # last_layer_factory(last_layer.out_features, last_layer.out_features),
+            # torch.nn.ReLU(),
             last_layer_factory(last_layer.out_features, action_space)
         )
 

@@ -10,7 +10,7 @@ class TensorBoard(SummaryWriter):
         super(TensorBoard, self).__init__(path)
         try:
             self.process = subprocess.Popen(["tensorboard", "--logdir="+path], shell=False)
-            threading.Thread(target=lambda: time.sleep(2) or webbrowser.open("http://localhost:6006")).start()
+            threading.Thread(target=lambda: time.sleep(3) or webbrowser.open("http://localhost:6006")).start()
         except FileNotFoundError:
             print("tensorboard is not installed")
 
