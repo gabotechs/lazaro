@@ -275,6 +275,12 @@ class Agent(ABC):
             self.log.info("model wrapped correctly")
         return model
 
+    def last_layer_factory(self, in_features: int, out_features: int):
+        if isinstance(self.explorer, NoisyExplorer):
+            return NoisyLinear(in_features, out_features, self.explorer.ep.std_init)
+        else:
+            return torch.nn.Linear(in_features, out_features)
+
     def get_self_class_name(self):
         return self.__class__.__bases__[0].__name__
 

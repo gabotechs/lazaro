@@ -1,9 +1,11 @@
 from abc import ABC
 import typing as T
 import torch
+import torch.nn.functional as F
 import numpy as np
 
 from ..explorers import AnyExplorer
+from ..explorers.noisy_explorer import NoisyLinear
 from environments import Environment
 from ..replay_buffers import AnyReplayBuffer, ReplayBufferEntry
 from agents.agents.base.models import ACHyperParams, TrainingProgress, TrainingParams, LearningStep, TrainingStep
@@ -11,24 +13,34 @@ from agents.agents.base.agent import Agent
 
 
 class Actor(torch.nn.Module):
-    def __init__(self, model: torch.nn.Module):
+    def __init__(self, model: torch.nn.Module, action_size: int, last_layer_factory: T.Callable[[int, int], torch.nn.Module]):
         super(Actor, self).__init__()
         self.model = model
-        self.softmax = torch.nn.Softmax(1)
+        last_layer = list(model.modules())[-1]
+        if not isinstance(last_layer, (torch.nn.Linear, NoisyLinear)):
+            raise ValueError("the model you have created must have a torch.nn.Linear or "
+                             "agents.explorers.noisy_explorer.NoisyLinear in the last layer")
+
+        if last_layer.out_features == action_size:
+            print("WARNING: detected same number of features in the output of the model than the action space")
+
+        self.linear = last_layer_factory(last_layer.out_features, action_size)
 
     def forward(self, x):
         x = self.model(x)
-        return self.softmax(x)
+        return F.softmax(self.linear(x), dim=1)
 
 
 class Critic(torch.nn.Module):
-    def __init__(self, model: torch.nn.Module):
+    def __init__(self, model: torch.nn.Module, last_layer_factory: T.Callable[[int, int], torch.nn.Module]):
         super(Critic, self).__init__()
         self.model = model
         last_layer = list(model.modules())[-1]
-        if not isinstance(last_layer, torch.nn.Linear):
-            raise ValueError("the model you have created must have a torch.nn.Linear in the last layer")
-        self.linear = torch.nn.Linear(last_layer.out_features, 1)
+        if not isinstance(last_layer, (torch.nn.Linear, NoisyLinear)):
+            raise ValueError("the model you have created must have a torch.nn.Linear or "
+                             "agents.explorers.noisy_explorer.NoisyLinear in the last layer")
+
+        self.linear = last_layer_factory(last_layer.out_features, 1)
 
     def forward(self, x):
         x = self.model(x)
@@ -37,6 +49,8 @@ class Critic(torch.nn.Module):
 
 class AdvantageActorCriticAgent(Agent, ABC):
     hp: ACHyperParams
+    actor_class = Actor
+    critic_class = Critic
 
     def __init__(self,
                  action_space: int,
@@ -44,22 +58,23 @@ class AdvantageActorCriticAgent(Agent, ABC):
                  tp: TrainingParams,
                  explorer: T.Union[AnyExplorer, None],
                  replay_buffer: AnyReplayBuffer,
-                 use_gpu: bool = True):
-        super(AdvantageActorCriticAgent, self).__init__(action_space, hp, tp, explorer, replay_buffer, use_gpu)
+                 use_gpu: bool = True,
+                 save_progress: bool = True,
+                 tensor_board_log: bool = True):
+        super(AdvantageActorCriticAgent, self).__init__(action_space, hp, tp, explorer, replay_buffer,
+                                                        use_gpu, save_progress, tensor_board_log)
 
-        self.actor = self.build_actor(self.model_factory().to(self.device)).to(self.device)
-        self.critic = self.build_critic(self.model_factory().to(self.device)).to(self.device)
+        self.actor = self.build_actor().to(self.device)
+        self.critic = self.build_critic().to(self.device)
         self.actor_optimizer = torch.optim.Adam(self.actor.parameters(), lr=hp.a_lr)
         self.critic_optimizer = torch.optim.Adam(self.critic.parameters(), lr=hp.c_lr)
         self.loss_f = torch.nn.MSELoss(reduction="none").to(self.device)
 
-    @staticmethod
-    def build_actor(model: torch.nn.Module):
-        return Actor(model)
+    def build_actor(self) -> torch.nn.Module:
+        return self.actor_class(self.build_model().to(self.device), self.action_space, self.last_layer_factory)
 
-    @staticmethod
-    def build_critic(model: torch.nn.Module):
-        return Critic(model)
+    def build_critic(self):
+        return self.critic_class(self.build_model().to(self.device), self.last_layer_factory)
 
     def postprocess(self, t: torch.Tensor) -> np.ndarray:
         return np.array(t.squeeze(0))

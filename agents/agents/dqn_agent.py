@@ -52,14 +52,7 @@ class DqnAgent(Agent, ABC):
 
     def build_model(self) -> torch.nn.Module:
         model = super(DqnAgent, self).build_model()
-
-        def last_layer_factory(in_features: int, out_features: int):
-            if isinstance(self.explorer, NoisyExplorer):
-                return NoisyLinear(in_features, out_features, self.explorer.ep.std_init)
-            else:
-                return torch.nn.Linear(in_features, out_features)
-
-        return self.network_class(model, self.action_space, last_layer_factory)
+        return self.network_class(model, self.action_space, self.last_layer_factory)
 
     def infer(self, x: np.ndarray) -> np.ndarray:
         with torch.no_grad():
