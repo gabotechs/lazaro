@@ -8,11 +8,11 @@ import time
 import numpy as np
 
 from environments import Environment
-from agents.explorers import AnyExplorer, RandomExplorer, NoisyExplorer
-from agents.replay_buffers import AnyReplayBuffer, ReplayBufferEntry, NStepsPrioritizedReplayBuffer, \
+from ..explorers import AnyExplorer, RandomExplorer, NoisyExplorer
+from ..replay_buffers import AnyReplayBuffer, ReplayBufferEntry, NStepsPrioritizedReplayBuffer, \
     PrioritizedReplayBuffer, NStepsRandomReplayBuffer
 from .models import HyperParams, TrainingProgress, TrainingParams, LearningStep, TrainingStep
-from agents.explorers.noisy_explorer import NoisyLinear
+from ..explorers.noisy_explorer import NoisyLinear
 from logger import get_logger
 from plotter import TensorBoard
 
@@ -129,13 +129,14 @@ class Agent(ABC):
     def forward_hook(self, module: torch.nn.Module, x: T.Tuple[torch.Tensor], y: torch.Tensor):
         if self.sample_inputs is None:
             self.sample_inputs = x
-        if len(self.module_names) == 0:
-            for attr, value in self.__dict__.items():
-                if isinstance(value, torch.nn.Module) and not attr.startswith("loss"):
-                    self.module_names.append(attr)
-        if module not in self.modules:
-            self.modules[module] = {"name": self.module_names[len(self.modules)], "times": 0, "renders": 0}
         if self.summary_writer:
+            if len(self.module_names) == 0:
+                for attr, value in self.__dict__.items():
+                    if isinstance(value, torch.nn.Module) and not attr.startswith("loss"):
+                        self.module_names.append(attr)
+            if module not in self.modules:
+                self.modules[module] = {"name": self.module_names[len(self.modules)], "times": 0, "renders": 0}
+
             if self.modules[module]["times"] % 1000 == 0:
                 self.summary_writer.add_embedding(y,
                                                   tag=self.modules[module]["name"],
