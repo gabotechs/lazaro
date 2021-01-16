@@ -9,7 +9,8 @@ import numpy as np
 
 from environments import Environment
 from ...explorers import AnyExplorer, RandomExplorer, NoisyExplorer
-from ...replay_buffers import AnyReplayBuffer, ReplayBufferEntry, NStepsPrioritizedReplayBuffer
+from ...replay_buffers import AnyReplayBuffer, ReplayBufferEntry, NStepsPrioritizedReplayBuffer, \
+    PrioritizedReplayBuffer, NStepsRandomReplayBuffer
 from .models import HyperParams, TrainingProgress, TrainingParams, LearningStep, TrainingStep
 from ...explorers.noisy_explorer import NoisyLinear
 from logger import get_logger
@@ -17,19 +18,6 @@ from plotter import TensorBoard
 
 
 class Agent(ABC):
-    module_names: T.List[str] = []
-    modules: T.Dict[torch.nn.Module, T.Dict] = {}
-    healthy_callbacks: T.List[T.Callable[[Environment], None]] = []
-    step_callbacks: T.List[T.Callable[[TrainingStep], None]] = []
-    progress_callbacks: T.List[T.Callable[[TrainingProgress], bool]] = []
-    learning_callbacks: T.List[T.Callable[[LearningStep], None]] = []
-    model_wrappers: T.List[T.Callable[[torch.nn.Module], torch.nn.Module]] = []
-    save_path: T.Union[None, str] = None
-    summary_writer: T.Union[TensorBoard, None] = None
-    reward_record: T.List[float] = []
-    loss_record: T.List[float] = []
-    sample_input: T.Union[None, torch.Tensor] = None
-
     def __init__(self,
                  action_space: int,
                  hp: HyperParams,
@@ -51,6 +39,20 @@ class Agent(ABC):
         self.use_gpu: bool = use_gpu
         self.save_progress: bool = save_progress
         self.tensor_board_log: bool = tensor_board_log
+
+        self.module_names: T.List[str] = []
+        self.modules: T.Dict[torch.nn.Module, T.Dict] = {}
+        self.healthy_callbacks: T.List[T.Callable[[Environment], None]] = []
+        self.step_callbacks: T.List[T.Callable[[TrainingStep], None]] = []
+        self.progress_callbacks: T.List[T.Callable[[TrainingProgress], bool]] = []
+        self.learning_callbacks: T.List[T.Callable[[LearningStep], None]] = []
+        self.model_wrappers: T.List[T.Callable[[torch.nn.Module], torch.nn.Module]] = []
+        self.save_path: T.Union[None, str] = None
+        self.summary_writer: T.Union[TensorBoard, None] = None
+        self.reward_record: T.List[float] = []
+        self.loss_record: T.List[float] = []
+        self.sample_input: T.Union[None, torch.Tensor] = None
+
         self.link_replay_buffer()
         self.link_explorer()
         self.link_saver()
@@ -91,7 +93,7 @@ class Agent(ABC):
                     self.module_names.append(attr)
         if module not in self.modules:
             self.modules[module] = {"name": self.module_names[len(self.modules)], "times": 0, "renders": 0}
-        if self.summary_writer and y.shape[0] > 1:
+        if self.summary_writer:
             if self.modules[module]["times"] % 1000 == 0:
                 self.summary_writer.add_embedding(y,
                                                   tag=self.modules[module]["name"],
@@ -172,8 +174,8 @@ class Agent(ABC):
         self.replay_buffer.increase_beta()
 
     def link_replay_buffer(self):
-        if isinstance(self.replay_buffer, NStepsPrioritizedReplayBuffer):
-            self.log.info(f"linking {type(self.replay_buffer).__name__}...")
+        if isinstance(self.replay_buffer, (PrioritizedReplayBuffer, NStepsPrioritizedReplayBuffer)):
+            self.log.info(f"linking {type(self.replay_buffer).__name__} priority...")
 
             self.add_learn_callback(self.prioritized_replay_buffer_update_priorities)
             self.add_step_callback(self.prioritized_replay_buffer_increase_beta)
@@ -181,12 +183,14 @@ class Agent(ABC):
             if self.tensor_board_log:
                 self.add_progress_callback(self.tensorboard_log_prioritized_replay_buffer_add_beta)
 
+            self.log.info(f"{type(self.replay_buffer).__name__} priority linked correctly")
+
+        if isinstance(self.replay_buffer, (NStepsPrioritizedReplayBuffer, NStepsRandomReplayBuffer)):
+            self.log.info(f"linking {type(self.replay_buffer).__name__} n_steps...")
             new_gamma = self.hp.gamma ** self.replay_buffer.rp.n_step
             self.log.info(f"refactoring gamma for {type(self.replay_buffer).__name__}: {self.gamma} -> {new_gamma}")
             self.gamma = new_gamma
-            self.log.info(f"{type(self.replay_buffer).__name__} linked correctly")
-        else:
-            self.log.info(f"{type(self.replay_buffer).__name__} replay buffer does not need linking")
+            self.log.info(f"{type(self.replay_buffer).__name__} n_steps linked correctly")
 
     def random_explorer_decay_epsilon(self, _: TrainingStep):
         self.log.debug(f"decay epsilon for {type(self.explorer).__name__} triggered")

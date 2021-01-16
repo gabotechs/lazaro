@@ -5,7 +5,7 @@ import numpy as np
 
 from environments import Environment
 from ..explorers import AnyExplorer
-from ..explorers.noisy_explorer import NoisyLinear, NoisyExplorer
+from ..explorers.noisy_explorer import NoisyLinear
 from ..replay_buffers import ReplayBufferEntry, AnyReplayBuffer
 from .base.models import DqnHyperParams, TrainingParams, TrainingProgress, LearningStep, TrainingStep
 from .base.agent import Agent
