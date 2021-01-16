@@ -8,10 +8,10 @@ from agents.explorers import NoisyExplorer, NoisyExplorerParams
 from environments import CartPole
 
 
-AGENT_PARAMS = ACHyperParams(c_lr=0.01, a_lr=0.03, gamma=0.97)
-TRAINING_PARAMS = TrainingParams(learn_every=1, batch_size=64, episodes=300)
+AGENT_PARAMS = ACHyperParams(c_lr=0.01, a_lr=0.05, gamma=0.97)
+TRAINING_PARAMS = TrainingParams(learn_every=1, batch_size=32, episodes=300)
 NOISY_EXPLORER_PARAMS = NoisyExplorerParams(extra_layers=[], std_init=0.5, reset_noise_every=1)
-REPLAY_BUFFER_PARAMS = NStepPrioritizedReplayBufferParams(max_len=20000, gamma=AGENT_PARAMS.gamma, n_step=6, alpha=0.6,
+REPLAY_BUFFER_PARAMS = NStepPrioritizedReplayBufferParams(max_len=20000, gamma=AGENT_PARAMS.gamma, n_step=3, alpha=0.6,
                                                           init_beta=0.4, final_beta=1.0, increase_beta=1e-4)
 
 

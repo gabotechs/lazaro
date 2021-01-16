@@ -1,5 +1,5 @@
-from agents import NStepsPrioritizedReplayBuffer
-from agents import NStepPrioritizedReplayBufferParams
+from agents.replay_buffers import NStepsPrioritizedReplayBuffer
+from agents.replay_buffers import NStepPrioritizedReplayBufferParams
 from .test_n_steps_random_replay_buffer import is_n_step
 from .test_prioritized_replay_buffer import is_prioritized
 

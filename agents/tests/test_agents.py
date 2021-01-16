@@ -112,16 +112,19 @@ class NN(torch.nn.Module):
 
 
 params = []
-for r_b in [get_random_replay_buffer(),
-            get_n_step_random_replay_buffer(),
-            get_prioritized_replay_buffer(),
-            get_n_step_prioritized_replay_buffer()]:
-    for ex in [get_random_explorer(),
-               get_noisy_explorer()]:
-        for ag in [get_dqn_agent(r_b, ex),
-                   get_double_dqn_agent(r_b, ex),
-                   get_dueling_dqn_agent(r_b, ex),
-                   get_double_dueling_dqn_agent(r_b, ex)]:
+for r_b_f in [get_random_replay_buffer,
+              get_n_step_random_replay_buffer,
+              get_prioritized_replay_buffer,
+              get_n_step_prioritized_replay_buffer]:
+    for ex_f in [get_random_explorer,
+                 get_noisy_explorer]:
+        for ag_f in [get_dqn_agent,
+                     get_double_dqn_agent,
+                     get_dueling_dqn_agent,
+                     get_double_dueling_dqn_agent]:
+            r_b = r_b_f()
+            ex = ex_f()
+            ag = ag_f(r_b, ex)
             params.append(pytest.param(ag, id=f"{ag.get_self_class_name()}({type(r_b).__name__}, {type(ex).__name__})"))
 
 
@@ -134,6 +137,7 @@ def test_agents(agent: Agent):
 
     def on_progress(progress: TrainingProgress):
         record.append(progress)
+        print(progress.total_reward)
         return progress.total_reward > 100
 
     agent.add_progress_callback(on_progress)

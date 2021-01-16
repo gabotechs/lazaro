@@ -1,5 +1,5 @@
 import numpy as np
-from agents import PrioritizedReplayBuffer, PrioritizedReplayBufferParams, ReplayBufferEntry
+from agents.replay_buffers import PrioritizedReplayBuffer, PrioritizedReplayBufferParams, ReplayBufferEntry
 
 
 def is_prioritized(replay_buffer: PrioritizedReplayBuffer):

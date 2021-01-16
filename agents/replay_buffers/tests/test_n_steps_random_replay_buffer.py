@@ -1,6 +1,6 @@
 import numpy as np
-from agents import NStepsRandomReplayBuffer
-from agents import NStepReplayBufferParams, ReplayBufferEntry
+from agents.replay_buffers import NStepsRandomReplayBuffer
+from agents.replay_buffers import NStepReplayBufferParams, ReplayBufferEntry
 from .test_random_replay_buffer import is_random
 
 

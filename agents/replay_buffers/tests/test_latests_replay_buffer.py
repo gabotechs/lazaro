@@ -1,6 +1,6 @@
 import numpy as np
-from agents import LatestReplayBuffer
-from agents import ReplayBufferParams, ReplayBufferEntry
+from agents.replay_buffers import LatestReplayBuffer
+from agents.replay_buffers import ReplayBufferParams, ReplayBufferEntry
 
 
 def test_last_elements_are_retrieved():

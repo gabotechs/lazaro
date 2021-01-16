@@ -21,7 +21,7 @@ def test_generated_model_works():
 
     op = torch.optim.Adam(model.parameters(), lr=0.01)
 
-    bs, ep = 8, 4000
+    bs, ep = 8, 6000
     x = torch.zeros((bs, 2), dtype=torch.float32)
     y = torch.zeros((bs, 1), dtype=torch.float32)
     for i in range(ep):
