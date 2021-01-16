@@ -42,7 +42,6 @@ class Agent(ABC):
 
         self.module_names: T.List[str] = []
         self.modules: T.Dict[torch.nn.Module, T.Dict] = {}
-        self.healthy_callbacks: T.List[T.Callable[[Environment], None]] = []
         self.step_callbacks: T.List[T.Callable[[TrainingStep], None]] = []
         self.progress_callbacks: T.List[T.Callable[[TrainingProgress], bool]] = []
         self.learning_callbacks: T.List[T.Callable[[LearningStep], None]] = []
@@ -51,12 +50,59 @@ class Agent(ABC):
         self.summary_writer: T.Union[TensorBoard, None] = None
         self.reward_record: T.List[float] = []
         self.loss_record: T.List[float] = []
-        self.sample_input: T.Union[None, torch.Tensor] = None
+        self.sample_inputs: T.Union[None, T.List[torch.Tensor]] = None
 
         self.link_replay_buffer()
         self.link_explorer()
         self.link_saver()
         self.link_tensorboard()
+
+    def health_check(self, env: Environment):
+        self.log.info("checking the model is healthy...")
+        s = env.reset()
+        self.log.debug(f"state for testing health is:\n{s}")
+        self.log.info("testing preprocessing...")
+        try:
+            self.preprocess(s)
+        except Exception as e:
+            self.log.error("error while testing preprocessing")
+            raise e
+        self.log.info("preprocessing is correct")
+        self.log.info("testing inference...")
+        try:
+            self.infer(s)
+        except Exception as e:
+            self.log.error("error while testing inference")
+            raise e
+        self.log.info("inference is correct")
+        self.log.info("testing learning...")
+        while len(self.replay_buffer) < 2:
+            a = 0
+            s_, r, final = env.step(a)
+            self.replay_buffer.add(ReplayBufferEntry(s, s_, a, r, final))
+            s = s_
+            if final:
+                s = env.reset()
+
+        batch = self.replay_buffer.sample(2)
+        try:
+            self.learn(batch)
+        except Exception as e:
+            self.log.error("error while testing learning")
+            raise e
+
+        self.log.info("learning is correct")
+        self.log.info("model is healthy!")
+        self.replay_buffer.clear()
+        if self.tensor_board_log or self.save_progress:
+            self.create_save_folder(env)
+
+        if self.tensor_board_log:
+            self.summary_writer = TensorBoard(self.save_path)
+            self.tensorboard_log_model_graph()
+
+        if self.save_progress:
+            self.save_agent_info()
 
     def tensorboard_log_training_progress(self, training_progress: TrainingProgress):
         if self.summary_writer:
@@ -64,14 +110,10 @@ class Agent(ABC):
 
         return False
 
-    def tensorboard_log_model_graph(self, env: Environment):
-        if self.save_path is None:
-            self.create_save_folder(env)
-
-        self.summary_writer = TensorBoard(self.save_path)
+    def tensorboard_log_model_graph(self):
         for attr, value in self.__dict__.items():
-            if isinstance(value, torch.nn.Module) and not attr.startswith("loss") and self.sample_input is not None:
-                self.summary_writer.add_graph(value, self.sample_input.to(self.device))
+            if isinstance(value, torch.nn.Module) and not attr.startswith("loss") and self.sample_inputs is not None:
+                self.summary_writer.add_graph(value, self.sample_inputs)
                 break
 
     def tensorboard_log_random_explorer_add_epsilon(self, training_progress: TrainingProgress) -> bool:
@@ -85,8 +127,8 @@ class Agent(ABC):
         return False
 
     def forward_hook(self, module: torch.nn.Module, x: T.Tuple[torch.Tensor], y: torch.Tensor):
-        if self.sample_input is None:
-            self.sample_input = x[0]
+        if self.sample_inputs is None:
+            self.sample_inputs = x
         if len(self.module_names) == 0:
             for attr, value in self.__dict__.items():
                 if isinstance(value, torch.nn.Module) and not attr.startswith("loss"):
@@ -105,7 +147,6 @@ class Agent(ABC):
         if self.tensor_board_log:
             self.log.info("linking tensorboard callbacks...")
             self.add_progress_callback(self.tensorboard_log_training_progress)
-            self.add_healthy_callback(self.tensorboard_log_model_graph)
 
             def model_wrapper(model: torch.nn.Module):
                 model.register_forward_hook(self.forward_hook)
@@ -130,10 +171,8 @@ class Agent(ABC):
         self.save_path = folder
         self.log.info(f"all save folders created: {folder}")
 
-    def save_agent_info_callback(self, env: Environment):
-        self.log.info("initializing save callback triggered")
-        if self.save_path is None:
-            self.create_save_folder(env)
+    def save_agent_info(self):
+        self.log.info("saving agent info...")
         agent_info_path = os.path.join(self.save_path, "agent.json")
         json.dump(self.get_info(), open(agent_info_path, "w"), indent=4)
         self.log.info("agent.json created correctly")
@@ -155,8 +194,6 @@ class Agent(ABC):
     def link_saver(self):
         if self.save_progress:
             self.log.info("linking saving callbacks...")
-            self.add_healthy_callback(self.create_save_folder)
-            self.add_healthy_callback(self.save_agent_info_callback)
             self.add_progress_callback(self.save_training_progress_callback)
             self.log.info("progress callbacks linked correctly")
         else:
@@ -227,10 +264,6 @@ class Agent(ABC):
         else:
             self.log.info(f"{type(self.explorer).__name__} explorer does not need linking")
 
-    def add_healthy_callback(self, cbk: T.Callable[[Environment], None]):
-        self.healthy_callbacks.append(cbk)
-        self.log.info(f"added new healthy callback, there are {len(self.healthy_callbacks)} healthy callbacks")
-
     def add_step_callback(self, cbk: T.Callable[[TrainingStep], None]):
         self.step_callbacks.append(cbk)
         self.log.info(f"added new step callback, there are {len(self.step_callbacks)} step callbacks")
@@ -242,12 +275,6 @@ class Agent(ABC):
     def add_learn_callback(self, cbk: T.Callable[[LearningStep], None]):
         self.learning_callbacks.append(cbk)
         self.log.info(f"added new learn callback, there are {len(self.learning_callbacks)} learn callbacks")
-
-    def call_healthy_callbacks(self, env_name: Environment):
-        self.log.debug("calling healthy callbacks...")
-        for cbk in self.healthy_callbacks:
-            cbk(env_name)
-        self.log.debug("all healthy callbacks called")
 
     def call_step_callbacks(self, training_step: TrainingStep):
         self.log.debug(f"new training step: {training_step.__dict__}")

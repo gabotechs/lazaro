@@ -14,9 +14,7 @@ NOISY_EXPLORER_PARAMS = NoisyExplorerParams(extra_layers=[], std_init=0.5, reset
 REPLAY_BUFFER_PARAMS = NStepPrioritizedReplayBufferParams(max_len=20000, gamma=AGENT_PARAMS.gamma, n_step=5, alpha=0.6,
                                                           init_beta=0.4, final_beta=1.0, increase_beta=1e-4)
 
-USE_MONTE_CARLO = True
 
-AgentParentClass = MonteCarloAdvantageActorCriticAgent if USE_MONTE_CARLO else AdvantageActorCriticAgent
 env = CartPole()
 
 
@@ -29,7 +27,7 @@ class CustomActionEstimator(torch.nn.Module):
         return F.relu(self.linear1(x))
 
 
-class CustomActorCriticAgent(AgentParentClass):
+class CustomActorCriticAgent(MonteCarloAdvantageActorCriticAgent):
     def model_factory(self) -> torch.nn.Module:
         return CustomActionEstimator(env.get_observation_space()[0])
 

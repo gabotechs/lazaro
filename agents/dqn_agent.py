@@ -82,12 +82,12 @@ class DqnAgent(Agent, ABC):
         self.call_learn_callbacks(LearningStep(batch, [v.item() for v in x], [v.item() for v in y]))
 
     def train(self, env: Environment) -> None:
+        self.health_check(env)
         s = env.reset()
         i = 0
         episode = 1
         steps_survived = 0
         accumulated_reward = 0
-        is_healthy = False
         while True:
             estimated_rewards = self.infer(s)
             a = self.explorer.choose(estimated_rewards, lambda x: np.argmax(estimated_rewards).item())
@@ -101,9 +101,6 @@ class DqnAgent(Agent, ABC):
             if i % self.tp.learn_every == 0 and i != 0 and len(self.replay_buffer) >= self.tp.batch_size:
                 batch = self.replay_buffer.sample(self.tp.batch_size)
                 self.learn(batch)
-                if not is_healthy:
-                    is_healthy = True
-                    self.call_healthy_callbacks(env)
 
             if final:
                 must_exit = self.call_progress_callbacks(TrainingProgress(episode, steps_survived, accumulated_reward))

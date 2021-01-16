@@ -10,9 +10,13 @@ class SegmentTree:
             init_value (float)
         """
         assert capacity > 0 and capacity & (capacity - 1) == 0, "capacity must be positive and a power of 2."
+        self.init_value = init_value
         self.capacity = capacity
         self.tree = [init_value for _ in range(2 * capacity)]
         self.operation = operation
+
+    def clear(self):
+        self.tree = [self.init_value for _ in range(2 * self.capacity)]
 
     def _operate_helper(self, start: int, end: int, node: int, node_start: int, node_end: int) -> float:
         """Returns result of operation in segment."""

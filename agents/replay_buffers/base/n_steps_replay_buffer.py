@@ -36,3 +36,7 @@ class NStepsReplayBuffer(ReplayBuffer, ABC):
         n_step_entry = self._get_n_step_info()
         super(NStepsReplayBuffer, self).add(n_step_entry)
         return True
+
+    def clear(self):
+        super(NStepsReplayBuffer, self).clear()
+        self.n_step_buffer.clear()

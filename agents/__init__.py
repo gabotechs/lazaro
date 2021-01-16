@@ -5,9 +5,8 @@ from .dqn_agent import DqnAgent, DqnHyperParams
 from .double_dqn_agent import DoubleDqnAgent, DoubleDqnHyperParams
 from .double_dueling_dqn_agent import DoubleDuelingDqnAgent, DoubleDuelingDqnHyperParams
 from .dueling_dqn_agent import DuelingDqnAgent, DuelingDqnHyperParams
-import replay_buffers
-import explorers
 from .base.models import TrainingStep, TrainingParams, TrainingProgress, LearningStep
+from . import replay_buffers, explorers
 
 AnyAgent = typing.Union[DqnAgent, DoubleDqnAgent, DuelingDqnAgent, DoubleDuelingDqnAgent, AdvantageActorCriticAgent,
                         MonteCarloAdvantageActorCriticAgent]
