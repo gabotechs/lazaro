@@ -15,9 +15,19 @@ class DqnHyperParams(HyperParams):
 
 
 @dataclass
+class DuelingDqnHyperParams(DqnHyperParams):
+    pass
+
+
+@dataclass
 class DoubleDqnHyperParams(DqnHyperParams):
     lr: float
     ensure_every: int
+
+
+@dataclass
+class DoubleDuelingDqnHyperParams(DoubleDqnHyperParams):
+    pass
 
 
 @dataclass

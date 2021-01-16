@@ -2,7 +2,7 @@ from abc import ABC
 import typing as T
 import torch
 from .explorers.noisy_explorer import NoisyLinear
-from .base.models import DqnHyperParams
+from .base.models import DuelingDqnHyperParams
 from .dqn_agent import DqnAgent
 
 
@@ -34,9 +34,6 @@ class DuelingDqnNetwork(torch.nn.Module):
         v = self.value(x)
         a = self.advantage(x)
         return v + a - a.mean(dim=-1, keepdim=True)
-
-
-DuelingDqnHyperParams = DqnHyperParams
 
 
 class DuelingDqnAgent(DqnAgent, ABC):

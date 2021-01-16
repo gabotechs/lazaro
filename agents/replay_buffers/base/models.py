@@ -26,6 +26,11 @@ class ReplayBufferParams:
 
 
 @dataclass
+class RandomReplayBufferParams(ReplayBufferParams):
+    pass
+
+
+@dataclass
 class NStepReplayBufferParams(ReplayBufferParams):
     n_step: int
     gamma: float
