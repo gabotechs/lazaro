@@ -8,11 +8,11 @@ import time
 import numpy as np
 
 from environments import Environment
-from ...explorers import AnyExplorer, RandomExplorer, NoisyExplorer
-from ...replay_buffers import AnyReplayBuffer, ReplayBufferEntry, NStepsPrioritizedReplayBuffer, \
+from agents.explorers import AnyExplorer, RandomExplorer, NoisyExplorer
+from agents.replay_buffers import AnyReplayBuffer, ReplayBufferEntry, NStepsPrioritizedReplayBuffer, \
     PrioritizedReplayBuffer, NStepsRandomReplayBuffer
 from .models import HyperParams, TrainingProgress, TrainingParams, LearningStep, TrainingStep
-from ...explorers.noisy_explorer import NoisyLinear
+from agents.explorers.noisy_explorer import NoisyLinear
 from logger import get_logger
 from plotter import TensorBoard
 

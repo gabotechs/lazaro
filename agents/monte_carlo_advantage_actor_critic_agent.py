@@ -3,7 +3,7 @@ import typing as T
 import torch
 import numpy as np
 from environments import Environment
-from ..replay_buffers import ReplayBufferEntry, NStepsPrioritizedReplayBuffer, NStepsRandomReplayBuffer
+from .replay_buffers import ReplayBufferEntry, NStepsPrioritizedReplayBuffer, NStepsRandomReplayBuffer
 from .base.models import TrainingProgress, LearningStep, TrainingStep
 from .advantage_actor_critic_agent import AdvantageActorCriticAgent
 

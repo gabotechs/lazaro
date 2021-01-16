@@ -4,12 +4,12 @@ import torch
 import torch.nn.functional as F
 import numpy as np
 
-from ..explorers import AnyExplorer
-from ..explorers.noisy_explorer import NoisyLinear
+from .explorers import AnyExplorer
+from .explorers.noisy_explorer import NoisyLinear
 from environments import Environment
-from ..replay_buffers import AnyReplayBuffer, ReplayBufferEntry
-from agents.agents.base.models import ACHyperParams, TrainingProgress, TrainingParams, LearningStep, TrainingStep
-from agents.agents.base.agent import Agent
+from .replay_buffers import AnyReplayBuffer, ReplayBufferEntry
+from .base.models import ACHyperParams, TrainingProgress, TrainingParams, LearningStep, TrainingStep
+from .base.agent import Agent
 
 
 class Actor(torch.nn.Module):

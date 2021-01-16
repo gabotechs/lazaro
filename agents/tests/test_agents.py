@@ -7,7 +7,7 @@ from agents import DqnAgent, DoubleDqnAgent, DuelingDqnAgent, DoubleDuelingDqnAg
     MonteCarloAdvantageActorCriticAgent
 
 from agents import DqnHyperParams, DoubleDqnHyperParams, TrainingParams, TrainingProgress, ACHyperParams
-from agents.agents.base import Agent
+from agents.base import Agent
 from environments import CartPole
 from agents.replay_buffers import RandomReplayBuffer, NStepsRandomReplayBuffer, NStepsPrioritizedReplayBuffer, \
     PrioritizedReplayBuffer, AnyReplayBuffer
