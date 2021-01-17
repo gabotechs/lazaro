@@ -111,10 +111,21 @@ class Agent(ABC):
         return False
 
     def tensorboard_log_model_graph(self):
+        models: T.Dict[str, torch.nn.Module] = {}
         for attr, value in self.__dict__.items():
             if isinstance(value, torch.nn.Module) and not attr.startswith("loss") and self.sample_inputs is not None:
-                self.summary_writer.add_graph(value, self.sample_inputs)
-                break
+                models[attr] = value
+
+        class AllModels(torch.nn.Module):
+            def __init__(self):
+                super(AllModels, self).__init__()
+                for name, model in models.items():
+                    self.__setattr__(name, model)
+
+            def forward(self, x):
+                return tuple(self.__getattr__(name)(x) for name in models)
+
+        self.summary_writer.add_graph(AllModels(), self.sample_inputs)
 
     def tensorboard_log_random_explorer_add_epsilon(self, training_progress: TrainingProgress) -> bool:
         if self.summary_writer:
