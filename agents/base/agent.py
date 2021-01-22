@@ -35,8 +35,15 @@ class Agent(ABC):
         self.gamma: float = hp.gamma
         self.explorer: T.Union[AnyExplorer, None] = explorer
         self.replay_buffer: AnyReplayBuffer = replay_buffer
-        self.device: str = "cuda" if use_gpu else "cpu"
+        self.device: str = "cpu"
         self.use_gpu: bool = use_gpu
+        if use_gpu:
+            if not torch.cuda.is_available():
+                self.log.warning("cuda is not available, CPU will be used")
+                self.use_gpu = False
+            else:
+                self.device = "cuda"
+
         self.save_progress: bool = save_progress
         self.tensor_board_log: bool = tensor_board_log
 
@@ -123,7 +130,14 @@ class Agent(ABC):
                     self.__setattr__(name, model)
 
             def forward(self, x):
-                return tuple(self.__getattr__(name)(x) for name in models)
+                result_unfolded = []
+                for result in [self.__getattr__(name)(x) for name in models]:
+                    if isinstance(result, tuple):
+                        for folded_result in result:
+                            result_unfolded.append(folded_result)
+                    else:
+                        result_unfolded.append(result)
+                return tuple(result_unfolded)
 
         self.summary_writer.add_graph(AllModels(), self.sample_inputs)
 

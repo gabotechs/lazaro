@@ -1,7 +1,7 @@
 import numpy as np
 import torch
 
-from agents import ActorCriticAgent, ACHyperParams, TrainingParams, TrainingProgress
+from agents import ActorCriticAgent, A2CHyperParams, TrainingParams, TrainingProgress
 from agents.replay_buffers import RandomReplayBuffer
 from environments import CartPole
 from evolutioners import Evolutioner, T_EParams, EvolutionerParams, EvolutionProgress
@@ -59,7 +59,7 @@ def agent_finish_training_condition(x: TrainingProgress):
 
 
 def agent_factory(params: T_EParams) -> ActorCriticAgent:
-    agent_params = ACHyperParams(
+    agent_params = A2CHyperParams(
         c_lr=params["c_lr"].value,
         a_lr=params["a_lr"].value,
         gamma=0.995

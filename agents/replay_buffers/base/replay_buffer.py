@@ -23,6 +23,7 @@ class ReplayBuffer(ABC):
         entry.index = self.ptr
         self.ptr = (self.ptr + 1) % self.rp.max_len
         if not self.filled and self.ptr == 0:
+            print("FFFIIIILLLLEEEEDDDD")
             self.filled = True
         return True
 

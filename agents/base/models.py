@@ -31,9 +31,14 @@ class DoubleDuelingDqnHyperParams(DoubleDqnHyperParams):
 
 
 @dataclass
-class ACHyperParams(HyperParams):
-    c_lr: float
-    a_lr: float
+class A2CHyperParams(HyperParams):
+    lr: float
+
+
+@dataclass
+class PpoHyperParams(A2CHyperParams):
+    clip_factor: float
+    ensure_every: int
 
 
 @dataclass

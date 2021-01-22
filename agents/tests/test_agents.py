@@ -3,10 +3,10 @@ import torch.nn.functional as F
 import numpy as np
 import pytest
 import typing as T
-from agents import DqnAgent, DoubleDqnAgent, DuelingDqnAgent, DoubleDuelingDqnAgent, AdvantageActorCriticAgent, \
-    MonteCarloAdvantageActorCriticAgent
+from agents import DqnAgent, DoubleDqnAgent, DuelingDqnAgent, DoubleDuelingDqnAgent, A2cAgent, \
+    MonteCarloA2cCriticAgent
 
-from agents import DqnHyperParams, DoubleDqnHyperParams, TrainingParams, TrainingProgress, ACHyperParams
+from agents import DqnHyperParams, DoubleDqnHyperParams, TrainingParams, TrainingProgress, A2CHyperParams
 from agents.base import Agent
 from environments import CartPole
 from agents.replay_buffers import RandomReplayBuffer, NStepsRandomReplayBuffer, NStepsPrioritizedReplayBuffer, \

@@ -5,31 +5,27 @@ import numpy as np
 from environments import Environment
 from .replay_buffers import ReplayBufferEntry, NStepsPrioritizedReplayBuffer, NStepsRandomReplayBuffer
 from .base.models import TrainingProgress, LearningStep, TrainingStep
-from .advantage_actor_critic_agent import AdvantageActorCriticAgent
+from .advantage_actor_critic_agent import A2cAgent
 
 
-class MonteCarloAdvantageActorCriticAgent(AdvantageActorCriticAgent, ABC):
+class MonteCarloA2cCriticAgent(A2cAgent, ABC):
     def learn(self, batch: T.List[ReplayBufferEntry]) -> None:
         batch_s = torch.cat([self.preprocess(m.s) for m in batch], 0).to(self.device).requires_grad_(True)
         batch_a = torch.tensor([m.a for m in batch], device=self.device)
         batch_rt = torch.tensor([[m.r] for m in batch], dtype=torch.float32, device=self.device)
         batch_weights = torch.tensor([m.weight for m in batch], device=self.device)
 
-        action_probabilities: torch.Tensor = self.actor(batch_s)
-        state_values: torch.Tensor = self.critic(batch_s)
+        action_probabilities, state_values = self.actor_critic(batch_s)
 
         advantages: torch.Tensor = (batch_rt - state_values.clone().detach()).squeeze(1)
         chosen_action_log_probabilities: torch.Tensor = torch.stack(
             [torch.distributions.Categorical(p).log_prob(a) for p, a in zip(action_probabilities, batch_a)])
-        actor_loss: torch.Tensor = (-chosen_action_log_probabilities * advantages * batch_weights).mean()
-        element_wise_critic_loss: torch.Tensor = self.loss_f(state_values, batch_rt)
-        critic_loss = (element_wise_critic_loss * batch_weights).mean()
-        self.actor_optimizer.zero_grad()
-        self.critic_optimizer.zero_grad()
-        actor_loss.backward()
-        critic_loss.backward()
-        self.actor_optimizer.step()
-        self.critic_optimizer.step()
+        actor_loss: torch.Tensor = -chosen_action_log_probabilities * advantages * batch_weights
+        critic_loss: torch.Tensor = self.loss_f(state_values, batch_rt) * batch_weights
+        loss = (actor_loss + critic_loss).mean()
+        self.actor_critic_optimizer.zero_grad()
+        loss.backward()
+        self.actor_critic_optimizer.step()
         self.call_learn_callbacks(LearningStep(batch, [v.item() for v in state_values], [v.item() for v in batch_rt]))
 
     def train(self, env: Environment) -> None:

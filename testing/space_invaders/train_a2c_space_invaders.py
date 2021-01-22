@@ -2,13 +2,13 @@ import numpy as np
 import typing as T
 import torch
 
-from agents import ActorCriticAgent, ACHyperParams, TrainingParams
+from agents import ActorCriticAgent, A2CHyperParams, TrainingParams
 from agents.replay_buffers import RandomReplayBuffer
 from environments import SpaceInvaders
 
 from testing.helpers import train
 
-AGENT_PARAMS = ACHyperParams(c_lr=0.001, a_lr=0.0001, gamma=0.995)
+AGENT_PARAMS = A2CHyperParams(c_lr=0.001, a_lr=0.0001, gamma=0.995)
 TRAINING_PARAMS = TrainingParams(learn_every=10, batch_size=128, episodes=40)
 MEMORY_LEN = 1000
 
