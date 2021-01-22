@@ -56,10 +56,10 @@ class MonteCarloA2cCriticAgent(A2cAgent, ABC):
             if final:
                 discounted_r = 0
                 reward_array = np.zeros((len(steps_record)))
-                for i, step in enumerate(steps_record[::-1]):
+                for j, step in enumerate(steps_record[::-1]):
                     discounted_r = step.r + self.hp.gamma * discounted_r
                     step.r = discounted_r
-                    reward_array[i] = discounted_r
+                    reward_array[j] = discounted_r
 
                 mean, std, eps = reward_array.mean(), reward_array.std(), np.finfo(np.float32).eps.item()
                 for step in steps_record:

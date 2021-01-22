@@ -15,7 +15,7 @@ class PpoAgent(MonteCarloA2cCriticAgent, ABC):
                  explorer: T.Union[AnyExplorer, None],
                  replay_buffer: AnyReplayBuffer,
                  tp: TrainingParams,
-                 hp: PpoHyperParams,
+                 hp: PpoHyperParams = PpoHyperParams(),
                  use_gpu: bool = True,
                  save_progress: bool = True,
                  tensor_board_log: bool = True):
@@ -38,20 +38,25 @@ class PpoAgent(MonteCarloA2cCriticAgent, ABC):
 
         new_action_probabilities, state_values = self.actor_critic_new(batch_s)
 
-        new_chosen_action_log_probabilities: torch.Tensor = torch.stack(
-            [torch.distributions.Categorical(p).log_prob(a) for p, a in zip(new_action_probabilities, batch_a)])
+        new_chosen_action_log_probabilities_list = []
+        new_chosen_action_log_entropy_list = []
 
-        new_chosen_action_log_entropy: torch.Tensor = torch.stack(
-            [torch.distributions.Categorical(p).entropy() for p, a in zip(new_action_probabilities, batch_a)])
+        for p, a in zip(new_action_probabilities, batch_a):
+            dist = torch.distributions.Categorical(p)
+            new_chosen_action_log_probabilities_list.append(dist.log_prob(a))
+            new_chosen_action_log_entropy_list.append(dist.entropy())
+
+        new_chosen_action_log_probabilities: torch.Tensor = torch.stack(new_chosen_action_log_probabilities_list)
+        new_chosen_action_log_entropy: torch.Tensor = torch.stack(new_chosen_action_log_entropy_list)
 
         with torch.no_grad():
             old_action_probabilities, _ = self.actor_critic(batch_s)
             old_chosen_action_log_probabilities: torch.Tensor = torch.stack(
                 [torch.distributions.Categorical(p).log_prob(a) for p, a in zip(old_action_probabilities, batch_a)])
 
-        advantages: torch.Tensor = (batch_rt - state_values.clone().detach()).squeeze(1)
+        advantages: torch.Tensor = (batch_rt - state_values.detach()).squeeze(1)
 
-        ratios = torch.exp(new_chosen_action_log_probabilities-old_chosen_action_log_probabilities.detach())
+        ratios = torch.exp(new_chosen_action_log_probabilities-old_chosen_action_log_probabilities)
         surrogate_loss_1 = ratios * advantages
         surrogate_loss_2 = torch.clamp(ratios, 1 - self.hp.clip_factor, 1 + self.hp.clip_factor) * advantages
 

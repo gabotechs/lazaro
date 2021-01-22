@@ -15,7 +15,7 @@ class CustomNN(torch.nn.Module):
         return F.relu(self.linear(x))
 
 
-class CustomAgent(agents.DoubleDuelingDqnAgent):
+class CustomAgent(agents.PpoAgent):
     def model_factory(self):
         return CustomNN()
 
