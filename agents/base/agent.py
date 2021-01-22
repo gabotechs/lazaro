@@ -308,7 +308,8 @@ class Agent(ABC):
     def call_step_callbacks(self, training_step: TrainingStep):
         self.log.debug(f"new training step: {training_step.__dict__}")
         self.log.debug("calling step callbacks...")
-        for cbk in self.step_callbacks:
+        for i, cbk in enumerate(self.step_callbacks):
+            self.log.debug(f"calling step callback {i}, {cbk}")
             cbk(training_step)
         self.log.debug("all step callbacks called")
 
@@ -317,6 +318,7 @@ class Agent(ABC):
         self.log.debug("calling progress callbacks...")
         must_exit = False
         for i, cbk in enumerate(self.progress_callbacks):
+            self.log.debug(f"calling progress callback {i}, {cbk}")
             may_exit = cbk(training_progress)
             if may_exit:
                 must_exit = True
@@ -325,9 +327,10 @@ class Agent(ABC):
         return must_exit
 
     def call_learn_callbacks(self, learning_step: LearningStep):
-        self.log.debug(f"new learning step")
+        self.log.debug(f"new learning step: {learning_step.__dict__}"[:45]+"...")
         self.log.debug("calling learning callbacks...")
-        for cbk in self.learning_callbacks:
+        for i, cbk in enumerate(self.learning_callbacks):
+            self.log.debug(f"calling learning callback {i}, {cbk}")
             cbk(learning_step)
         self.log.debug("all learning callbacks called")
 
@@ -336,7 +339,7 @@ class Agent(ABC):
         model = self.model_factory()
         self.log.info("model built correctly")
         for i, wrapper in enumerate(self.model_wrappers):
-            self.log.info(f"wrapping model with wrapper {i}")
+            self.log.info(f"wrapping model with wrapper {i}, {wrapper}")
             model = wrapper(model)
             self.log.info("model wrapped correctly")
         return model

@@ -63,6 +63,7 @@ class ModelWithNoisyLayers(torch.nn.Module):
 
 class NoisyExplorer(Explorer):
     def __init__(self, ep: NoisyExplorerParams = NoisyExplorerParams()):
+        super(NoisyExplorer, self).__init__()
         self.ep: NoisyExplorerParams = ep
 
     def wrap_model(self, model: torch.nn.Module) -> torch.nn.Module:

@@ -6,7 +6,7 @@ from dataclasses import dataclass
 class RandomExplorerParams:
     init_ep: float = 1.0
     final_ep: float = 0.01
-    decay_ep: float = 1e-4
+    decay_ep: float = 1e-3
 
 
 @dataclass

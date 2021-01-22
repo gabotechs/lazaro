@@ -22,7 +22,7 @@ class MemoryReplayBufferEntry(ReplayBufferEntry):
 
 @dataclass
 class ReplayBufferParams:
-    max_len: int = 1e5
+    max_len: int = 10000
 
 
 @dataclass

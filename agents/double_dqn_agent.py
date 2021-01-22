@@ -18,7 +18,7 @@ class DoubleDqnAgent(DqnAgent, ABC):
                  explorer: T.Union[AnyExplorer, None],
                  replay_buffer: AnyReplayBuffer,
                  tp: TrainingParams,
-                 hp: DoubleDqnHyperParams,
+                 hp: DoubleDqnHyperParams = DoubleDqnHyperParams(),
                  use_gpu: bool = True,
                  save_progress: bool = True,
                  tensor_board_log: bool = True):
