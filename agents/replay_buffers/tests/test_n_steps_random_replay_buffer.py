@@ -1,11 +1,12 @@
 import numpy as np
+from agents.replay_buffers.base.n_steps_replay_buffer import NStepsReplayBuffer
 from agents.replay_buffers import NStepsRandomReplayBuffer
 from agents.replay_buffers import NStepReplayBufferParams, ReplayBufferEntry
 from .test_random_replay_buffer import is_random
 
 
-def is_n_step(replay_buffer):
-    n_step, gamma = replay_buffer.rp.n_step, replay_buffer.rp.gamma
+def is_n_step(replay_buffer: NStepsReplayBuffer):
+    n_step, gamma = replay_buffer.rp.n_step, replay_buffer.gamma
     final_step = 6
     records = []
     for i in range(14):
@@ -26,12 +27,12 @@ def is_n_step(replay_buffer):
 
 
 def test_elements_are_n_step():
-    nrp = NStepReplayBufferParams(max_len=15, n_step=3, gamma=0.6)
+    nrp = NStepReplayBufferParams(max_len=15, n_step=3)
     replay_buffer = NStepsRandomReplayBuffer(nrp)
     is_n_step(replay_buffer)
 
 
 def test_elements_retrieved_are_random():
-    nrp = NStepReplayBufferParams(max_len=10, n_step=1, gamma=0.9)
+    nrp = NStepReplayBufferParams(max_len=10, n_step=1)
     replay_buffer = NStepsRandomReplayBuffer(nrp)
     is_random(replay_buffer)

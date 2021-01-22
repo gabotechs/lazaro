@@ -1,6 +1,5 @@
 import typing as T
 from abc import ABC, abstractmethod
-import numpy as np
 
 
 class Explorer(ABC):

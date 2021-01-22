@@ -20,10 +20,10 @@ from plotter import TensorBoard
 class Agent(ABC):
     def __init__(self,
                  action_space: int,
-                 hp: HyperParams,
-                 tp: TrainingParams,
                  explorer: T.Union[AnyExplorer, None],
                  replay_buffer: AnyReplayBuffer,
+                 tp: TrainingParams,
+                 hp: HyperParams,
                  use_gpu: bool = True,
                  save_progress: bool = True,
                  tensor_board_log: bool = True):
@@ -113,7 +113,7 @@ class Agent(ABC):
 
     def tensorboard_log_training_progress(self, training_progress: TrainingProgress):
         if self.summary_writer:
-            self.summary_writer.add_scalar("episode reward", training_progress.total_reward, training_progress.tries)
+            self.summary_writer.add_scalar("episode reward", training_progress.total_reward, training_progress.episode)
 
         return False
 
@@ -143,12 +143,14 @@ class Agent(ABC):
 
     def tensorboard_log_random_explorer_add_epsilon(self, training_progress: TrainingProgress) -> bool:
         if self.summary_writer:
-            self.summary_writer.add_scalar("random explorer Epsilon", self.explorer.epsilon, training_progress.tries)
+            self.summary_writer.add_scalar("random explorer Epsilon", self.explorer.epsilon, training_progress.episode)
         return False
     
     def tensorboard_log_prioritized_replay_buffer_add_beta(self, training_progress: TrainingProgress):
         if self.summary_writer:
-            self.summary_writer.add_scalar("prioritized replay buffer Beta", self.replay_buffer.beta, training_progress.tries)
+            self.summary_writer.add_scalar("prioritized replay buffer Beta",
+                                           self.replay_buffer.beta,
+                                           training_progress.episode)
         return False
 
     def forward_hook(self, module: torch.nn.Module, x: T.Tuple[torch.Tensor], y: torch.Tensor):
@@ -250,6 +252,7 @@ class Agent(ABC):
 
         if isinstance(self.replay_buffer, (NStepsPrioritizedReplayBuffer, NStepsRandomReplayBuffer)):
             self.log.info(f"linking {type(self.replay_buffer).__name__} n_steps...")
+            self.replay_buffer.set_gamma(self.hp.gamma)
             new_gamma = self.hp.gamma ** self.replay_buffer.rp.n_step
             self.log.info(f"refactoring gamma for {type(self.replay_buffer).__name__}: {self.gamma} -> {new_gamma}")
             self.gamma = new_gamma
@@ -261,7 +264,7 @@ class Agent(ABC):
 
     def noisy_explorer_reset_noise(self, training_step: TrainingStep):
         self.log.debug(f"reset noise for {type(self.explorer).__name__} triggered")
-        if training_step.i % self.explorer.ep.reset_noise_every == 0:
+        if training_step.step % self.explorer.ep.reset_noise_every == 0:
             for attr, value in self.__dict__.items():
                 if isinstance(value, torch.nn.Module):
                     for i, layer in enumerate(value.modules()):

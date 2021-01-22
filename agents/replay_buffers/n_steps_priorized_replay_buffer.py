@@ -4,4 +4,5 @@ from .priorized_replay_buffer import PrioritizedReplayBuffer
 
 
 class NStepsPrioritizedReplayBuffer(PrioritizedReplayBuffer, NStepsReplayBuffer):
-    rp: NStepPrioritizedReplayBufferParams
+    def __init__(self, rp: NStepPrioritizedReplayBufferParams = NStepPrioritizedReplayBufferParams()):
+        super(NStepsPrioritizedReplayBuffer, self).__init__(rp)

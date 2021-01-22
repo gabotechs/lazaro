@@ -6,12 +6,13 @@ from agents.replay_buffers import ReplayBufferEntry
 
 @dataclass
 class HyperParams:
-    gamma: float
+    gamma: float = 0.99
+    learn_every: int = 1
 
 
 @dataclass
 class DqnHyperParams(HyperParams):
-    lr: float
+    lr: float = 0.01
 
 
 @dataclass
@@ -21,8 +22,7 @@ class DuelingDqnHyperParams(DqnHyperParams):
 
 @dataclass
 class DoubleDqnHyperParams(DqnHyperParams):
-    lr: float
-    ensure_every: int
+    ensure_every: int = 1
 
 
 @dataclass
@@ -32,33 +32,33 @@ class DoubleDuelingDqnHyperParams(DoubleDqnHyperParams):
 
 @dataclass
 class A2CHyperParams(HyperParams):
-    lr: float
+    lr: float = 0.01
 
 
 @dataclass
 class PpoHyperParams(A2CHyperParams):
-    clip_factor: float
-    ensure_every: int
+    clip_factor: float = 0.02
+    entropy_factor: float = 0.01
+    ensure_every: int = 1
 
 
 @dataclass
 class TrainingProgress:
-    tries: int
+    step: int
+    episode: int
     steps_survived: int
     total_reward: float
 
 
 @dataclass
 class TrainingParams:
-    learn_every: int
     batch_size: int
     episodes: int
 
 
 @dataclass
 class TrainingStep:
-    i: int
-    steps_survived: int
+    step: int
     episode: int
 
 

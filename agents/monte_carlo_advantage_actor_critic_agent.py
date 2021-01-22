@@ -47,9 +47,9 @@ class MonteCarloA2cCriticAgent(A2cAgent, ABC):
             accumulated_reward += r
             s = s_
 
-            self.call_step_callbacks(TrainingStep(i, steps_survived, episode))
+            self.call_step_callbacks(TrainingStep(i, episode))
 
-            if i % self.tp.learn_every == 0 and i != 0 and len(self.replay_buffer) >= self.tp.batch_size:
+            if i % self.hp.learn_every == 0 and i != 0 and len(self.replay_buffer) >= self.tp.batch_size:
                 batch = self.replay_buffer.sample(self.tp.batch_size)
                 self.learn(batch)
 
@@ -66,7 +66,8 @@ class MonteCarloA2cCriticAgent(A2cAgent, ABC):
                     step.r = (step.r - mean) / (std + eps)
                     self.replay_buffer.add(step)
 
-                must_exit = self.call_progress_callbacks(TrainingProgress(episode, steps_survived, accumulated_reward))
+                training_progress = TrainingProgress(i, episode, steps_survived, accumulated_reward)
+                must_exit = self.call_progress_callbacks(training_progress)
                 if episode >= self.tp.episodes or must_exit:
                     return
 

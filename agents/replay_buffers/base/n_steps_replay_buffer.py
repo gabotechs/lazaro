@@ -7,11 +7,15 @@ from .models import ReplayBufferEntry, NStepReplayBufferParams
 
 
 class NStepsReplayBuffer(ReplayBuffer, ABC):
-    def __init__(self, rp: NStepReplayBufferParams):
+    def __init__(self, rp: NStepReplayBufferParams = NStepReplayBufferParams()):
         super().__init__(rp)
         self.rp: NStepReplayBufferParams = rp
         self.n_step_buffer: T.Deque[ReplayBufferEntry] = deque(maxlen=self.rp.n_step)
         self.accumulate_rewards: bool = True
+        self.gamma = 0.99  # should be overridden
+
+    def set_gamma(self, gamma: float) -> None:
+        self.gamma = gamma
 
     def _get_n_step_info(self) -> ReplayBufferEntry:
         first_entry = self.n_step_buffer[0]
@@ -21,7 +25,7 @@ class NStepsReplayBuffer(ReplayBuffer, ABC):
         for transition in reversed(list(self.n_step_buffer)[:-1]):
             r, s_, final = transition.r, transition.s_, transition.final
             if self.accumulate_rewards:
-                ac_r = r + self.rp.gamma * ac_r
+                ac_r = r + self.gamma * ac_r
 
             if final:
                 ac_s_, ac_final, ac_r = (s_, final, r)

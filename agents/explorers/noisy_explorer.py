@@ -44,7 +44,9 @@ class NoisyLinear(torch.nn.Module):
         return 'in_features={}, out_features={}'.format(self.in_features, self.out_features)
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
-        return F.linear(x, self.weight_mu + self.weight_sigma * self.weight_epsilon, self.bias_mu + self.bias_sigma * self.bias_epsilon)
+        return F.linear(x,
+                        self.weight_mu + self.weight_sigma * self.weight_epsilon,
+                        self.bias_mu + self.bias_sigma * self.bias_epsilon)
 
 
 class ModelWithNoisyLayers(torch.nn.Module):
@@ -60,7 +62,7 @@ class ModelWithNoisyLayers(torch.nn.Module):
 
 
 class NoisyExplorer(Explorer):
-    def __init__(self, ep: NoisyExplorerParams):
+    def __init__(self, ep: NoisyExplorerParams = NoisyExplorerParams()):
         self.ep: NoisyExplorerParams = ep
 
     def wrap_model(self, model: torch.nn.Module) -> torch.nn.Module:
@@ -78,4 +80,3 @@ class NoisyExplorer(Explorer):
 
     def choose(self, actions: np.ndarray, f: T.Callable[[np.ndarray], int]) -> int:
         return f(actions)
-

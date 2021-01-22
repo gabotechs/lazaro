@@ -10,7 +10,7 @@ from agents.explorers import RandomExplorer, RandomExplorerParams
 from environments import CartPole
 
 
-AGENT_PARAMS = PpoHyperParams(lr=0.01, gamma=0.99, clip_factor=0.2, ensure_every=1)
+AGENT_PARAMS = PpoHyperParams(lr=0.01, gamma=0.99, clip_factor=0.2, ensure_every=1, entropy_factor=0.01)
 TRAINING_PARAMS = TrainingParams(learn_every=1, batch_size=16, episodes=300)
 NOISY_EXPLORER = NoisyExplorer(NoisyExplorerParams(extra_layers=[], std_init=0.5, reset_noise_every=1))
 RANDOM_EXPLORER = RandomExplorer(RandomExplorerParams(init_ep=1, final_ep=0, decay_ep=1e-3))

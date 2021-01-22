@@ -22,7 +22,7 @@ class MemoryReplayBufferEntry(ReplayBufferEntry):
 
 @dataclass
 class ReplayBufferParams:
-    max_len: int
+    max_len: int = 1e5
 
 
 @dataclass
@@ -32,16 +32,15 @@ class RandomReplayBufferParams(ReplayBufferParams):
 
 @dataclass
 class NStepReplayBufferParams(ReplayBufferParams):
-    n_step: int
-    gamma: float
+    n_step: int = 3
 
 
 @dataclass
 class PrioritizedReplayBufferParams(ReplayBufferParams):
-    alpha: float
-    init_beta: float
-    final_beta: float
-    increase_beta: float
+    alpha: float = 0.6
+    init_beta: float = 0.4
+    final_beta: float = 1.0
+    increase_beta: float = 1e-4
 
 
 @dataclass

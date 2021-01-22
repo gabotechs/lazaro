@@ -7,7 +7,7 @@ from .base.models import ReplayBufferEntry, PrioritizedReplayBufferParams
 
 
 class PrioritizedReplayBuffer(ReplayBuffer):
-    def __init__(self, rp: PrioritizedReplayBufferParams):
+    def __init__(self, rp: PrioritizedReplayBufferParams = PrioritizedReplayBufferParams()):
         super(PrioritizedReplayBuffer, self).__init__(rp)
         if rp.alpha < 0:
             raise ValueError("alpha must be >= 0")

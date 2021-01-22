@@ -5,7 +5,7 @@ from agents.explorers.base.explorer import Explorer
 
 
 class RandomExplorer(Explorer):
-    def __init__(self, ep: RandomExplorerParams):
+    def __init__(self, ep: RandomExplorerParams = RandomExplorerParams()):
         if not 0 <= ep.init_ep <= 1:
             raise ValueError("initial epsilon must be between 0 and 1")
         elif not 0 <= ep.final_ep <= 1:

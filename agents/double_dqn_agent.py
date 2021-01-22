@@ -15,14 +15,14 @@ class DoubleDqnAgent(DqnAgent, ABC):
 
     def __init__(self,
                  action_space: int,
-                 hp: DoubleDqnHyperParams,
-                 tp: TrainingParams,
                  explorer: T.Union[AnyExplorer, None],
                  replay_buffer: AnyReplayBuffer,
+                 tp: TrainingParams,
+                 hp: DoubleDqnHyperParams,
                  use_gpu: bool = True,
                  save_progress: bool = True,
                  tensor_board_log: bool = True):
-        super(DoubleDqnAgent, self).__init__(action_space, hp, tp, explorer, replay_buffer,
+        super(DoubleDqnAgent, self).__init__(action_space, explorer, replay_buffer, tp, hp,
                                              use_gpu, save_progress, tensor_board_log)
 
         self.action_evaluator = self.build_model().to(self.device).eval()
@@ -65,9 +65,9 @@ class DoubleDqnAgent(DqnAgent, ABC):
             accumulated_reward += r
             s = s_
 
-            self.call_step_callbacks(TrainingStep(i, steps_survived, episode))
+            self.call_step_callbacks(TrainingStep(i, episode))
 
-            if i % self.tp.learn_every == 0 and i != 0 and len(self.replay_buffer) >= self.tp.batch_size:
+            if i % self.hp.learn_every == 0 and i != 0 and len(self.replay_buffer) >= self.tp.batch_size:
                 batch = self.replay_buffer.sample(self.tp.batch_size)
                 self.learn(batch)
 
@@ -75,7 +75,8 @@ class DoubleDqnAgent(DqnAgent, ABC):
                 self.ensure_learning()
 
             if final:
-                must_exit = self.call_progress_callbacks(TrainingProgress(episode, steps_survived, accumulated_reward))
+                training_progress = TrainingProgress(i, episode, steps_survived, accumulated_reward)
+                must_exit = self.call_progress_callbacks(training_progress)
                 if episode >= self.tp.episodes or must_exit:
                     return
 

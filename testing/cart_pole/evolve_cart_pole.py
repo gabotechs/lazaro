@@ -55,7 +55,7 @@ evolve_params: T_EParams = {
 
 
 def agent_finish_training_condition(x: TrainingProgress):
-    return x.tries >= 50
+    return x.episode >= 50
 
 
 def agent_factory(params: T_EParams) -> ActorCriticAgent:

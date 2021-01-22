@@ -1,6 +1,6 @@
 import numpy as np
 from agents.replay_buffers import RandomReplayBuffer
-from agents.replay_buffers import ReplayBufferParams, ReplayBufferEntry
+from agents.replay_buffers import RandomReplayBufferParams, ReplayBufferEntry
 
 
 def is_random(replay_buffer: RandomReplayBuffer):
@@ -20,6 +20,6 @@ def is_random(replay_buffer: RandomReplayBuffer):
 
 
 def test_elements_retrieved_are_random():
-    lrp = ReplayBufferParams(max_len=10)
+    lrp = RandomReplayBufferParams(max_len=10)
     replay_buffer = RandomReplayBuffer(lrp)
     is_random(replay_buffer)

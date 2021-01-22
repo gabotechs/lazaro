@@ -4,7 +4,8 @@ from .base.models import RandomReplayBufferParams
 
 
 class RandomReplayBuffer(ReplayBuffer):
-    rp: RandomReplayBufferParams
+    def __init__(self, rp: RandomReplayBufferParams = RandomReplayBufferParams()):
+        super(RandomReplayBuffer, self).__init__(rp)
 
     def sample(self, limit: int):
         indexes = random.sample(list(range(len(self))), limit)

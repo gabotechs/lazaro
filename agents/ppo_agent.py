@@ -12,14 +12,14 @@ class PpoAgent(MonteCarloA2cCriticAgent, ABC):
 
     def __init__(self,
                  action_space: int,
-                 hp: PpoHyperParams,
-                 tp: TrainingParams,
                  explorer: T.Union[AnyExplorer, None],
                  replay_buffer: AnyReplayBuffer,
+                 tp: TrainingParams,
+                 hp: PpoHyperParams,
                  use_gpu: bool = True,
                  save_progress: bool = True,
                  tensor_board_log: bool = True):
-        super(MonteCarloA2cCriticAgent, self).__init__(action_space, hp, tp, explorer, replay_buffer,
+        super(MonteCarloA2cCriticAgent, self).__init__(action_space, explorer, replay_buffer, tp, hp,
                                                        use_gpu, save_progress, tensor_board_log)
         self.actor_critic_new = self.build_actor_critic().to(self.device).eval()
         self.actor_critic_new_optimizer = torch.optim.Adam(self.actor_critic_new.parameters(), lr=hp.lr)
@@ -27,7 +27,7 @@ class PpoAgent(MonteCarloA2cCriticAgent, ABC):
         self.add_step_callback(self.ensure_learning_step_callback)
 
     def ensure_learning_step_callback(self, training_step: TrainingStep) -> None:
-        if training_step.i % self.hp.ensure_every == 0:
+        if training_step.step % self.hp.ensure_every == 0:
             self.actor_critic.load_state_dict(self.actor_critic_new.state_dict())
 
     def learn(self, batch: T.List[ReplayBufferEntry]) -> None:
@@ -57,7 +57,7 @@ class PpoAgent(MonteCarloA2cCriticAgent, ABC):
 
         actor_loss: torch.Tensor = -torch.min(surrogate_loss_1, surrogate_loss_2) * batch_weights
         critic_loss: torch.Tensor = self.loss_f(state_values, batch_rt) * batch_weights
-        entropy_loss: torch.Tensor = -0.01*new_chosen_action_log_entropy * batch_weights
+        entropy_loss: torch.Tensor = -self.hp.entropy_factor * new_chosen_action_log_entropy * batch_weights
 
         loss = (actor_loss + critic_loss + entropy_loss).mean()
 
