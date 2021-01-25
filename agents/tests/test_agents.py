@@ -23,7 +23,7 @@ def get_test_env():
 
 
 def get_random_explorer():
-    return RandomExplorer(RandomExplorerParams(init_ep=1.0, final_ep=0.0, decay_ep=1e-2))
+    return RandomExplorer(RandomExplorerParams(init_ep=1.0, final_ep=0.05, decay_ep=5e-3))
 
 
 def get_noisy_explorer():
@@ -31,22 +31,22 @@ def get_noisy_explorer():
 
 
 def get_random_replay_buffer():
-    return RandomReplayBuffer(RandomReplayBufferParams(max_len=1000))
+    return RandomReplayBuffer(RandomReplayBufferParams(max_len=10000))
 
 
 def get_n_step_random_replay_buffer():
-    return NStepsRandomReplayBuffer(NStepReplayBufferParams(max_len=1000, n_step=5))
+    return NStepsRandomReplayBuffer(NStepReplayBufferParams(max_len=10000, n_step=5))
 
 
 def get_prioritized_replay_buffer():
     return PrioritizedReplayBuffer(PrioritizedReplayBufferParams(
-        max_len=1000, alpha=0.6, init_beta=0.4, final_beta=1.0, increase_beta=1e-4
+        max_len=10000, alpha=0.6, init_beta=0.4, final_beta=1.0, increase_beta=1e-4
     ))
 
 
 def get_n_step_prioritized_replay_buffer():
     return NStepsPrioritizedReplayBuffer(NStepPrioritizedReplayBufferParams(
-        max_len=1000, n_step=5, alpha=0.6, init_beta=0.4, final_beta=1.0, increase_beta=1e-4
+        max_len=10000, n_step=5, alpha=0.6, init_beta=0.4, final_beta=1.0, increase_beta=1e-4
     ))
 
 
@@ -58,7 +58,7 @@ def get_dqn_agent(replay_buffer: AnyReplayBuffer, explorer: AnyExplorer) -> Agen
         def preprocess(self, x: np.ndarray) -> torch.Tensor:
             return torch.unsqueeze(torch.tensor(x, dtype=torch.float32), 0)
 
-    hp = DqnHyperParams(lr=0.03, gamma=0.9, learn_every=1)
+    hp = DqnHyperParams(lr=0.003, gamma=0.99, learn_every=1)
     tp = TrainingParams(batch_size=64, episodes=200)
     return CustomAgent(2, explorer, replay_buffer, tp, hp, save_progress=False, tensor_board_log=False)
 
@@ -71,7 +71,7 @@ def get_double_dqn_agent(replay_buffer: AnyReplayBuffer, explorer: AnyExplorer) 
         def preprocess(self, x: np.ndarray) -> torch.Tensor:
             return torch.unsqueeze(torch.tensor(x, dtype=torch.float32), 0)
 
-    hp = DoubleDqnHyperParams(lr=0.03, gamma=0.9, ensure_every=20, learn_every=1)
+    hp = DoubleDqnHyperParams(lr=0.003, gamma=0.99, ensure_every=20, learn_every=1)
     tp = TrainingParams(batch_size=64, episodes=200)
     return CustomAgent(2, explorer, replay_buffer, tp, hp, save_progress=False, tensor_board_log=False)
 
@@ -84,7 +84,7 @@ def get_dueling_dqn_agent(replay_buffer: AnyReplayBuffer, explorer: AnyExplorer)
         def preprocess(self, x: np.ndarray) -> torch.Tensor:
             return torch.unsqueeze(torch.tensor(x, dtype=torch.float32), 0)
 
-    hp = DuelingDqnHyperParams(lr=0.03, gamma=0.9, learn_every=1)
+    hp = DuelingDqnHyperParams(lr=0.003, gamma=0.99, learn_every=1)
     tp = TrainingParams(batch_size=64, episodes=200)
     return CustomAgent(2, explorer, replay_buffer, tp, hp, save_progress=False, tensor_board_log=False)
 
@@ -97,7 +97,7 @@ def get_double_dueling_dqn_agent(replay_buffer: AnyReplayBuffer, explorer: AnyEx
         def preprocess(self, x: np.ndarray) -> torch.Tensor:
             return torch.unsqueeze(torch.tensor(x, dtype=torch.float32), 0)
 
-    hp = DoubleDuelingDqnHyperParams(lr=0.03, gamma=0.9, ensure_every=20, learn_every=1)
+    hp = DoubleDuelingDqnHyperParams(lr=0.003, gamma=0.99, ensure_every=20, learn_every=1)
     tp = TrainingParams(batch_size=64, episodes=200)
     return CustomAgent(2, explorer, replay_buffer, tp, hp, save_progress=False, tensor_board_log=False)
 
@@ -110,7 +110,7 @@ def get_a2c_agent(replay_buffer: AnyReplayBuffer, explorer: AnyExplorer) -> Agen
         def preprocess(self, x: np.ndarray) -> torch.Tensor:
             return torch.unsqueeze(torch.tensor(x, dtype=torch.float32), 0)
 
-    hp = A2CHyperParams(lr=0.03, gamma=0.9, learn_every=1)
+    hp = A2CHyperParams(lr=0.003, gamma=0.99, learn_every=1)
     tp = TrainingParams(batch_size=64, episodes=200)
     return CustomAgent(2, explorer, replay_buffer, tp, hp, save_progress=False, tensor_board_log=False)
 
@@ -123,7 +123,7 @@ def get_mca2c_agent(replay_buffer: AnyReplayBuffer, explorer: AnyExplorer) -> Ag
         def preprocess(self, x: np.ndarray) -> torch.Tensor:
             return torch.unsqueeze(torch.tensor(x, dtype=torch.float32), 0)
 
-    hp = A2CHyperParams(lr=0.03, gamma=0.9, learn_every=1)
+    hp = A2CHyperParams(lr=0.003, gamma=0.99, learn_every=1)
     tp = TrainingParams(batch_size=64, episodes=200)
     return CustomAgent(2, explorer, replay_buffer, tp, hp, save_progress=False, tensor_board_log=False)
 
@@ -136,7 +136,7 @@ def get_ppo_agent(replay_buffer: AnyReplayBuffer, explorer: AnyExplorer) -> Agen
         def preprocess(self, x: np.ndarray) -> torch.Tensor:
             return torch.unsqueeze(torch.tensor(x, dtype=torch.float32), 0)
 
-    hp = PpoHyperParams(lr=0.03, gamma=0.9, learn_every=1, clip_factor=0.2, entropy_factor=0.01)
+    hp = PpoHyperParams(lr=0.003, gamma=0.99, learn_every=1, clip_factor=0.2, entropy_factor=0.01)
     tp = TrainingParams(batch_size=64, episodes=200)
     return CustomAgent(2, explorer, replay_buffer, tp, hp, save_progress=False, tensor_board_log=False)
 
@@ -145,7 +145,7 @@ class NN(torch.nn.Module):
     def __init__(self):
         super(NN, self).__init__()
         self.linear_1 = torch.nn.Linear(4, 10)
-        self.linear_2 = torch.nn.Linear(10, 10)
+        self.linear_2 = torch.nn.Linear(10, 100)
 
     def forward(self, x):
         return F.relu(self.linear_2(F.relu(self.linear_1(x))))
