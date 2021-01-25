@@ -1,44 +1,34 @@
 import numpy as np
 import torch
+import torch.nn.functional as F
 
-from agents import ActorCriticAgent, A2CHyperParams, TrainingParams, TrainingProgress
-from agents.replay_buffers import RandomReplayBuffer
+import agents as lz
 from environments import CartPole
 from evolutioners import Evolutioner, T_EParams, EvolutionerParams, EvolutionProgress
 from evolutioners.models import EvolvingFloat, EvolvingInt
-
-EVOLUTIONER_PARAMS = EvolutionerParams(generation_size=10, max_allowed_mutation=0.9, workers=4)
 
 
 env = CartPole()
 
 
-class CustomActionEstimator(torch.nn.Module):
-    def __init__(self, in_size: int, hidden_1: int, hidden_2: int, out_size: int):
-        super(CustomActionEstimator, self).__init__()
-        self.out_size = out_size
-        self.linear1 = torch.nn.Linear(in_size, in_size*hidden_1)
-        self.relu1 = torch.nn.ReLU()
-
-        self.linear2 = torch.nn.Linear(in_size*hidden_1, out_size*hidden_2)
-        self.relu2 = torch.nn.ReLU()
-
-        self.linear3 = torch.nn.Linear(out_size*hidden_2, out_size)
+class CustomNN(torch.nn.Module):
+    def __init__(self, in_size: int, linear_1: int, linear_2: int):
+        super(CustomNN, self).__init__()
+        self.linear1 = torch.nn.Linear(in_size, linear_1)
+        self.linear2 = torch.nn.Linear(linear_1, linear_2)
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
-        x = self.relu1(self.linear1(x))
-        x = self.relu2(self.linear2(x))
-        return self.linear3(x)
+        return F.relu(self.linear2(F.relu(self.linear1(x))))
 
 
-class CustomActorCriticAgent(ActorCriticAgent):
+class CustomAgent(lz.DoubleDuelingDqnAgent):
     def __init__(self, *args, hidden_1,  hidden_2, **kwargs):
         self.hidden_1 = hidden_1
         self.hidden_2 = hidden_2
-        super(CustomActorCriticAgent, self).__init__(*args, **kwargs)
+        super(CustomAgent, self).__init__(*args, **kwargs)
 
     def model_factory(self) -> torch.nn.Module:
-        return CustomActionEstimator(env.get_observation_space()[0], self.hidden_1, self.hidden_2, len(env.get_action_space()))
+        return CustomNN(env.get_observation_space()[0], self.hidden_1, self.hidden_2)
 
     def preprocess(self, x: np.ndarray) -> torch.Tensor:
         return torch.unsqueeze(torch.tensor(x, dtype=torch.float32), 0)
@@ -47,37 +37,28 @@ class CustomActorCriticAgent(ActorCriticAgent):
 evolve_params: T_EParams = {
     "hidden_1": EvolvingInt(10, 3, 50, 0.3),
     "hidden_2": EvolvingInt(100, 10, 500, 0.3),
-    "c_lr": EvolvingFloat(7.604609807959665e-05, 1e-6, 1e-1, 0.8),
-    "a_lr": EvolvingFloat(0.0002442092598528454, 1e-6, 1e-1, 0.8),
+    "lr": EvolvingFloat(0.0002442092598528454, 1e-6, 1e-1, 0.8),
     "batch_size": EvolvingInt(63, 8, 512, 0.8),
     "memory_len": EvolvingInt(11434, 256, 20000, 2.0),
 }
 
 
-def agent_finish_training_condition(x: TrainingProgress):
-    return x.episode >= 50
-
-
-def agent_factory(params: T_EParams) -> ActorCriticAgent:
-    agent_params = A2CHyperParams(
-        c_lr=params["c_lr"].value,
-        a_lr=params["a_lr"].value,
-        gamma=0.995
-    )
-    training_params = TrainingParams(
-        learn_every=1,
-        ensure_every=10,
-        batch_size=params["batch_size"].value,
-        finish_condition=agent_finish_training_condition
-    )
-
-    memory_len = params["memory_len"].value
-
-    agent = CustomActorCriticAgent(
-        agent_params,
-        training_params,
-        None,
-        RandomReplayBuffer(memory_len),
+def agent_factory(params: T_EParams) -> lz.AnyAgent:
+    agent = CustomAgent(
+        len(env.get_action_space()),
+        lz.explorers.RandomExplorer(),
+        lz.replay_buffers.RandomReplayBuffer(lz.replay_buffers.RandomReplayBufferParams(
+            max_len=params["memory_len"].value
+        )),
+        lz.TrainingParams(
+            batch_size=params["batch_size"].value,
+            episodes=50
+        ),
+        lz.DoubleDuelingDqnHyperParams(
+            learn_every=1,
+            lr=params["lr"].value,
+            ensure_every=10
+        ),
         use_gpu=True,
         hidden_1=params["hidden_1"].value,
         hidden_2=params["hidden_2"].value
@@ -89,7 +70,11 @@ def agent_factory(params: T_EParams) -> ActorCriticAgent:
 if __name__ == "__main__":
     evolutioner = Evolutioner(
         env,
-        EVOLUTIONER_PARAMS,
+        EvolutionerParams(
+            generation_size=10,
+            max_allowed_mutation=0.9,
+            workers=4
+        ),
         evolve_params,
         agent_factory
     )

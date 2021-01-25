@@ -4,24 +4,24 @@ import asyncio
 import os
 import json
 import time
-from agents import Agent, TrainingProgress
+from agents import AnyAgent, TrainingProgress
 from environments import Environment
 
 
 class Individual:
-    def __init__(self, agent: Agent, env: Environment):
-        self.agent: Agent = agent
+    def __init__(self, agent: AnyAgent, env: Environment):
+        self.agent: AnyAgent = agent
         self.env: Environment = env
         self.history: T.List[float] = []
 
-    def _on_progress(self, progress: TrainingProgress, prev_func: T.Union[T.Callable[[TrainingProgress], None]]) -> None:
+    def _on_progress(self, progress: TrainingProgress) -> bool:
         self.history.append(progress.total_reward)
-        if prev_func:
-            prev_func(progress)
+        return False
 
     def life(self, dump_file: str = "") -> T.List[float]:
-        prev_func = self.agent.progress_callback
-        self.agent.add_progress_callback(lambda x: self._on_progress(x, prev_func))
+        self.agent.add_progress_callback(self._on_progress)
+        self.agent.tensor_board_log = False
+        self.agent.save_progress = False
         self.agent.train(self.env)
         self.env.close()
         if dump_file != "":

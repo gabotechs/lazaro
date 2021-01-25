@@ -4,7 +4,7 @@ import numpy as np
 import asyncio
 import torch
 
-from agents import Agent
+from agents import AnyAgent
 from environments import Environment
 from .individual import Individual
 from .models import EvolutionProgress, EvolutionerParams, T_EParams, EvolvingFloat, EvolvingBool, EvolvingInt
@@ -15,12 +15,12 @@ class Evolutioner:
                  env: Environment,
                  evolutioner_params: EvolutionerParams,
                  init_params: T_EParams,
-                 agent_factory: T.Callable[[T_EParams], Agent]):
+                 agent_factory: T.Callable[[T_EParams], AnyAgent]):
 
         self.env: Environment = env
         self.evolutioner_params: EvolutionerParams = evolutioner_params
         self.init_params: T_EParams = init_params
-        self.agent_factory: T.Callable[[T_EParams], Agent] = agent_factory
+        self.agent_factory: T.Callable[[T_EParams], AnyAgent] = agent_factory
         self.progress_callback: T.Callable[[EvolutionProgress], None] = lambda x: None
         self.fitness_function: T.Callable[[np.ndarray], float] = lambda x: np.mean(x).item()
 

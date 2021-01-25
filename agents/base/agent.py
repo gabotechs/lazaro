@@ -107,6 +107,7 @@ class Agent(ABC):
         if self.tensor_board_log:
             self.summary_writer = TensorBoard(self.save_path)
             self.tensorboard_log_model_graph()
+            # self.tensorboard_log_hyper_params()
 
         if self.save_progress:
             self.save_agent_info()
@@ -116,6 +117,21 @@ class Agent(ABC):
             self.summary_writer.add_scalar("episode reward", training_progress.total_reward, training_progress.episode)
 
         return False
+
+    def tensorboard_log_hyper_params(self):
+        info = self.get_info()
+        result = {}
+
+        def nested(root: T.Any, acc: str = ""):
+            if not isinstance(root, dict):
+                result[acc] = json.dumps(root) if isinstance(root, tuple) else root
+            else:
+                for key in root:
+                    nested(root[key], acc+" -> "+key if acc != "" else key)
+
+        nested(info)
+        for r in result:
+            self.summary_writer.add_text(r, str(result[r]))
 
     def tensorboard_log_model_graph(self):
         models: T.Dict[str, torch.nn.Module] = {}
@@ -171,16 +187,15 @@ class Agent(ABC):
                 self.modules[module]["renders"] += 1
             self.modules[module]["times"] += 1
 
+    def tensorboard_model_wrapper(self, model: torch.nn.Module):
+        model.register_forward_hook(self.forward_hook)
+        return model
+
     def link_tensorboard(self):
         if self.tensor_board_log:
             self.log.info("linking tensorboard callbacks...")
             self.add_progress_callback(self.tensorboard_log_training_progress)
-
-            def model_wrapper(model: torch.nn.Module):
-                model.register_forward_hook(self.forward_hook)
-                return model
-
-            self.model_wrappers.append(model_wrapper)
+            self.model_wrappers.append(self.tensorboard_model_wrapper)
             
     def create_save_folder(self, env: Environment):
         base = os.environ.get("SAVE_DIR", "data")
