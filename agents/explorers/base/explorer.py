@@ -1,11 +1,12 @@
 import typing as T
 from abc import ABC, abstractmethod
-import logging
+from logger import get_logger
+import os
 
 
 class Explorer(ABC):
     def __init__(self):
-        self.log = logging.getLogger(type(self).__name__)
+        self.log = get_logger(type(self).__name__)
 
     @abstractmethod
     def choose(self, actions: T.List[float], f: T.Callable[[T.List[float]], int]) -> int:

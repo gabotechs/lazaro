@@ -4,13 +4,10 @@ import typing as T
 from collections import deque
 import torch
 import torch.nn.functional as F
-
-from agents import DoubleDuelingDqnAgent, DoubleDqnHyperParams, TrainingParams, MonteCarloA2cCriticAgent, A2CHyperParams
-from agents.explorers import NoisyExplorer, NoisyExplorerParams, RandomExplorer, RandomExplorerParams
-from agents.replay_buffers import NStepsPrioritizedReplayBuffer, NStepPrioritizedReplayBufferParams
+import agents as lz
 from environments import CartPole
 
-os.environ["LOG_LEVEL"] = "WARNING"
+os.environ["LZ_DEBUG"] = "INFO"
 
 
 class CustomCartPole(CartPole):
@@ -24,9 +21,9 @@ class CustomCartPole(CartPole):
         return 2,
 
     def reset_history(self):
-        os = self.get_observation_space()
+        o_s = self.get_observation_space()
         for _ in range(self.frame_history_size):
-            self.frame_history.append(np.zeros(os, dtype=np.uint8))
+            self.frame_history.append(np.zeros(o_s, dtype=np.uint8))
 
     def reset(self) -> np.ndarray:
         self.reset_history()
@@ -89,7 +86,7 @@ class CustomActionEstimator(torch.nn.Module):
         return F.relu(self.head(out))
 
 
-class CustomDoubleDqnAgent(MonteCarloA2cCriticAgent):
+class CustomDoubleDqnAgent(lz.DoubleDqnAgent):
     def model_factory(self) -> torch.nn.Module:
         return CustomActionEstimator(env.get_observation_space()[0])
 
@@ -97,19 +94,20 @@ class CustomDoubleDqnAgent(MonteCarloA2cCriticAgent):
         return torch.unsqueeze(torch.tensor(x, dtype=torch.float32), 0)
 
 
-NOISY_EXPLORER_PARAMS = NoisyExplorerParams(extra_layers=[], std_init=0.5, reset_noise_every=1)
-RANDOM_EXPLORER_PARAMS = RandomExplorerParams(init_ep=1.0, final_ep=0.01, decay_ep=1e-3)
-AGENT_PARAMS = A2CHyperParams(a_lr=0.01, gamma=0.95, c_lr=0.01)
-TRAINING_PARAMS = TrainingParams(learn_every=1, batch_size=64, episodes=5000)
-REPLAY_BUFFER_PARAMS = NStepPrioritizedReplayBufferParams(max_len=20000, gamma=AGENT_PARAMS.gamma, n_step=3, alpha=0.6,
-                                                          init_beta=0.4, final_beta=1.0, increase_beta=1e-5)
+NOISY_EXPLORER_PARAMS = lz.explorers.NoisyExplorerParams(extra_layers=tuple(), std_init=0.5, reset_noise_every=1)
+RANDOM_EXPLORER_PARAMS = lz.explorers.RandomExplorerParams(init_ep=1.0, final_ep=0.01, decay_ep=1e-3)
+AGENT_PARAMS = lz.DoubleDqnHyperParams(lr=0.001, gamma=0.99, learn_every=1)
+TRAINING_PARAMS = lz.TrainingParams(batch_size=64, episodes=5000)
+REPLAY_BUFFER_PARAMS = lz.replay_buffers.NStepPrioritizedReplayBufferParams(max_len=20000, n_step=3, alpha=0.6,
+                                                                            init_beta=0.4, final_beta=1.0,
+                                                                            increase_beta=1e-5)
 
 if __name__ == "__main__":
     agent = CustomDoubleDqnAgent(
         len(env.get_action_space()),
-        AGENT_PARAMS,
+        lz.explorers.NoisyExplorer(NOISY_EXPLORER_PARAMS),
+        lz.replay_buffers.NStepsPrioritizedReplayBuffer(REPLAY_BUFFER_PARAMS),
         TRAINING_PARAMS,
-        RandomExplorer(RANDOM_EXPLORER_PARAMS),
-        NStepsPrioritizedReplayBuffer(REPLAY_BUFFER_PARAMS)
+        AGENT_PARAMS,
     )
     agent.train(env)

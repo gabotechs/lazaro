@@ -1,7 +1,6 @@
 from abc import ABC, abstractmethod
 import typing as T
 import torch
-import os
 import json
 import datetime
 import numpy as np
@@ -10,7 +9,8 @@ from environments import Environment
 
 from . import models
 from .. import explorers as ex, replay_buffers as rp
-import logging
+from logger import get_logger
+import os
 from plotter import TensorBoard
 
 
@@ -24,7 +24,7 @@ class Agent(ABC):
                  use_gpu: bool = True,
                  tensor_board_log: bool = True):
 
-        self.log = logging.getLogger(self.get_self_class_name())
+        self.log = get_logger(self.get_self_class_name())
         self.action_space = action_space
         self.hp = hp
         self.tp = tp
@@ -48,6 +48,11 @@ class Agent(ABC):
         self.progress_callbacks: T.List[models.TProgressCallback] = []
         self.learning_callbacks: T.List[models.TLearnCallback] = []
         self.model_wrappers: T.List[T.Callable[[torch.nn.Module], torch.nn.Module]] = []
+
+        def last_layer_factory(in_features: int, out_features: int) -> torch.nn.Linear:
+            return torch.nn.Linear(in_features, out_features)
+
+        self.last_layer_factory: T.Callable[[int, int], torch.nn.Module] = last_layer_factory
         self.save_path: T.Union[None, str] = None
         self.summary_writer: T.Union[TensorBoard, None] = None
         self.sample_inputs: T.Union[None, T.List[torch.Tensor]] = None
@@ -261,12 +266,6 @@ class Agent(ABC):
             model = wrapper(model)
             self.log.info("model wrapped correctly")
         return model
-
-    def last_layer_factory(self, in_features: int, out_features: int):
-        if isinstance(self.explorer, ex.noisy_explorer.NoisyExplorer):
-            return ex.noisy_explorer.NoisyLinear(in_features, out_features, self.explorer.ep.std_init)
-        else:
-            return torch.nn.Linear(in_features, out_features)
 
     def get_self_class_name(self):
         return self.__class__.__bases__[0].__name__

@@ -80,7 +80,7 @@ class NoisyExplorer(Explorer):
             noisy_layers.append(torch.nn.ReLU())
             noisy_layers.append(NoisyLinear(self.ep.extra_layers[i - 1], self.ep.extra_layers[i], self.ep.std_init))
 
-        self.noisy_layers_reference = noisy_layers
+        self.noisy_layers_reference += noisy_layers
         return ModelWithNoisyLayers(model, noisy_layers)
 
     def choose(self, actions: np.ndarray, f: T.Callable[[np.ndarray], int]) -> int:
@@ -102,6 +102,13 @@ class NoisyExplorer(Explorer):
         self.log.info(f"linking {type(self).__name__}...")
         agent.add_step_callback(self.reset_noise)
         agent.model_wrappers.append(self.wrap_model)
+
+        def last_layer_factory(in_features: int, out_features: int) -> NoisyLinear:
+            noisy_linear = NoisyLinear(in_features, out_features, self.ep.std_init)
+            self.noisy_layers_reference.append(noisy_linear)
+            return noisy_linear
+
+        agent.last_layer_factory = last_layer_factory
 
     def get_stats(self) -> T.Dict[str, float]:
         return {}

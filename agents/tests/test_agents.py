@@ -18,6 +18,9 @@ from agents.explorers import RandomExplorer, NoisyExplorer, AnyExplorer
 from agents.explorers import RandomExplorerParams, NoisyExplorerParams
 
 
+EXPECTED_REWARD = 25
+
+
 def get_test_env():
     return CartPole()
 
@@ -181,8 +184,8 @@ def test_agents(agent: Agent):
     def on_progress(progress: TrainingProgress):
         record.append(progress)
         print(progress.total_reward)
-        return progress.total_reward > 100
+        return progress.total_reward > EXPECTED_REWARD
 
     agent.add_progress_callback(on_progress)
     agent.train(env)
-    assert any([r.total_reward > 100 for r in record])
+    assert any([r.total_reward > EXPECTED_REWARD for r in record])
