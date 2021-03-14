@@ -41,10 +41,8 @@ class DuelingDqnAgent(DqnAgent, ABC):
                  tp: TrainingParams,
                  hp: DuelingDqnHyperParams = DuelingDqnHyperParams(),
                  use_gpu: bool = True,
-                 save_progress: bool = True,
                  tensor_board_log: bool = True):
-        super(DuelingDqnAgent, self).__init__(action_space, explorer, replay_buffer, tp, hp,
-                                              use_gpu, save_progress, tensor_board_log)
+        super(DuelingDqnAgent, self).__init__(action_space, explorer, replay_buffer, tp, hp, use_gpu, tensor_board_log)
 
     def build_model(self) -> torch.nn.Module:
         model = super(DqnAgent, self).build_model()

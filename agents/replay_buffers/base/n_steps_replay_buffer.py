@@ -44,3 +44,9 @@ class NStepsReplayBuffer(ReplayBuffer, ABC):
     def clear(self):
         super(NStepsReplayBuffer, self).clear()
         self.n_step_buffer.clear()
+
+    def link_to_agent(self, agent):
+        self.gamma = agent.hp.gamma
+        new_gamma = agent.hp.gamma ** self.rp.n_step
+        self.log.info(f"refactoring gamma for {type(self).__name__}: {self.gamma} -> {new_gamma}")
+        agent.gamma = new_gamma

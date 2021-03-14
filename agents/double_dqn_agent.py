@@ -15,16 +15,13 @@ class DoubleDqnAgent(DqnAgent, ABC):
 
     def __init__(self,
                  action_space: int,
-                 explorer: T.Union[AnyExplorer, None],
+                 explorer: AnyExplorer,
                  replay_buffer: AnyReplayBuffer,
                  tp: TrainingParams,
                  hp: DoubleDqnHyperParams = DoubleDqnHyperParams(),
                  use_gpu: bool = True,
-                 save_progress: bool = True,
                  tensor_board_log: bool = True):
-        super(DoubleDqnAgent, self).__init__(action_space, explorer, replay_buffer, tp, hp,
-                                             use_gpu, save_progress, tensor_board_log)
-
+        super(DoubleDqnAgent, self).__init__(action_space, explorer, replay_buffer, tp, hp, use_gpu, tensor_board_log)
         self.action_evaluator = self.build_model().to(self.device).eval()
 
     def get_state_dict(self) -> dict:

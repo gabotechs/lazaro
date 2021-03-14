@@ -11,11 +11,11 @@ from environments import CartPole
 
 
 AGENT_PARAMS = PpoHyperParams(lr=0.01, gamma=0.99, clip_factor=0.2, ensure_every=1, entropy_factor=0.01)
-TRAINING_PARAMS = TrainingParams(learn_every=1, batch_size=16, episodes=300)
-NOISY_EXPLORER = NoisyExplorer(NoisyExplorerParams(extra_layers=[], std_init=0.5, reset_noise_every=1))
+TRAINING_PARAMS = TrainingParams(batch_size=16, episodes=300)
+NOISY_EXPLORER = NoisyExplorer(NoisyExplorerParams(extra_layers=tuple(), std_init=0.5, reset_noise_every=1))
 RANDOM_EXPLORER = RandomExplorer(RandomExplorerParams(init_ep=1, final_ep=0, decay_ep=1e-3))
 N_STEPS_PRIORITIZED_REPLAY_BUFFER = NStepsPrioritizedReplayBuffer(NStepPrioritizedReplayBufferParams(
-    max_len=10000, gamma=AGENT_PARAMS.gamma, n_step=3, alpha=0.6, init_beta=0.4, final_beta=1.0, increase_beta=1e-4)
+    max_len=10000, n_step=3, alpha=0.6, init_beta=0.4, final_beta=1.0, increase_beta=1e-4)
 )
 RANDOM_REPLAY_BUFFER = RandomReplayBuffer(RandomReplayBufferParams(max_len=10000))
 
@@ -43,10 +43,10 @@ class CustomActorCriticAgent(PpoAgent):
 if __name__ == "__main__":
     agent = CustomActorCriticAgent(
         len(env.get_action_space()),
-        AGENT_PARAMS,
+        NOISY_EXPLORER,
+        N_STEPS_PRIORITIZED_REPLAY_BUFFER,
         TRAINING_PARAMS,
-        RANDOM_EXPLORER,
-        RANDOM_REPLAY_BUFFER
+        AGENT_PARAMS,
     )
     agent.train(env)
     input()

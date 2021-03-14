@@ -41,10 +41,8 @@ class DqnAgent(Agent, ABC):
                  tp: TrainingParams,
                  hp: DqnHyperParams = DqnHyperParams(),
                  use_gpu: bool = True,
-                 save_progress: bool = True,
                  tensor_board_log: bool = True):
-        super(DqnAgent, self).__init__(action_space, explorer, replay_buffer, tp, hp,
-                                       use_gpu, save_progress, tensor_board_log)
+        super(DqnAgent, self).__init__(action_space, explorer, replay_buffer, tp, hp, use_gpu, tensor_board_log)
 
         self.action_estimator = self.build_model().to(self.device)
         self.optimizer = torch.optim.Adam(self.action_estimator.parameters(), lr=hp.lr)

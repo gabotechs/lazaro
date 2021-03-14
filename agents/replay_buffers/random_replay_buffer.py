@@ -10,3 +10,6 @@ class RandomReplayBuffer(ReplayBuffer):
     def sample(self, limit: int):
         indexes = random.sample(list(range(len(self))), limit)
         return [self.records[i] for i in indexes]
+
+    def link_to_agent(self, agent):
+        return

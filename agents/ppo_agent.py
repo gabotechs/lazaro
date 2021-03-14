@@ -12,15 +12,13 @@ class PpoAgent(MonteCarloA2cCriticAgent, ABC):
 
     def __init__(self,
                  action_space: int,
-                 explorer: T.Union[AnyExplorer, None],
+                 explorer: AnyExplorer,
                  replay_buffer: AnyReplayBuffer,
                  tp: TrainingParams,
                  hp: PpoHyperParams = PpoHyperParams(),
                  use_gpu: bool = True,
-                 save_progress: bool = True,
                  tensor_board_log: bool = True):
-        super(MonteCarloA2cCriticAgent, self).__init__(action_space, explorer, replay_buffer, tp, hp,
-                                                       use_gpu, save_progress, tensor_board_log)
+        super(MonteCarloA2cCriticAgent, self).__init__(action_space, explorer, replay_buffer, tp, hp, use_gpu, tensor_board_log)
         self.actor_critic_new = self.build_actor_critic().to(self.device).eval()
         self.actor_critic_new_optimizer = torch.optim.Adam(self.actor_critic_new.parameters(), lr=hp.lr)
         self.actor_critic_new.load_state_dict(self.actor_critic.state_dict())

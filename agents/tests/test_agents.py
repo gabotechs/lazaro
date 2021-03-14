@@ -60,7 +60,7 @@ def get_dqn_agent(replay_buffer: AnyReplayBuffer, explorer: AnyExplorer) -> Agen
 
     hp = DqnHyperParams(lr=0.003, gamma=0.99, learn_every=1)
     tp = TrainingParams(batch_size=64, episodes=200)
-    return CustomAgent(2, explorer, replay_buffer, tp, hp, save_progress=False, tensor_board_log=False)
+    return CustomAgent(2, explorer, replay_buffer, tp, hp, tensor_board_log=False)
 
 
 def get_double_dqn_agent(replay_buffer: AnyReplayBuffer, explorer: AnyExplorer) -> Agent:
@@ -73,7 +73,7 @@ def get_double_dqn_agent(replay_buffer: AnyReplayBuffer, explorer: AnyExplorer) 
 
     hp = DoubleDqnHyperParams(lr=0.003, gamma=0.99, ensure_every=20, learn_every=1)
     tp = TrainingParams(batch_size=64, episodes=200)
-    return CustomAgent(2, explorer, replay_buffer, tp, hp, save_progress=False, tensor_board_log=False)
+    return CustomAgent(2, explorer, replay_buffer, tp, hp, tensor_board_log=False)
 
 
 def get_dueling_dqn_agent(replay_buffer: AnyReplayBuffer, explorer: AnyExplorer) -> Agent:
@@ -86,7 +86,7 @@ def get_dueling_dqn_agent(replay_buffer: AnyReplayBuffer, explorer: AnyExplorer)
 
     hp = DuelingDqnHyperParams(lr=0.003, gamma=0.99, learn_every=1)
     tp = TrainingParams(batch_size=64, episodes=200)
-    return CustomAgent(2, explorer, replay_buffer, tp, hp, save_progress=False, tensor_board_log=False)
+    return CustomAgent(2, explorer, replay_buffer, tp, hp, tensor_board_log=False)
 
 
 def get_double_dueling_dqn_agent(replay_buffer: AnyReplayBuffer, explorer: AnyExplorer) -> Agent:
@@ -99,7 +99,7 @@ def get_double_dueling_dqn_agent(replay_buffer: AnyReplayBuffer, explorer: AnyEx
 
     hp = DoubleDuelingDqnHyperParams(lr=0.003, gamma=0.99, ensure_every=20, learn_every=1)
     tp = TrainingParams(batch_size=64, episodes=200)
-    return CustomAgent(2, explorer, replay_buffer, tp, hp, save_progress=False, tensor_board_log=False)
+    return CustomAgent(2, explorer, replay_buffer, tp, hp, tensor_board_log=False)
 
 
 def get_a2c_agent(replay_buffer: AnyReplayBuffer, explorer: AnyExplorer) -> Agent:
@@ -112,7 +112,7 @@ def get_a2c_agent(replay_buffer: AnyReplayBuffer, explorer: AnyExplorer) -> Agen
 
     hp = A2CHyperParams(lr=0.003, gamma=0.99, learn_every=1)
     tp = TrainingParams(batch_size=64, episodes=200)
-    return CustomAgent(2, explorer, replay_buffer, tp, hp, save_progress=False, tensor_board_log=False)
+    return CustomAgent(2, explorer, replay_buffer, tp, hp, tensor_board_log=False)
 
 
 def get_mca2c_agent(replay_buffer: AnyReplayBuffer, explorer: AnyExplorer) -> Agent:
@@ -125,7 +125,7 @@ def get_mca2c_agent(replay_buffer: AnyReplayBuffer, explorer: AnyExplorer) -> Ag
 
     hp = A2CHyperParams(lr=0.003, gamma=0.99, learn_every=1)
     tp = TrainingParams(batch_size=64, episodes=200)
-    return CustomAgent(2, explorer, replay_buffer, tp, hp, save_progress=False, tensor_board_log=False)
+    return CustomAgent(2, explorer, replay_buffer, tp, hp, tensor_board_log=False)
 
 
 def get_ppo_agent(replay_buffer: AnyReplayBuffer, explorer: AnyExplorer) -> Agent:
@@ -138,7 +138,7 @@ def get_ppo_agent(replay_buffer: AnyReplayBuffer, explorer: AnyExplorer) -> Agen
 
     hp = PpoHyperParams(lr=0.003, gamma=0.99, learn_every=1, clip_factor=0.2, entropy_factor=0.01)
     tp = TrainingParams(batch_size=64, episodes=200)
-    return CustomAgent(2, explorer, replay_buffer, tp, hp, save_progress=False, tensor_board_log=False)
+    return CustomAgent(2, explorer, replay_buffer, tp, hp, tensor_board_log=False)
 
 
 class NN(torch.nn.Module):

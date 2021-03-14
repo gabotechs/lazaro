@@ -23,7 +23,8 @@ class PrioritizedReplayBuffer(ReplayBuffer):
         self.sum_tree = SumSegmentTree(tree_capacity)
         self.min_tree = MinSegmentTree(tree_capacity)
 
-    def increase_beta(self):
+    def increase_beta(self, *_, **__):
+        self.log.debug(f"increase beta for {type(self).__name__} triggered")
         if self.beta < self.rp.final_beta:
             self.beta += self.rp.increase_beta
         elif self.beta > self.rp.final_beta:
@@ -86,3 +87,21 @@ class PrioritizedReplayBuffer(ReplayBuffer):
         super(PrioritizedReplayBuffer, self).clear()
         self.sum_tree.clear()
         self.min_tree.clear()
+
+    def link_to_agent(self, agent):
+        self.log.info(f"linking {type(self).__name__} priority...")
+        agent.add_step_callback(self.increase_beta)
+
+        def update_priorities(learning_step) -> None:
+            self.log.debug(f"update priorities for {type(self).__name__} triggered")
+            self.update_priorities(
+                [e.index for e in learning_step.batch],
+                [abs(x - y) + 1e-7 for x, y in zip(learning_step.x, learning_step.y)]
+            )
+
+        agent.add_learn_callback(update_priorities)
+
+    def get_stats(self) -> T.Dict[str, float]:
+        stats = super(PrioritizedReplayBuffer, self).get_stats()
+        stats.update({"Prioritized Replay Buffer Beta": self.beta})
+        return stats

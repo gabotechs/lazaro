@@ -19,7 +19,8 @@ class RandomExplorer(Explorer):
         self.epsilon: float = ep.init_ep
         self.arrived_to_minimum: bool = False
 
-    def decay(self):
+    def decay(self, *_, **__) -> None:
+        self.log.debug(f"decay epsilon for {type(self).__name__} triggered")
         if self.epsilon > self.ep.final_ep:
             self.epsilon -= self.ep.decay_ep
         elif self.epsilon < self.ep.final_ep:
@@ -33,3 +34,9 @@ class RandomExplorer(Explorer):
             return f(actions)
         else:
             return randrange(0, len(actions))
+
+    def link_to_agent(self, agent):
+        agent.add_step_callback(self.decay)
+
+    def get_stats(self) -> T.Dict[str, float]:
+        return {"Random Explorer Epsilon": self.epsilon}

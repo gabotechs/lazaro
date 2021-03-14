@@ -34,3 +34,10 @@ class ReplayBuffer(ABC):
     @abstractmethod
     def sample(self, limit: int):
         raise NotImplementedError()
+
+    @abstractmethod
+    def link_to_agent(self, agent):
+        raise NotImplementedError()
+
+    def get_stats(self) -> T.Dict[str, float]:
+        return {"Replay Buffer Size": len(self)}

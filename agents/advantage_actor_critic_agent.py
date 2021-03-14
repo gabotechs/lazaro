@@ -35,15 +35,13 @@ class ActorCritic(torch.nn.Module):
 class A2cAgent(Agent, ABC):
     def __init__(self,
                  action_space: int,
-                 explorer: T.Union[AnyExplorer, None],
+                 explorer: AnyExplorer,
                  replay_buffer: AnyReplayBuffer,
                  tp: TrainingParams,
                  hp: A2CHyperParams = A2CHyperParams(),
                  use_gpu: bool = True,
-                 save_progress: bool = True,
                  tensor_board_log: bool = True):
-        super(A2cAgent, self).__init__(action_space, explorer, replay_buffer, tp, hp,
-                                       use_gpu, save_progress, tensor_board_log)
+        super(A2cAgent, self).__init__(action_space, explorer, replay_buffer, tp, hp, use_gpu, tensor_board_log)
 
         self.actor_critic = self.build_actor_critic().to(self.device)
         self.actor_critic_optimizer = torch.optim.Adam(self.actor_critic.parameters(), lr=hp.lr)

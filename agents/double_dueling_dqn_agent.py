@@ -11,12 +11,10 @@ from .replay_buffers import AnyReplayBuffer
 class DoubleDuelingDqnAgent(DuelingDqnAgent, DoubleDqnAgent, ABC):
     def __init__(self,
                  action_space: int,
-                 explorer: T.Union[AnyExplorer, None],
+                 explorer: AnyExplorer,
                  replay_buffer: AnyReplayBuffer,
                  tp: TrainingParams,
                  hp: DoubleDuelingDqnHyperParams = DoubleDuelingDqnHyperParams(),
                  use_gpu: bool = True,
-                 save_progress: bool = True,
                  tensor_board_log: bool = True):
-        super(DoubleDuelingDqnAgent, self).__init__(action_space, explorer, replay_buffer, tp, hp,
-                                                    use_gpu, save_progress, tensor_board_log)
+        super(DoubleDuelingDqnAgent, self).__init__(action_space, explorer, replay_buffer, tp, hp, use_gpu, tensor_board_log)

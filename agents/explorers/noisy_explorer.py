@@ -65,8 +65,11 @@ class NoisyExplorer(Explorer):
     def __init__(self, ep: NoisyExplorerParams = NoisyExplorerParams()):
         super(NoisyExplorer, self).__init__()
         self.ep: NoisyExplorerParams = ep
+        self.noisy_layers_reference: T.List[NoisyLinear] = []
+        self.reset_count: int = 0
 
     def wrap_model(self, model: torch.nn.Module) -> torch.nn.Module:
+        self.log.info(f"wrapping model with noisy layers")
         last_layer = list(model.modules())[-1]
         if not isinstance(last_layer, torch.nn.Linear):
             raise ValueError("the model you have created must have a torch.nn.Linear in the last layer")
@@ -77,7 +80,28 @@ class NoisyExplorer(Explorer):
             noisy_layers.append(torch.nn.ReLU())
             noisy_layers.append(NoisyLinear(self.ep.extra_layers[i - 1], self.ep.extra_layers[i], self.ep.std_init))
 
+        self.noisy_layers_reference = noisy_layers
         return ModelWithNoisyLayers(model, noisy_layers)
 
     def choose(self, actions: np.ndarray, f: T.Callable[[np.ndarray], int]) -> int:
         return f(actions)
+
+    def reset_noise(self, *_, **__):
+        self.reset_count += 1
+        if self.reset_count < self.ep.reset_noise_every:
+            return
+        self.reset_count = 0
+        i = 0
+        for layer in self.noisy_layers_reference:
+            if isinstance(layer, NoisyLinear):
+                self.log.debug(f"resetting noise for noise layer {i}")
+                layer.reset_noise()
+                i += 1
+
+    def link_to_agent(self, agent):
+        self.log.info(f"linking {type(self).__name__}...")
+        agent.add_step_callback(self.reset_noise)
+        agent.model_wrappers.append(self.wrap_model)
+
+    def get_stats(self) -> T.Dict[str, float]:
+        return {}

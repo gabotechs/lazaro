@@ -50,6 +50,9 @@ class TrainingProgress:
     total_reward: float
 
 
+TProgressCallback = T.Callable[[TrainingProgress], bool]
+
+
 @dataclass
 class TrainingParams:
     batch_size: int
@@ -62,8 +65,14 @@ class TrainingStep:
     episode: int
 
 
+TStepCallback = T.Callable[[TrainingStep], None]
+
+
 @dataclass
 class LearningStep:
     batch: T.List[ReplayBufferEntry]
     x: T.List[float]
     y: T.List[float]
+
+
+TLearnCallback = T.Callable[[LearningStep], None]
