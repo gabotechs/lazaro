@@ -26,6 +26,11 @@ class PpoAgent(MonteCarloA2cCriticAgent, ABC):
         self.actor_critic_new.load_state_dict(self.actor_critic.state_dict())
         self.add_step_callback(self.ensure_learning_step_callback)
 
+    def get_state_dict(self) -> dict:
+        state_dict = super(PpoAgent, self).get_state_dict()
+        state_dict.update({"actor_critic_new": self.actor_critic_new.state_dict()})
+        return state_dict
+
     def ensure_learning_step_callback(self, training_step: TrainingStep) -> None:
         if training_step.step % self.hp.ensure_every == 0:
             self.actor_critic.load_state_dict(self.actor_critic_new.state_dict())

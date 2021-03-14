@@ -27,6 +27,11 @@ class DoubleDqnAgent(DqnAgent, ABC):
 
         self.action_evaluator = self.build_model().to(self.device).eval()
 
+    def get_state_dict(self) -> dict:
+        state_dict = super(DoubleDqnAgent, self).get_state_dict()
+        state_dict.update({"action_evaluator": self.action_evaluator.state_dict()})
+        return state_dict
+
     def ensure_learning(self) -> None:
         self.action_evaluator.load_state_dict(self.action_estimator.state_dict())
 

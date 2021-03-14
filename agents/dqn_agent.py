@@ -50,6 +50,9 @@ class DqnAgent(Agent, ABC):
         self.optimizer = torch.optim.Adam(self.action_estimator.parameters(), lr=hp.lr)
         self.loss_f = torch.nn.MSELoss(reduction="none").to(self.device)
 
+    def get_state_dict(self) -> dict:
+        return {"action_estimator": self.action_estimator.state_dict()}
+
     def build_model(self) -> torch.nn.Module:
         model = super(DqnAgent, self).build_model()
         return DqnNetwork(model, self.action_space, self.last_layer_factory)

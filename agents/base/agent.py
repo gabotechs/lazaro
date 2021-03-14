@@ -397,6 +397,10 @@ class Agent(ABC):
         return info
 
     @abstractmethod
+    def get_state_dict(self) -> dict:
+        raise NotImplementedError()
+
+    @abstractmethod
     def model_factory(self) -> torch.nn.Module:
         raise NotImplementedError()
 

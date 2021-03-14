@@ -49,6 +49,9 @@ class A2cAgent(Agent, ABC):
         self.actor_critic_optimizer = torch.optim.Adam(self.actor_critic.parameters(), lr=hp.lr)
         self.loss_f = torch.nn.MSELoss(reduction="none").to(self.device)
 
+    def get_state_dict(self) -> dict:
+        return {"actor_critic": self.actor_critic.state_dict()}
+
     def build_actor_critic(self) -> torch.nn.Module:
         return ActorCritic(self.build_model().to(self.device), self.action_space, self.last_layer_factory)
 

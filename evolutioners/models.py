@@ -2,7 +2,7 @@ import typing as T
 
 
 class EvolvingInt:
-    def __init__(self, value: int, min_limit: int, max_limit: int, mutation_factor: float):
+    def __init__(self, value: int, min_limit: int, max_limit: int, mutation_step: float):
         if value > max_limit:
             value = max_limit
         elif value < min_limit:
@@ -10,11 +10,11 @@ class EvolvingInt:
         self.value: int = value
         self.min_limit: int = min_limit
         self.max_limit: int = max_limit
-        self.mutation_factor: float = mutation_factor
+        self.mutation_step: float = mutation_step
 
 
 class EvolvingFloat:
-    def __init__(self, value: float, min_limit: float, max_limit: float, mutation_factor: float):
+    def __init__(self, value: float, min_limit: float, max_limit: float, mutation_step: float):
         if value > max_limit:
             value = max_limit
         elif value < min_limit:
@@ -22,20 +22,19 @@ class EvolvingFloat:
         self.value: float = value
         self.min_limit: float = min_limit
         self.max_limit: float = max_limit
-        self.mutation_factor: float = mutation_factor
+        self.mutation_step: float = mutation_step
 
 
 class EvolvingBool:
-    def __init__(self, value: bool, mutation_factor: float):
+    def __init__(self, value: bool, mutation_step: float):
         self.value: float = value
-        self.mutation_factor: float = mutation_factor
+        self.mutation_step: float = mutation_step
 
 
 class EvolutionerParams:
-    def __init__(self, workers: int, generation_size: int, max_allowed_mutation: float):
+    def __init__(self, workers: int, generation_size: int):
         self.workers: int = workers
         self.generation_size: int = generation_size
-        self.max_allowed_mutation: float = max_allowed_mutation
 
 
 T_EParams = T.Dict[str, T.Union[EvolvingInt, EvolvingBool, EvolvingFloat]]

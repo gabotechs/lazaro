@@ -9,6 +9,7 @@ from evolutioners.models import EvolvingFloat, EvolvingInt
 
 
 env = CartPole()
+env.visualize = False
 
 
 class CustomNN(torch.nn.Module):
@@ -22,9 +23,9 @@ class CustomNN(torch.nn.Module):
 
 
 class CustomAgent(lz.DoubleDuelingDqnAgent):
-    def __init__(self, *args, hidden_1,  hidden_2, **kwargs):
-        self.hidden_1 = hidden_1
-        self.hidden_2 = hidden_2
+    def __init__(self, *args, **kwargs):
+        self.hidden_1 = 6
+        self.hidden_2 = 23
         super(CustomAgent, self).__init__(*args, **kwargs)
 
     def model_factory(self) -> torch.nn.Module:
@@ -35,48 +36,42 @@ class CustomAgent(lz.DoubleDuelingDqnAgent):
 
 
 evolve_params: T_EParams = {
-    "hidden_1": EvolvingInt(10, 3, 50, 0.3),
-    "hidden_2": EvolvingInt(100, 10, 500, 0.3),
-    "lr": EvolvingFloat(0.0002442092598528454, 1e-6, 1e-1, 0.8),
-    "batch_size": EvolvingInt(63, 8, 512, 0.8),
-    "memory_len": EvolvingInt(11434, 256, 20000, 2.0),
+    "lr": EvolvingFloat(0.0025, 1e-6, 1e-1, 0.0005),
+    "batch_size": EvolvingInt(46, 8, 512, 20),
+    "memory_len": EvolvingInt(11246, 256, 20000, 1000),
 }
 
 
-def agent_factory(params: T_EParams) -> lz.AnyAgent:
-    agent = CustomAgent(
-        len(env.get_action_space()),
-        lz.explorers.RandomExplorer(),
-        lz.replay_buffers.RandomReplayBuffer(lz.replay_buffers.RandomReplayBufferParams(
-            max_len=params["memory_len"].value
-        )),
-        lz.TrainingParams(
-            batch_size=params["batch_size"].value,
-            episodes=50
-        ),
-        lz.DoubleDuelingDqnHyperParams(
-            learn_every=1,
-            lr=params["lr"].value,
-            ensure_every=10
-        ),
-        use_gpu=True,
-        hidden_1=params["hidden_1"].value,
-        hidden_2=params["hidden_2"].value
-    )
-
-    return agent
+class CustomEvolutioner(Evolutioner):
+    def agent_factory(self, params: T_EParams, state_dict: dict) -> lz.AnyAgent:
+        agent = CustomAgent(
+            len(env.get_action_space()),
+            lz.explorers.RandomExplorer(),
+            lz.replay_buffers.RandomReplayBuffer(lz.replay_buffers.RandomReplayBufferParams(
+                max_len=params["memory_len"].value
+            )),
+            lz.TrainingParams(
+                batch_size=params["batch_size"].value,
+                episodes=50
+            ),
+            lz.DoubleDuelingDqnHyperParams(
+                learn_every=1,
+                lr=params["lr"].value,
+                ensure_every=10
+            ),
+            use_gpu=True
+        )
+        if state_dict:
+            agent.action_estimator.load_state_dict(state_dict["action_estimator"], strict=False)
+            agent.action_evaluator.load_state_dict(agent.action_estimator.state_dict())
+        return agent
 
 
 if __name__ == "__main__":
-    evolutioner = Evolutioner(
+    evolutioner = CustomEvolutioner(
         env,
-        EvolutionerParams(
-            generation_size=10,
-            max_allowed_mutation=0.9,
-            workers=4
-        ),
         evolve_params,
-        agent_factory
+        EvolutionerParams(generation_size=10, workers=4),
     )
 
     def on_progress(progress: EvolutionProgress):
