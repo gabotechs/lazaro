@@ -38,7 +38,8 @@ class A2cAgent(BaseAgent, ABC):
                  hp: A2CHyperParams = A2CHyperParams(),
                  use_gpu: bool = True):
         super(A2cAgent, self).__init__(action_space, hp, use_gpu)
-        self.actor_critic = self.build_actor_critic().to(self.device)
+        self.model_wrappers.append(self.a2c_model_wrapper)
+        self.actor_critic = self.build_model().to(self.device)
         self.actor_critic_optimizer = torch.optim.Adam(self.actor_critic.parameters(), lr=hp.lr)
         self.loss_f = torch.nn.MSELoss(reduction="none").to(self.device)
 
@@ -48,8 +49,8 @@ class A2cAgent(BaseAgent, ABC):
     def get_state_dict(self) -> dict:
         return {"actor_critic": self.actor_critic.state_dict()}
 
-    def build_actor_critic(self) -> torch.nn.Module:
-        return ActorCritic(self.build_model().to(self.device), self.action_space, self.last_layer_factory)
+    def a2c_model_wrapper(self, model: torch.nn.Module) -> torch.nn.Module:
+        return ActorCritic(model, self.action_space, self.last_layer_factory)
 
     def postprocess(self, t: torch.Tensor) -> np.ndarray:
         return np.array(t.squeeze(0))

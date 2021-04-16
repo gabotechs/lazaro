@@ -16,7 +16,7 @@ class CustomNN(torch.nn.Module):
         return F.relu(self.linear(x))
 
 
-class CustomAgent(replay_buffers.NStepsPrioritizedReplayBuffer, explorers.NoisyExplorer, agents.DoubleDuelingDqnAgent):
+class CustomAgent(replay_buffers.RandomReplayBuffer, explorers.NoisyExplorer, agents.PpoAgent):
     def model_factory(self):
         return CustomNN()
 

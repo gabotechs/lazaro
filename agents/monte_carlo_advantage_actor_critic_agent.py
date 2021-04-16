@@ -30,8 +30,7 @@ class MonteCarloA2cCriticAgent(A2cAgent, ABC):
 
     def train(self, env: Environment, tp: TrainingParams) -> None:
         self.health_check(env)
-        if hasattr(self, "accumulate_rewards"):  # todo: very dirty
-            setattr(self, "accumulate_rewards", False)
+        self.accumulate_rewards = False
 
         s = env.reset()
         i = 0

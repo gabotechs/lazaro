@@ -14,7 +14,7 @@ class PpoAgent(MonteCarloA2cCriticAgent, ABC):
                  use_gpu: bool = True):
         super(MonteCarloA2cCriticAgent, self).__init__(action_space, hp, use_gpu)
         self.hyper_params = hp
-        self.actor_critic_new = self.build_actor_critic().to(self.device).eval()
+        self.actor_critic_new = self.build_model().to(self.device).eval()
         self.actor_critic_new_optimizer = torch.optim.Adam(self.actor_critic_new.parameters(), lr=hp.lr)
         self.actor_critic_new.load_state_dict(self.actor_critic.state_dict())
         self.add_step_callback("ppo agent update state", self.ensure_learning_step_callback)

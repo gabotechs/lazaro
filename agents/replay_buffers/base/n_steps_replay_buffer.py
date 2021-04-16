@@ -10,7 +10,6 @@ class NStepsReplayBuffer(ReplayBuffer, ABC):
     def __init__(self, rp: NStepReplayBufferParams = NStepReplayBufferParams(), *args, **kwargs):
         self.rp: NStepReplayBufferParams = rp
         self.n_step_buffer: T.Deque[ReplayBufferEntry] = deque(maxlen=self.rp.n_step)
-        self.accumulate_rewards: bool = True
         super().__init__(rp, *args, **kwargs)
 
     def _get_n_step_info(self) -> ReplayBufferEntry:

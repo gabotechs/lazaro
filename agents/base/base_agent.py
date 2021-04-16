@@ -26,6 +26,7 @@ class BaseAgent(BaseObject,
         self.progress_callbacks: T.Dict[str, models.TProgressCallback] = {}
         self.learning_callbacks: T.Dict[str, models.TLearnCallback] = {}
         self.model_wrappers: T.List[T.Callable[[torch.nn.Module], torch.nn.Module]] = []
+        self.accumulate_rewards: bool = True
         self.rp_link()
         self.ex_link()
 

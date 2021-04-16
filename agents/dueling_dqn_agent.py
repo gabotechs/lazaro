@@ -40,6 +40,5 @@ class DuelingDqnAgent(DqnAgent, ABC):
                  use_gpu: bool = True):
         super(DuelingDqnAgent, self).__init__(action_space, hp, use_gpu)
 
-    def build_model(self) -> torch.nn.Module:
-        model = super(DqnAgent, self).build_model()
+    def dqn_model_wrapper(self, model: torch.nn.Module) -> torch.nn.Module:
         return DuelingDqnNetwork(model, self.action_space, self.last_layer_factory)

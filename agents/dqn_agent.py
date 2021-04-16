@@ -38,6 +38,7 @@ class DqnAgent(BaseAgent, ABC):
                  hp: DqnHyperParams = DqnHyperParams(),
                  use_gpu: bool = True):
         super(DqnAgent, self).__init__(action_space, hp, use_gpu)
+        self.model_wrappers.append(self.dqn_model_wrapper)
         self.action_estimator = self.build_model().to(self.device)
         self.optimizer = torch.optim.Adam(self.action_estimator.parameters(), lr=hp.lr)
         self.loss_f = torch.nn.MSELoss(reduction="none").to(self.device)
@@ -48,8 +49,7 @@ class DqnAgent(BaseAgent, ABC):
     def get_info(self) -> dict:
         return {}
 
-    def build_model(self) -> torch.nn.Module:
-        model = super(DqnAgent, self).build_model()
+    def dqn_model_wrapper(self, model: torch.nn.Module) -> torch.nn.Module:
         return DqnNetwork(model, self.action_space, self.last_layer_factory)
 
     def infer(self, x: np.ndarray) -> np.ndarray:
