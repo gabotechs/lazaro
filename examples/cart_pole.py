@@ -1,6 +1,7 @@
 import torch
 import torch.nn.functional as F
 import agents
+from agents import explorers, replay_buffers
 from environments import CartPole
 
 env = CartPole()
@@ -15,7 +16,7 @@ class CustomNN(torch.nn.Module):
         return F.relu(self.linear(x))
 
 
-class CustomAgent(agents.PpoAgent):
+class CustomAgent(replay_buffers.NStepsPrioritizedReplayBuffer, explorers.NoisyExplorer, agents.DoubleDuelingDqnAgent):
     def model_factory(self):
         return CustomNN()
 
@@ -23,11 +24,6 @@ class CustomAgent(agents.PpoAgent):
         return torch.unsqueeze(torch.tensor(x, dtype=torch.float32), 0)
 
 
-agent = CustomAgent(
-    len(env.get_action_space()),
-    agents.explorers.RandomExplorer(),
-    agents.replay_buffers.RandomReplayBuffer(),
-    agents.TrainingParams(batch_size=128, episodes=100),
-)
-agent.train(env)
+agent = CustomAgent(action_space=len(env.get_action_space()))
+agent.train(env, agents.TrainingParams(batch_size=128, episodes=100))
 input()

@@ -1,27 +1,27 @@
-from abc import ABC, abstractmethod
+from abc import ABC
 import typing as T
 from .models import ReplayBufferEntry, ReplayBufferParams
-from logger import get_logger
+from ...base.base_agent import BaseAgent
 
 
-class ReplayBuffer(ABC):
-    def __init__(self, rp: ReplayBufferParams):
-        self.log = get_logger(type(self).__name__)
+class ReplayBuffer(BaseAgent, ABC):
+    def __init__(self, rp: ReplayBufferParams, *args, **kwargs):
+        super(ReplayBuffer, self).__init__(*args, **kwargs)
         self.rp: ReplayBufferParams = rp
         self.records: T.List[T.Union[None, ReplayBufferEntry]] = [None for _ in range(self.rp.max_len)]
         self.ptr = 0
         self.filled = False
 
-    def __len__(self):
+    def rp_get_length(self):
         return self.ptr if not self.filled else self.rp.max_len
 
-    def clear(self):
+    def rp_clear(self) -> None:
         self.log.info("buffer is being emptied")
         self.records = [None for _ in range(self.rp.max_len)]
         self.ptr = 0
         self.filled = False
 
-    def add(self, entry: T.Union[ReplayBufferEntry]) -> bool:
+    def rp_add(self, entry: T.Union[ReplayBufferEntry]) -> bool:
         self.log.debug("adding new entry to bufer")
         self.records[self.ptr] = entry
         entry.index = self.ptr
@@ -31,13 +31,5 @@ class ReplayBuffer(ABC):
             self.filled = True
         return True
 
-    @abstractmethod
-    def sample(self, limit: int):
-        raise NotImplementedError()
-
-    @abstractmethod
-    def link_to_agent(self, agent):
-        raise NotImplementedError()
-
-    def get_stats(self) -> T.Dict[str, float]:
-        return {"Replay Buffer Size": len(self)}
+    def rp_get_stats(self) -> T.Dict[str, float]:
+        return {"Replay Buffer Size": self.rp_get_length()}

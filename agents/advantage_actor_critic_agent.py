@@ -1,15 +1,15 @@
-from abc import ABC
 import typing as T
+from abc import ABC
+
+import numpy as np
 import torch
 import torch.nn.functional as F
-import numpy as np
 
-from .explorers import AnyExplorer
-from .explorers.noisy_explorer import NoisyLinear
 from environments import Environment
-from .replay_buffers import AnyReplayBuffer, ReplayBufferEntry
+from .base.base_agent import BaseAgent
 from .base.models import A2CHyperParams, TrainingProgress, TrainingParams, LearningStep, TrainingStep
-from .base.agent import Agent
+from .explorers.noisy_explorer import NoisyLinear
+from .replay_buffers import ReplayBufferEntry
 
 
 class ActorCritic(torch.nn.Module):
@@ -32,20 +32,18 @@ class ActorCritic(torch.nn.Module):
         return F.softmax(self.actor(x), dim=1), self.critic(x)
 
 
-class A2cAgent(Agent, ABC):
+class A2cAgent(BaseAgent, ABC):
     def __init__(self,
                  action_space: int,
-                 explorer: AnyExplorer,
-                 replay_buffer: AnyReplayBuffer,
-                 tp: TrainingParams,
                  hp: A2CHyperParams = A2CHyperParams(),
-                 use_gpu: bool = True,
-                 tensor_board_log: bool = True):
-        super(A2cAgent, self).__init__(action_space, explorer, replay_buffer, tp, hp, use_gpu, tensor_board_log)
-
+                 use_gpu: bool = True):
+        super(A2cAgent, self).__init__(action_space, hp, use_gpu)
         self.actor_critic = self.build_actor_critic().to(self.device)
         self.actor_critic_optimizer = torch.optim.Adam(self.actor_critic.parameters(), lr=hp.lr)
         self.loss_f = torch.nn.MSELoss(reduction="none").to(self.device)
+
+    def get_info(self) -> dict:
+        return {}
 
     def get_state_dict(self) -> dict:
         return {"actor_critic": self.actor_critic.state_dict()}
@@ -71,7 +69,7 @@ class A2cAgent(Agent, ABC):
         action_probabilities, state_values = self.actor_critic(batch_s)
         with torch.no_grad():
             _, next_state_values = self.actor_critic(batch_s_)
-            estimated_q_value: torch.Tensor = self.hp.gamma * next_state_values * batch_finals + batch_r
+            estimated_q_value: torch.Tensor = self.hyper_params.gamma * next_state_values * batch_finals + batch_r
 
         advantages: torch.Tensor = (estimated_q_value - state_values.clone().detach()).squeeze(1)
         chosen_action_log_probabilities: torch.Tensor = torch.stack(
@@ -84,7 +82,7 @@ class A2cAgent(Agent, ABC):
         self.actor_critic_optimizer.step()
         self.call_learn_callbacks(LearningStep(batch, [v.item() for v in state_values], [v.item() for v in estimated_q_value]))
 
-    def train(self, env: Environment) -> None:
+    def train(self, env: Environment, tp: TrainingParams) -> None:
         self.health_check(env)
         s = env.reset()
         i = 0
@@ -94,22 +92,22 @@ class A2cAgent(Agent, ABC):
         while True:
             estimated_rewards = self.infer(s)
             def choosing_f(x): return torch.distributions.Categorical(torch.tensor(x)).sample().item()
-            a = self.explorer.choose(estimated_rewards, choosing_f) if self.explorer else choosing_f(estimated_rewards)
+            a = self.ex_choose(list(estimated_rewards), choosing_f)
             s_, r, final = env.step(a)
-            self.replay_buffer.add(ReplayBufferEntry(s, s_, a, r, final))
+            self.rp_add(ReplayBufferEntry(s, s_, a, r, final))
             accumulated_reward += r
             s = s_
 
             self.call_step_callbacks(TrainingStep(i, episode))
 
-            if i % self.hp.learn_every == 0 and i != 0 and len(self.replay_buffer) >= self.tp.batch_size:
-                batch = self.replay_buffer.sample(self.tp.batch_size)
+            if i % self.hyper_params.learn_every == 0 and i != 0 and self.rp_get_length() >= tp.batch_size:
+                batch = self.rp_sample(tp.batch_size)
                 self.learn(batch)
 
             if final:
                 training_progress = TrainingProgress(i, episode, steps_survived, accumulated_reward)
                 must_exit = self.call_progress_callbacks(training_progress)
-                if episode >= self.tp.episodes or must_exit:
+                if episode >= tp.episodes or must_exit:
                     return
 
                 accumulated_reward = 0

@@ -1,11 +1,11 @@
-from abc import ABC
 import typing as T
+from abc import ABC
+
 import torch
-from .explorers.noisy_explorer import NoisyLinear
-from .base.models import DuelingDqnHyperParams, TrainingParams
+
+from .base.models import DuelingDqnHyperParams
 from .dqn_agent import DqnAgent
-from .explorers import AnyExplorer
-from .replay_buffers import AnyReplayBuffer
+from .explorers.noisy_explorer import NoisyLinear
 
 
 class DuelingDqnNetwork(torch.nn.Module):
@@ -36,13 +36,9 @@ class DuelingDqnNetwork(torch.nn.Module):
 class DuelingDqnAgent(DqnAgent, ABC):
     def __init__(self,
                  action_space: int,
-                 explorer: T.Union[AnyExplorer, None],
-                 replay_buffer: AnyReplayBuffer,
-                 tp: TrainingParams,
                  hp: DuelingDqnHyperParams = DuelingDqnHyperParams(),
-                 use_gpu: bool = True,
-                 tensor_board_log: bool = True):
-        super(DuelingDqnAgent, self).__init__(action_space, explorer, replay_buffer, tp, hp, use_gpu, tensor_board_log)
+                 use_gpu: bool = True):
+        super(DuelingDqnAgent, self).__init__(action_space, hp, use_gpu)
 
     def build_model(self) -> torch.nn.Module:
         model = super(DqnAgent, self).build_model()

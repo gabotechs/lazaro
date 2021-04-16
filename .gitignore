@@ -1,4 +1,5 @@
-data
-venv
-.pytest_cache
-runs
+/data
+/venv
+/.pytest_cache
+/runs
+/.idea

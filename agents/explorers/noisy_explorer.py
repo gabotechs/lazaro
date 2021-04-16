@@ -3,6 +3,7 @@ import typing as T
 import torch
 import torch.nn.functional as F
 import numpy as np
+from abc import ABC
 
 from .base.explorer import Explorer
 from .base.models import NoisyExplorerParams
@@ -61,12 +62,14 @@ class ModelWithNoisyLayers(torch.nn.Module):
         return x
 
 
-class NoisyExplorer(Explorer):
-    def __init__(self, ep: NoisyExplorerParams = NoisyExplorerParams()):
-        super(NoisyExplorer, self).__init__()
+class NoisyExplorer(Explorer, ABC):
+    def __init__(self, ep: NoisyExplorerParams = NoisyExplorerParams(), *args, **kwargs):
+        if not isinstance(ep, NoisyExplorerParams):
+            raise ValueError("argument ep must be an instance of NoisyExplorerParams")
         self.ep: NoisyExplorerParams = ep
         self.noisy_layers_reference: T.List[NoisyLinear] = []
         self.reset_count: int = 0
+        super(NoisyExplorer, self).__init__(*args, **kwargs)
 
     def wrap_model(self, model: torch.nn.Module) -> torch.nn.Module:
         self.log.info(f"wrapping model with noisy layers")
@@ -83,7 +86,7 @@ class NoisyExplorer(Explorer):
         self.noisy_layers_reference += noisy_layers
         return ModelWithNoisyLayers(model, noisy_layers)
 
-    def choose(self, actions: np.ndarray, f: T.Callable[[np.ndarray], int]) -> int:
+    def ex_choose(self, actions: np.ndarray, f: T.Callable[[np.ndarray], int]) -> int:
         return f(actions)
 
     def reset_noise(self, *_, **__):
@@ -98,17 +101,15 @@ class NoisyExplorer(Explorer):
                 layer.reset_noise()
                 i += 1
 
-    def link_to_agent(self, agent):
+    def last_layer_factory(self, in_features: int, out_features: int) -> NoisyLinear:
+        noisy_linear = NoisyLinear(in_features, out_features, self.ep.std_init)
+        self.noisy_layers_reference.append(noisy_linear)
+        return noisy_linear
+
+    def ex_link(self):
         self.log.info(f"linking {type(self).__name__}...")
-        agent.add_step_callback(self.reset_noise)
-        agent.model_wrappers.append(self.wrap_model)
+        self.add_step_callback("noisy explorer reset noisy", self.reset_noise)
+        self.model_wrappers.append(self.wrap_model)
 
-        def last_layer_factory(in_features: int, out_features: int) -> NoisyLinear:
-            noisy_linear = NoisyLinear(in_features, out_features, self.ep.std_init)
-            self.noisy_layers_reference.append(noisy_linear)
-            return noisy_linear
-
-        agent.last_layer_factory = last_layer_factory
-
-    def get_stats(self) -> T.Dict[str, float]:
+    def ex_get_stats(self) -> T.Dict[str, float]:
         return {}

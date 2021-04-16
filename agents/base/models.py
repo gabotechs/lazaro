@@ -1,7 +1,17 @@
 import typing as T
 from dataclasses import dataclass
+import numpy as np
 
-from agents.replay_buffers import ReplayBufferEntry
+
+@dataclass
+class ReplayBufferEntry:
+    s: np.ndarray
+    s_: np.ndarray
+    a: int
+    r: float
+    final: bool
+    index: T.Union[None, int] = None
+    weight: int = 1
 
 
 @dataclass
@@ -70,7 +80,7 @@ TStepCallback = T.Callable[[TrainingStep], None]
 
 @dataclass
 class LearningStep:
-    batch: T.List[ReplayBufferEntry]
+    batch: T.List[T.Any]
     x: T.List[float]
     y: T.List[float]
 

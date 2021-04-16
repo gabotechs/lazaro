@@ -8,13 +8,14 @@ import numpy as np
 from environments import Environment
 
 from . import models
+from .base_object import BaseObject
 from .. import explorers as ex, replay_buffers as rp
 from logger import get_logger
 import os
 from plotter import TensorBoard
 
 
-class Agent(ABC):
+class Agent(BaseObject, ABC):
     def __init__(self,
                  action_space: int,
                  explorer: ex.AnyExplorer,
@@ -23,7 +24,7 @@ class Agent(ABC):
                  hp: models.HyperParams,
                  use_gpu: bool = True,
                  tensor_board_log: bool = True):
-
+        super(Agent, self).__init__()
         self.log = get_logger(self.get_self_class_name())
         self.action_space = action_space
         self.hp = hp

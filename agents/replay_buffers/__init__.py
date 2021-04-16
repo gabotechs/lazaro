@@ -6,5 +6,7 @@ from .n_steps_priorized_replay_buffer import NStepsPrioritizedReplayBuffer
 from .base.models import ReplayBufferParams, RandomReplayBufferParams, ReplayBufferEntry, MemoryReplayBufferEntry, \
     NStepReplayBufferParams,  NStepPrioritizedReplayBufferParams, PrioritizedReplayBufferParams
 
-AnyReplayBuffer = T.Union[RandomReplayBuffer, NStepsRandomReplayBuffer,
-                          NStepsPrioritizedReplayBuffer, PrioritizedReplayBuffer]
+AnyReplayBuffer = T.Union[RandomReplayBuffer,
+                          NStepsRandomReplayBuffer,
+                          NStepsPrioritizedReplayBuffer,
+                          PrioritizedReplayBuffer]

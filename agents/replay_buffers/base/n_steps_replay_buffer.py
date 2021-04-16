@@ -7,15 +7,11 @@ from .models import ReplayBufferEntry, NStepReplayBufferParams
 
 
 class NStepsReplayBuffer(ReplayBuffer, ABC):
-    def __init__(self, rp: NStepReplayBufferParams = NStepReplayBufferParams()):
-        super().__init__(rp)
+    def __init__(self, rp: NStepReplayBufferParams = NStepReplayBufferParams(), *args, **kwargs):
         self.rp: NStepReplayBufferParams = rp
         self.n_step_buffer: T.Deque[ReplayBufferEntry] = deque(maxlen=self.rp.n_step)
         self.accumulate_rewards: bool = True
-        self.gamma = 0.99  # should be overridden
-
-    def set_gamma(self, gamma: float) -> None:
-        self.gamma = gamma
+        super().__init__(rp, *args, **kwargs)
 
     def _get_n_step_info(self) -> ReplayBufferEntry:
         first_entry = self.n_step_buffer[0]
@@ -25,28 +21,28 @@ class NStepsReplayBuffer(ReplayBuffer, ABC):
         for transition in reversed(list(self.n_step_buffer)[:-1]):
             r, s_, final = transition.r, transition.s_, transition.final
             if self.accumulate_rewards:
-                ac_r = r + self.gamma * ac_r
+                ac_r = r + self.hyper_params.gamma * ac_r
 
             if final:
                 ac_s_, ac_final, ac_r = (s_, final, r)
 
         return ReplayBufferEntry(first_entry.s, ac_s_, first_entry.a, ac_r, ac_final)
 
-    def add(self, entry: T.Union[ReplayBufferEntry]) -> bool:
+    def rp_add(self, entry: T.Union[ReplayBufferEntry]) -> bool:
         self.n_step_buffer.append(entry)
         if len(self.n_step_buffer) < self.rp.n_step:
             return False
 
         n_step_entry = self._get_n_step_info()
-        super(NStepsReplayBuffer, self).add(n_step_entry)
+        super(NStepsReplayBuffer, self).rp_add(n_step_entry)
         return True
 
-    def clear(self):
-        super(NStepsReplayBuffer, self).clear()
+    def rp_clear(self):
+        super(NStepsReplayBuffer, self).rp_clear()
         self.n_step_buffer.clear()
 
-    def link_to_agent(self, agent):
-        self.gamma = agent.hp.gamma
-        new_gamma = agent.hp.gamma ** self.rp.n_step
-        self.log.info(f"refactoring gamma for {type(self).__name__}: {self.gamma} -> {new_gamma}")
-        agent.gamma = new_gamma
+    def rp_link(self):
+        prev_gamma = self.hyper_params.gamma
+        self.hyper_params.gamma = self.hyper_params.gamma ** self.rp.n_step
+        self.log.info(f"refactoring gamma: {prev_gamma} -> {self.hyper_params.gamma}")
+
