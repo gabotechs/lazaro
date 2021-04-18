@@ -1,7 +1,7 @@
 import torch
 import torch.nn.functional as F
 import agents
-from agents import explorers, replay_buffers
+from agents import explorers, replay_buffers, loggers
 from environments import CartPole
 
 env = CartPole()
@@ -16,7 +16,7 @@ class CustomNN(torch.nn.Module):
         return F.relu(self.linear(x))
 
 
-class CustomAgent(replay_buffers.RandomReplayBuffer, explorers.NoisyExplorer, agents.PpoAgent):
+class CustomAgent(loggers.TensorBoardLogger, replay_buffers.RandomReplayBuffer, explorers.NoisyExplorer, agents.PpoAgent):
     def model_factory(self):
         return CustomNN()
 

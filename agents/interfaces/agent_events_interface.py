@@ -53,6 +53,14 @@ class AgentEventInterface(ABC):
         raise NotImplementedError()
 
     @abstractmethod
+    def last_layers_model_modifier(self, model: torch.nn.Module) -> torch.nn.Module:
+        raise NotImplementedError()
+
+    @abstractmethod
+    def agent_specification_model_modifier(self, model: torch.nn.Module) -> torch.nn.Module:
+        raise NotImplementedError()
+
+    @abstractmethod
     def model_factory(self) -> torch.nn.Module:
         raise NotImplementedError()
 

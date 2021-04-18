@@ -27,9 +27,9 @@ class ActorCritic(torch.nn.Module):
         self.actor = last_layer_factory(last_layer.out_features, action_size)
         self.critic = last_layer_factory(last_layer.out_features, 1)
 
-    def forward(self, x):
+    def forward(self, x, use_critic: bool = True):
         x = self.model(x)
-        return F.softmax(self.actor(x), dim=1), self.critic(x)
+        return F.softmax(self.actor(x), dim=1), (self.critic(x) if use_critic else None)
 
 
 class A2cAgent(BaseAgent, ABC):
@@ -38,7 +38,6 @@ class A2cAgent(BaseAgent, ABC):
                  hp: A2CHyperParams = A2CHyperParams(),
                  use_gpu: bool = True):
         super(A2cAgent, self).__init__(action_space, hp, use_gpu)
-        self.model_wrappers.append(self.a2c_model_wrapper)
         self.actor_critic = self.build_model().to(self.device)
         self.actor_critic_optimizer = torch.optim.Adam(self.actor_critic.parameters(), lr=hp.lr)
         self.loss_f = torch.nn.MSELoss(reduction="none").to(self.device)
@@ -49,7 +48,8 @@ class A2cAgent(BaseAgent, ABC):
     def get_state_dict(self) -> dict:
         return {"actor_critic": self.actor_critic.state_dict()}
 
-    def a2c_model_wrapper(self, model: torch.nn.Module) -> torch.nn.Module:
+    def agent_specification_model_modifier(self, model: torch.nn.Module) -> torch.nn.Module:
+        self.log.info("wrapping model with actor critic layer")
         return ActorCritic(model, self.action_space, self.last_layer_factory)
 
     def postprocess(self, t: torch.Tensor) -> np.ndarray:
@@ -57,7 +57,7 @@ class A2cAgent(BaseAgent, ABC):
 
     def infer(self, x: np.ndarray) -> np.ndarray:
         with torch.no_grad():
-            return self.postprocess(self.actor_critic(self.preprocess(x).to(self.device))[0].cpu())
+            return self.postprocess(self.actor_critic.forward(self.preprocess(x).to(self.device), use_critic=False)[0].cpu())
 
     def learn(self, batch: T.List[ReplayBufferEntry]) -> None:
         batch_s = torch.cat([self.preprocess(m.s) for m in batch], 0).to(self.device).requires_grad_(True)

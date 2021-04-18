@@ -71,7 +71,7 @@ class NoisyExplorer(Explorer, ABC):
         self.reset_count: int = 0
         super(NoisyExplorer, self).__init__(*args, **kwargs)
 
-    def wrap_model(self, model: torch.nn.Module) -> torch.nn.Module:
+    def last_layers_model_modifier(self, model: torch.nn.Module) -> torch.nn.Module:
         self.log.info(f"wrapping model with noisy layers")
         last_layer = list(model.modules())[-1]
         if not isinstance(last_layer, torch.nn.Linear):
@@ -109,7 +109,6 @@ class NoisyExplorer(Explorer, ABC):
     def ex_link(self):
         self.log.info(f"linking {type(self).__name__}...")
         self.add_step_callback("noisy explorer reset noisy", self.reset_noise)
-        self.model_wrappers.append(self.wrap_model)
 
     def ex_get_stats(self) -> T.Dict[str, float]:
         return {}

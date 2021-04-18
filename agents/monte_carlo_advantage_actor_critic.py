@@ -1,11 +1,13 @@
-from abc import ABC
 import typing as T
-import torch
+from abc import ABC
+
 import numpy as np
+import torch
+
 from environments import Environment
-from .replay_buffers import ReplayBufferEntry, NStepsPrioritizedReplayBuffer, NStepsRandomReplayBuffer
+from .a2c import A2cAgent
 from .base.models import TrainingProgress, LearningStep, TrainingStep, TrainingParams
-from .advantage_actor_critic_agent import A2cAgent
+from .replay_buffers import ReplayBufferEntry
 
 
 class MonteCarloA2cCriticAgent(A2cAgent, ABC):

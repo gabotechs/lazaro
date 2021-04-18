@@ -5,27 +5,60 @@ import numpy as np
 import torch
 
 from environments import Environment
-from .base.models import DoubleDqnHyperParams, TrainingProgress, LearningStep, TrainingStep, TrainingParams
-from .dqn_agent import DqnAgent
+from .base.base_agent import BaseAgent
+from .base.models import DqnHyperParams, TrainingParams, TrainingProgress, LearningStep, TrainingStep
+from .explorers.noisy_explorer import NoisyLinear
 from .replay_buffers import ReplayBufferEntry
 
 
-class DoubleDqnAgent(DqnAgent, ABC):
+class DqnNetwork(torch.nn.Module):
+    def __init__(self,
+                 model: torch.nn.Module,
+                 action_space: int,
+                 last_layer_factory: T.Callable[[int, int], torch.nn.Module]):
+        super(DqnNetwork, self).__init__()
+        self.model = model
+        last_layer = list(model.modules())[-1]
+        if not isinstance(last_layer, (torch.nn.Linear, NoisyLinear)):
+            raise ValueError("the model you have created must have a torch.nn.Linear or "
+                             "agents.explorers.noisy_explorer.NoisyLinear in the last layer")
+
+        if last_layer.out_features == action_space:
+            print("WARNING: detected same number of features in the output of the model than the action space")
+
+        self.head = last_layer_factory(last_layer.out_features, action_space)
+
+    def forward(self, x: torch.Tensor) -> torch.Tensor:
+        x = self.model(x)
+        return self.head(x)
+
+
+class DqnAgent(BaseAgent, ABC):
     def __init__(self,
                  action_space: int,
-                 hp: DoubleDqnHyperParams = DoubleDqnHyperParams(),
+                 hp: DqnHyperParams = DqnHyperParams(),
                  use_gpu: bool = True):
-        super(DoubleDqnAgent, self).__init__(action_space, hp, use_gpu)
-        self.hyper_params = hp
-        self.action_evaluator = self.build_model().to(self.device).eval()
+        super(DqnAgent, self).__init__(action_space, hp, use_gpu)
+        self.action_estimator = self.build_model().to(self.device)
+        self.optimizer = torch.optim.Adam(self.action_estimator.parameters(), lr=hp.lr)
+        self.loss_f = torch.nn.MSELoss(reduction="none").to(self.device)
 
     def get_state_dict(self) -> dict:
-        state_dict = super(DoubleDqnAgent, self).get_state_dict()
-        state_dict.update({"action_evaluator": self.action_evaluator.state_dict()})
-        return state_dict
+        return {"action_estimator": self.action_estimator.state_dict()}
 
-    def ensure_learning(self) -> None:
-        self.action_evaluator.load_state_dict(self.action_estimator.state_dict())
+    def get_info(self) -> dict:
+        return {}
+
+    def agent_specification_model_modifier(self, model: torch.nn.Module) -> torch.nn.Module:
+        self.log.info("wrapping model with simple dqn layer")
+        return DqnNetwork(model, self.action_space, self.last_layer_factory)
+
+    def infer(self, x: np.ndarray) -> np.ndarray:
+        with torch.no_grad():
+            return self.postprocess(self.action_estimator.forward(self.preprocess(x).to(self.device)).cpu())
+
+    def postprocess(self, t: torch.Tensor) -> np.ndarray:
+        return np.array(t.squeeze(0))
 
     def learn(self, batch: T.List[ReplayBufferEntry]) -> None:
         batch_s = torch.cat([self.preprocess(m.s) for m in batch], 0).to(self.device).requires_grad_(True)
@@ -36,7 +69,7 @@ class DoubleDqnAgent(DqnAgent, ABC):
         batch_weights = torch.tensor([m.weight for m in batch], device=self.device)
         actions_estimated_values: torch.Tensor = self.action_estimator(batch_s)
         with torch.no_grad():
-            actions_expected_values: torch.Tensor = self.action_evaluator(batch_s_)
+            actions_expected_values: torch.Tensor = self.action_estimator(batch_s_)
 
         x = torch.stack([t_s[t_a] for t_s, t_a in zip(actions_estimated_values, batch_a)])
         y = torch.max(actions_expected_values, 1)[0] * self.hyper_params.gamma * batch_finals + batch_r
@@ -67,9 +100,6 @@ class DoubleDqnAgent(DqnAgent, ABC):
             if i % self.hyper_params.learn_every == 0 and i != 0 and self.rp_get_length() >= tp.batch_size:
                 batch = self.rp_sample(tp.batch_size)
                 self.learn(batch)
-
-            if i % self.hyper_params.ensure_every == 0:
-                self.ensure_learning()
 
             if final:
                 training_progress = TrainingProgress(i, episode, steps_survived, accumulated_reward)

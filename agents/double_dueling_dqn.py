@@ -1,8 +1,8 @@
 from abc import ABC
 
-from .base.models import DoubleDuelingDqnHyperParams
-from .double_dqn_agent import DoubleDqnAgent
-from .dueling_dqn_agent import DuelingDqnAgent
+from .base import DoubleDuelingDqnHyperParams
+from .double_dqn import DoubleDqnAgent
+from .dueling_dqn import DuelingDqnAgent
 
 
 class DoubleDuelingDqnAgent(DuelingDqnAgent, DoubleDqnAgent, ABC):

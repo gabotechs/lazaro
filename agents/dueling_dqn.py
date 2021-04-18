@@ -4,7 +4,7 @@ from abc import ABC
 import torch
 
 from .base.models import DuelingDqnHyperParams
-from .dqn_agent import DqnAgent
+from .dqn import DqnAgent
 from .explorers.noisy_explorer import NoisyLinear
 
 

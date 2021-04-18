@@ -25,13 +25,12 @@ class BaseAgent(BaseObject,
         self.step_callbacks: T.Dict[str, models.TStepCallback] = {}
         self.progress_callbacks: T.Dict[str, models.TProgressCallback] = {}
         self.learning_callbacks: T.Dict[str, models.TLearnCallback] = {}
-        self.model_wrappers: T.List[T.Callable[[torch.nn.Module], torch.nn.Module]] = []
         self.accumulate_rewards: bool = True
         self.rp_link()
         self.ex_link()
 
     def get_self_class_name(self):
-        return self.__class__.__bases__[0].__name__
+        return self.__class__.__name__
 
     @staticmethod
     def last_layer_factory(in_features: int, out_features: int) -> torch.nn.Linear:
@@ -119,13 +118,16 @@ class BaseAgent(BaseObject,
             cbk(learning_step)
         self.log.debug("all learning callbacks called")
 
+    def forward_hook(self, module: torch.nn.Module, x: T.Tuple[torch.Tensor], y: torch.Tensor) -> None:
+        pass
+
     def build_model(self) -> torch.nn.Module:
         self.log.info("building model from model factory...")
         model = self.model_factory()
-        self.log.info("model built correctly")
-        for i, wrapper in enumerate(self.model_wrappers):
-            self.log.info(f"wrapping model with wrapper {i}, {wrapper}")
-            model = wrapper(model)
-            self.log.info("model wrapped correctly")
+        model.register_forward_hook(self.forward_hook)
+        self.log.info("model built correctly, applying last layers modifier...")
+        model = self.last_layers_model_modifier(model)
+        self.log.info("last layers modified correctly, applying agent specification")
+        model = self.agent_specification_model_modifier(model)
+        self.log.info("agent specification applied correctly")
         return model
-

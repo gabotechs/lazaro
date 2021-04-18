@@ -217,56 +217,6 @@ class Agent(BaseObject, ABC):
         self.save_path = folder
         self.log.info(f"all save folders created: {folder}")
 
-    def add_step_callback(self, cbk: models.TStepCallback) -> None:
-        self.step_callbacks.append(cbk)
-        self.log.info(f"added new step callback, there are {len(self.step_callbacks)} step callbacks")
-
-    def add_progress_callback(self, cbk: models.TProgressCallback) -> None:
-        self.progress_callbacks.append(cbk)
-        self.log.info(f"added new progress callback, there are {len(self.progress_callbacks)} progress callbacks")
-
-    def add_learn_callback(self, cbk: models.TLearnCallback) -> None:
-        self.learning_callbacks.append(cbk)
-        self.log.info(f"added new learn callback, there are {len(self.learning_callbacks)} learn callbacks")
-
-    def call_step_callbacks(self, training_step: models.TrainingStep) -> None:
-        self.log.debug(f"new training step: {training_step.__dict__}")
-        self.log.debug("calling step callbacks...")
-        for i, cbk in enumerate(self.step_callbacks):
-            self.log.debug(f"calling step callback {i}, {cbk}")
-            cbk(training_step)
-        self.log.debug("all step callbacks called")
-
-    def call_progress_callbacks(self, training_progress: models.TrainingProgress) -> bool:
-        self.log.info(f"new training progress: {training_progress.__dict__}")
-        self.log.debug("calling progress callbacks...")
-        must_exit = False
-        for i, cbk in enumerate(self.progress_callbacks):
-            self.log.debug(f"calling progress callback {i}, {cbk}")
-            may_exit = cbk(training_progress)
-            if may_exit:
-                must_exit = True
-                self.log.warning(f"progress callback {i} said that training should end")
-        self.log.debug("all progress callbacks called")
-        return must_exit
-
-    def call_learn_callbacks(self, learning_step: models.LearningStep):
-        self.log.debug(f"new learning step: {learning_step.__dict__}"[:45]+"...")
-        self.log.debug("calling learning callbacks...")
-        for i, cbk in enumerate(self.learning_callbacks):
-            self.log.debug(f"calling learning callback {i}, {cbk}")
-            cbk(learning_step)
-        self.log.debug("all learning callbacks called")
-
-    def build_model(self) -> torch.nn.Module:
-        self.log.info("building model from model factory...")
-        model = self.model_factory()
-        self.log.info("model built correctly")
-        for i, wrapper in enumerate(self.model_wrappers):
-            self.log.info(f"wrapping model with wrapper {i}, {wrapper}")
-            model = wrapper(model)
-            self.log.info("model wrapped correctly")
-        return model
 
     def get_self_class_name(self):
         return self.__class__.__bases__[0].__name__
@@ -298,31 +248,3 @@ class Agent(BaseObject, ABC):
             }
         }
         return info
-
-    @abstractmethod
-    def get_state_dict(self) -> dict:
-        raise NotImplementedError()
-
-    @abstractmethod
-    def model_factory(self) -> torch.nn.Module:
-        raise NotImplementedError()
-
-    @abstractmethod
-    def preprocess(self, x: np.ndarray) -> torch.Tensor:
-        raise NotImplementedError()
-
-    @abstractmethod
-    def postprocess(self, t: torch.Tensor) -> np.ndarray:
-        raise NotImplementedError()
-
-    @abstractmethod
-    def infer(self, *args) -> T.Any:
-        raise NotImplementedError()
-
-    @abstractmethod
-    def learn(self, batch: T.List[rp.ReplayBufferEntry]) -> None:
-        raise NotImplementedError()
-
-    @abstractmethod
-    def train(self, env: Environment) -> None:
-        raise NotImplementedError()
