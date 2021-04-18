@@ -1,22 +1,23 @@
 import numpy as np
-from agents.replay_buffers.base.n_steps_replay_buffer import NStepsReplayBuffer
+from agents.replay_buffers import NStepRandomReplayBufferParams, ReplayBufferEntry
 from agents.replay_buffers import NStepsRandomReplayBuffer
-from agents.replay_buffers import NStepReplayBufferParams, ReplayBufferEntry
+from agents.replay_buffers.base.n_steps_replay_buffer import NStepsReplayBuffer
 from .test_random_replay_buffer import is_random
+from . import tools
 
 
 def is_n_step(replay_buffer: NStepsReplayBuffer):
-    n_step, gamma = replay_buffer.rp.n_step, replay_buffer.gamma
+    n_step, gamma = replay_buffer.rp.n_step, replay_buffer.hyper_params.gamma
     final_step = 6
     records = []
     for i in range(14):
         rpe = ReplayBufferEntry(np.array([i]), np.array([i]), i, i, i == final_step)
         records.append(rpe)
-        replay_buffer.add(rpe)
+        replay_buffer.rp_add(rpe)
 
-    assert len(replay_buffer) == 14 - n_step + 1
+    assert replay_buffer.rp_get_length() == 14 - n_step + 1
 
-    samples = replay_buffer.sample(8)
+    samples = replay_buffer.rp_sample(8)
     for sample in samples:
         i = sample.a
         rest = 0
@@ -26,13 +27,17 @@ def is_n_step(replay_buffer: NStepsReplayBuffer):
         assert round(sample.r, 3) == round(sum([ii * (gamma ** n) for n, ii in enumerate(range(i, i + n_step - rest))]), 3)
 
 
+class TestAgent(NStepsRandomReplayBuffer, tools.TestAgent):
+    pass
+
+
 def test_elements_are_n_step():
-    nrp = NStepReplayBufferParams(max_len=15, n_step=3)
-    replay_buffer = NStepsRandomReplayBuffer(nrp)
-    is_n_step(replay_buffer)
+    nrp = NStepRandomReplayBufferParams(max_len=15, n_step=3)
+    test_agent = TestAgent(rp=nrp)
+    is_n_step(test_agent)
 
 
 def test_elements_retrieved_are_random():
-    nrp = NStepReplayBufferParams(max_len=10, n_step=1)
-    replay_buffer = NStepsRandomReplayBuffer(nrp)
-    is_random(replay_buffer)
+    nrp = NStepRandomReplayBufferParams(max_len=10, n_step=1)
+    test_agent = TestAgent(rp=nrp)
+    is_random(test_agent)

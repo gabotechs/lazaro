@@ -47,3 +47,7 @@ class PrioritizedReplayBufferParams(ReplayBufferParams):
 class NStepPrioritizedReplayBufferParams(NStepReplayBufferParams, PrioritizedReplayBufferParams):
     pass
 
+
+@dataclass
+class NStepRandomReplayBufferParams(NStepReplayBufferParams, RandomReplayBufferParams):
+    pass

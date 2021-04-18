@@ -3,6 +3,7 @@ from random import random, randrange
 from agents.explorers.base.models import RandomExplorerParams
 from agents.explorers.base.explorer import Explorer
 from abc import ABC
+import torch
 
 
 class RandomExplorer(Explorer, ABC):
@@ -21,6 +22,9 @@ class RandomExplorer(Explorer, ABC):
         self.epsilon: float = ep.init_ep
         self.arrived_to_minimum: bool = False
         super(RandomExplorer, self).__init__(*args, **kwargs)
+
+    def last_layers_model_modifier(self, model: torch.nn.Module) -> torch.nn.Module:
+        return model
 
     def decay(self, *_, **__) -> None:
         self.log.debug(f"decay epsilon for {type(self).__name__} triggered")

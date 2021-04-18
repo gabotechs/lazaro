@@ -4,16 +4,16 @@ from abc import ABC
 import torch
 
 from .base.models import LearningStep, PpoHyperParams, TrainingStep
-from .monte_carlo_advantage_actor_critic import MonteCarloA2cCriticAgent
+from .monte_carlo_advantage_actor_critic import MonteCarloA2c
 from .replay_buffers import ReplayBufferEntry
 
 
-class PpoAgent(MonteCarloA2cCriticAgent, ABC):
+class PpoAgent(MonteCarloA2c, ABC):
     def __init__(self,
                  action_space: int,
                  hp: PpoHyperParams = PpoHyperParams(),
                  use_gpu: bool = True):
-        super(MonteCarloA2cCriticAgent, self).__init__(action_space, hp, use_gpu)
+        super(MonteCarloA2c, self).__init__(action_space, hp, use_gpu)
         self.hyper_params = hp
         self.actor_critic_new = self.build_model().to(self.device).eval()
         self.actor_critic_new_optimizer = torch.optim.Adam(self.actor_critic_new.parameters(), lr=hp.lr)

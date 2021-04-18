@@ -1,11 +1,15 @@
 from ..noisy_explorer import NoisyExplorer, NoisyExplorerParams, NoisyLinear
 import random
 import torch
+from . import tools
+
+
+class TestAgent(NoisyExplorer, tools.TestAgent):
+    pass
 
 
 def test_generated_model_works():
     nep = NoisyExplorerParams(reset_noise_every=1, std_init=0.5, extra_layers=[2, 1])
-    explorer = NoisyExplorer(nep)
 
     class Model(torch.nn.Module):
         def __init__(self):
@@ -15,7 +19,8 @@ def test_generated_model_works():
         def forward(self, x):
             return self.linear(x)
 
-    model = explorer.wrap_model(Model())
+    test_agent = TestAgent(ep=nep)
+    model = test_agent.last_layers_model_modifier(Model())
     assert len([l for l in model.modules() if isinstance(l, torch.nn.Linear)]) == 1
     assert len([l for l in model.modules() if isinstance(l, NoisyLinear)]) == 2
 

@@ -10,7 +10,7 @@ from .base.models import TrainingProgress, LearningStep, TrainingStep, TrainingP
 from .replay_buffers import ReplayBufferEntry
 
 
-class MonteCarloA2cCriticAgent(A2cAgent, ABC):
+class MonteCarloA2c(A2cAgent, ABC):
     def learn(self, batch: T.List[ReplayBufferEntry]) -> None:
         batch_s = torch.cat([self.preprocess(m.s) for m in batch], 0).to(self.device).requires_grad_(True)
         batch_a = torch.tensor([m.a for m in batch], device=self.device)
