@@ -33,7 +33,7 @@ class BaseAgent(BaseObject,
         return self.__class__.__name__
 
     @staticmethod
-    def last_layer_factory(in_features: int, out_features: int) -> torch.nn.Linear:
+    def last_layer_factory(in_features: int, out_features: int) -> torch.nn.Module:
         return torch.nn.Linear(in_features, out_features)
 
     def health_check(self, env: Environment) -> None:
@@ -131,3 +131,6 @@ class BaseAgent(BaseObject,
         model = self.agent_specification_model_modifier(model)
         self.log.info("agent specification applied correctly")
         return model
+
+    def preprocess(self, x: T.Iterable) -> torch.Tensor:
+        return torch.unsqueeze(torch.tensor(x, dtype=torch.float32), 0)

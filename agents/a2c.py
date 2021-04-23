@@ -83,7 +83,7 @@ class A2cAgent(BaseAgent, ABC):
         self.actor_critic_optimizer.step()
         self.call_learn_callbacks(LearningStep(batch, [v.item() for v in state_values], [v.item() for v in estimated_q_value]))
 
-    def train(self, env: Environment, tp: TrainingParams) -> None:
+    def train(self, env: Environment, tp: TrainingParams = TrainingParams()) -> None:
         self.health_check(env)
         s = env.reset()
         i = 0

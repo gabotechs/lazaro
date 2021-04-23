@@ -6,10 +6,7 @@ from abc import ABC
 
 class RandomReplayBuffer(ReplayBuffer, ABC):
     def __init__(self, rp: RandomReplayBufferParams = RandomReplayBufferParams(), *args, **kwargs):
-        for sub_class in rp.__class__.mro():
-            if issubclass(sub_class, RandomReplayBufferParams):
-                break
-        else:
+        if not isinstance(rp, RandomReplayBufferParams):
             raise ValueError("argument rp must be an instance or subclass of RandomReplayBufferParams")
         super(RandomReplayBuffer, self).__init__(rp, *args, **kwargs)
 

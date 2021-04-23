@@ -1,7 +1,6 @@
 from abc import ABC, abstractmethod
 import typing as T
 import torch
-import numpy as np
 
 from agents.base import models
 from environments import Environment
@@ -65,11 +64,11 @@ class AgentEventInterface(ABC):
         raise NotImplementedError()
 
     @abstractmethod
-    def preprocess(self, x: np.ndarray) -> torch.Tensor:
+    def preprocess(self, x: T.Iterable) -> torch.Tensor:
         raise NotImplementedError()
 
     @abstractmethod
-    def postprocess(self, t: torch.Tensor) -> np.ndarray:
+    def postprocess(self, t: torch.Tensor) -> T.Iterable:
         raise NotImplementedError()
 
     @abstractmethod

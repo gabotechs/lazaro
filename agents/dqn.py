@@ -80,7 +80,7 @@ class DqnAgent(BaseAgent, ABC):
         self.optimizer.step()
         self.call_learn_callbacks(LearningStep(batch, [v.item() for v in x], [v.item() for v in y]))
 
-    def train(self, env: Environment, tp: TrainingParams) -> None:
+    def train(self, env: Environment, tp: TrainingParams = TrainingParams()) -> None:
         self.health_check(env)
         s = env.reset()
         i = 0

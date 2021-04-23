@@ -30,7 +30,7 @@ class MonteCarloA2c(A2cAgent, ABC):
         self.actor_critic_optimizer.step()
         self.call_learn_callbacks(LearningStep(batch, [v.item() for v in state_values], [v.item() for v in batch_rt]))
 
-    def train(self, env: Environment, tp: TrainingParams) -> None:
+    def train(self, env: Environment, tp: TrainingParams = TrainingParams()) -> None:
         self.health_check(env)
         self.accumulate_rewards = False
 

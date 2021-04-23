@@ -32,7 +32,7 @@ class DuelingDqnHyperParams(DqnHyperParams):
 
 @dataclass
 class DoubleDqnHyperParams(DqnHyperParams):
-    ensure_every: int = 1
+    ensure_every: int = 10
 
 
 @dataclass
@@ -42,7 +42,7 @@ class DoubleDuelingDqnHyperParams(DoubleDqnHyperParams):
 
 @dataclass
 class A2CHyperParams(HyperParams):
-    lr: float = 0.01
+    lr: float = 0.0025
 
 
 @dataclass
@@ -65,8 +65,8 @@ TProgressCallback = T.Callable[[TrainingProgress], bool]
 
 @dataclass
 class TrainingParams:
-    batch_size: int
-    episodes: int
+    batch_size: int = 46
+    episodes: int = 500
 
 
 @dataclass
