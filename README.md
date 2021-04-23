@@ -31,4 +31,4 @@ agent = CustomAgent(action_space=2)
 agent.train(env)
 ```
 
-![](docs/cartpole.gif)
+![](docs/cartpole.gif?style=center)
