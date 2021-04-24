@@ -1,9 +1,8 @@
 import torch
 import torch.nn.functional as F
-import agents as lz
-from environments import CartPole
+import src as lz
 
-env = CartPole()
+env = lz.environments.CartPole()
 
 
 class CustomNN(torch.nn.Module):
@@ -16,10 +15,10 @@ class CustomNN(torch.nn.Module):
         return F.relu(self.linear2(F.relu(self.linear(x))))
 
 
-class CustomAgent(lz.explorers.NoisyExplorer,
-                  lz.replay_buffers.NStepsPrioritizedReplayBuffer,
-                  lz.loggers.TensorBoardLogger,
-                  lz.DoubleDuelingDqnAgent):
+class CustomAgent(lz.agents.explorers.NoisyExplorer,
+                  lz.agents.replay_buffers.NStepsPrioritizedReplayBuffer,
+                  lz.agents.loggers.TensorBoardLogger,
+                  lz.agents.DoubleDuelingDqnAgent):
     def model_factory(self):
         return CustomNN()
 

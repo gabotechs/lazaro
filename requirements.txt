@@ -1,10 +1,7 @@
-gym
-numpy
-torch
-torchvision
-matplotlib
+gym==0.18.0
+numpy==1.19.0
+torch==1.8.1
 pycairo
 cairocffi
-coloredlogs
-pytest
-tensorboard
+pytest==6.2.3
+tensorboard==2.5.0
