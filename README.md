@@ -38,7 +38,9 @@ Create your custom model using PyTorch.
 class CustomModel(torch.nn.Module):
     def __init__(self):
         super(CustomModel, self).__init__()
-        self.linear = torch.nn.Linear(OBSERVATION_SPACE, 30)  # your last layer can have an arbitrary number of neurons, lazaro will handle the rest of the model for you
+        # your last layer can have an arbitrary number of output neurons, 
+        # lazaro will handle the rest of the model for you
+        self.linear = torch.nn.Linear(OBSERVATION_SPACE, 30) 
 
     def forward(self, x):
         return F.relu(self.linear(x))
@@ -52,7 +54,7 @@ algorithm.
 class CustomAgent(lz.agents.explorers.NoisyExplorer,
                   lz.agents.replay_buffers.NStepsPrioritizedReplayBuffer,
                   lz.agents.DoubleDuelingDqnAgent):  
-    # implement the model factory, which will be used for integrating your torch model into the agent
+    # implement the model factory. It will be used to embed your torch model into the agent
     def model_factory(self):
         return CustomModel()  
 ```
