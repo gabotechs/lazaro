@@ -1,8 +1,8 @@
 <p align="center">
-    <img src="docs/lazaro.svg">
+    <img src="./docs/lazaro.svg">
 </p>
 <p align="center">
-    ![Build Status](https://github.com/GabrielMusat/lazaro/actions/workflows/test.yml/badge.svg)
+    <img src="https://github.com/GabrielMusat/lazaro/actions/workflows/test.yml/badge.svg">
 </p>
 
 
