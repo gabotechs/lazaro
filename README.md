@@ -1,5 +1,5 @@
 <p align="center">
-    ![](docs/lazaro.svg)
+    <img src="docs/lazaro.svg">
 </p>
 <p align="center">
     ![Build Status](https://github.com/GabrielMusat/lazaro/actions/workflows/test.yml/badge.svg)
