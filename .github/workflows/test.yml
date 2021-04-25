@@ -1,0 +1,22 @@
+name: test
+on: [push]
+jobs:
+  test:
+    runs-on: ubuntu-20.04
+    steps:
+      - uses: actions/checkout@v2
+      - name: Cache venv
+        uses: actions/cache@v1
+        with:
+          path: venv
+          key: ${{ runner.OS }}-build-${{ hashFiles('**/requirements.txt') }}
+          restore-keys: |
+            ${{ runner.OS }}-build-${{ env.cache-name }}-
+            ${{ runner.OS }}-build-
+            ${{ runner.OS }}-
+      - name: Install
+        run: pip install -r requirements
+      - name: Install pytest
+        run: pip install pytest
+      - name: Test
+        run: pytest -v lazaro
