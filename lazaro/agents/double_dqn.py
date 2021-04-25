@@ -81,7 +81,6 @@ class DoubleDqnAgent(DqnAgent, ABC):
                 accumulated_reward = 0
                 steps_survived = 0
                 s = env.reset()
-
             else:
                 steps_survived += 1
             env.render()
