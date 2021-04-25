@@ -43,7 +43,7 @@ class DoubleDuelingDqnHyperParams(DoubleDqnHyperParams):
 
 @dataclass
 class A2CHyperParams(HyperParams):
-    lr: float = 0.0025
+    lr: float = 0.001
 
 
 @dataclass

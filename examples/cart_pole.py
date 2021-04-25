@@ -15,9 +15,9 @@ class CustomNN(torch.nn.Module):
 
 
 class CustomAgent(lz.agents.explorers.NoisyExplorer,
-                  lz.agents.replay_buffers.NStepsPrioritizedReplayBuffer,
+                  lz.agents.replay_buffers.RandomReplayBuffer,
                   lz.agents.loggers.TensorBoardLogger,
-                  lz.agents.DoubleDuelingDqnAgent):
+                  lz.agents.MonteCarloA2c):
     def model_factory(self):
         return CustomNN()
 
