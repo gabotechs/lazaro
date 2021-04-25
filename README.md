@@ -1,3 +1,5 @@
+[![Build Status]](https://github.com/GabrielMusat/lazaro/actions/workflows/test.yml/badge.svg)
+
 # Lazaro
 
 Minimalist reinforcement learning framework based on Pytorch.
