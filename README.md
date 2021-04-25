@@ -5,10 +5,9 @@ Minimalist reinforcement learning framework based on Pytorch.
 ```python
 import torch
 import torch.nn.functional as F
-import agents as lz
-from environments import CartPole
+import lazaro as lz
 
-env = CartPole()
+env = lz.environments.CartPole()
 
 
 class CustomNN(torch.nn.Module):
@@ -20,15 +19,17 @@ class CustomNN(torch.nn.Module):
         return F.relu(self.linear(x))
 
 
-class CustomAgent(lz.explorers.RandomExplorer,
-                  lz.replay_buffers.PrioritizedReplayBuffer,
-                  lz.DoubleDuelingDqnAgent):
+class CustomAgent(lz.agents.explorers.NoisyExplorer,
+                  lz.agents.replay_buffers.NStepsPrioritizedReplayBuffer,
+                  lz.agents.loggers.TensorBoardLogger,
+                  lz.agents.DoubleDuelingDqnAgent):
     def model_factory(self):
         return CustomNN()
 
 
 agent = CustomAgent(action_space=2)
 agent.train(env)
+
 ```
 
 ![](docs/cartpole.gif?style=center)

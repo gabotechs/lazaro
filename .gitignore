@@ -3,3 +3,5 @@
 /.pytest_cache
 /runs
 /.idea
+/build
+/dist

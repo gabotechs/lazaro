@@ -1,6 +1,6 @@
 import torch
 import torch.nn.functional as F
-import src as lz
+import lazaro as lz
 
 env = lz.environments.CartPole()
 
@@ -9,10 +9,9 @@ class CustomNN(torch.nn.Module):
     def __init__(self):
         super(CustomNN, self).__init__()
         self.linear = torch.nn.Linear(4, 30)
-        self.linear2 = torch.nn.Linear(30, 10)
 
     def forward(self, x):
-        return F.relu(self.linear2(F.relu(self.linear(x))))
+        return F.relu(self.linear(x))
 
 
 class CustomAgent(lz.agents.explorers.NoisyExplorer,
