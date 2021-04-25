@@ -48,15 +48,16 @@ Create your agent. You can select any agent and mix it with any exploration poli
 algorithm.
 
 ```python
+# mix any agent with any exploration policy and any replay buffer
 class CustomAgent(lz.agents.explorers.NoisyExplorer,
                   lz.agents.replay_buffers.NStepsPrioritizedReplayBuffer,
-                  lz.agents.DoubleDuelingDqnAgent):  # mix any agent with any exploration policy and any replay buffer
-    
+                  lz.agents.DoubleDuelingDqnAgent):  
+    # implement the model factory, which will be used for integrating your torch model into the agent
     def model_factory(self):
-        return CustomModel()  # implement the model factory, which will be used for integrating your torch model into the agent
+        return CustomModel()  
 ```
 
-Instantiate your agent and train it in your environment
+Instantiate your agent and train it in your environment.
 
 ```python
 agent = CustomAgent(action_space=ACTION_SPACE)
