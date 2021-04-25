@@ -1,4 +1,4 @@
-[![Build Status]](https://github.com/GabrielMusat/lazaro/actions/workflows/test.yml/badge.svg)
+![Build Status](https://github.com/GabrielMusat/lazaro/actions/workflows/test.yml/badge.svg)
 
 # Lazaro
 
