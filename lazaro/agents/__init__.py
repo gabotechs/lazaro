@@ -9,5 +9,4 @@ from .ppo import PpoAgent, PpoHyperParams
 from .base.models import TrainingStep, TrainingParams, TrainingProgress, LearningStep
 from . import replay_buffers, explorers, loggers
 
-
 AnyAgent = typing.Union[DqnAgent, DoubleDqnAgent, DuelingDqnAgent, DoubleDuelingDqnAgent, A2cAgent, MonteCarloA2c, PpoAgent]
