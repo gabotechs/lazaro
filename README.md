@@ -1,5 +1,5 @@
 <p align="center">
-    <img height="100" src="./docs/lazaro.svg">
+    <img height="200" src="./docs/lazaro.svg">
 </p>
 <p align="center">
     <img src="https://github.com/GabrielMusat/lazaro/actions/workflows/test.yml/badge.svg">
