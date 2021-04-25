@@ -1,4 +1,10 @@
-![Build Status](https://github.com/GabrielMusat/lazaro/actions/workflows/test.yml/badge.svg)
+<p align="center">
+    ![](docs/lazaro.svg)
+</p>
+<p align="center">
+    ![Build Status](https://github.com/GabrielMusat/lazaro/actions/workflows/test.yml/badge.svg)
+</p>
+
 
 # Lazaro
 
@@ -33,5 +39,6 @@ agent = CustomAgent(action_space=2)
 agent.train(env)
 
 ```
-
-![](docs/cartpole.gif?style=center)
+<p align="center">
+    ![](docs/cartpole.gif?style=center)
+</p>
