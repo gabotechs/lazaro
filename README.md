@@ -11,41 +11,58 @@ on custom environments using state of the art and modular reinforcement learning
 
 # Installation
 
-Lazaro package is available on PyPI for Python version greater or equal to 3.7.
+Lazaro package is available on PyPI for Python versions greater or equal to 3.7.
 ```shell
 pip install lazaro
 ```
 
 # Usage
+Import torch and lazaro packages
 ```python
 import torch
 import torch.nn.functional as F
 import lazaro as lz
+```
 
+Choose an environment to train your model. You can create one yourself or choose one from the 
+environments repository.
+```python
 env = lz.environments.CartPole()
+OBSERVATION_SPACE = 4  # position, speed, angle, rotation speed 
+ACTION_SPACE = 2  # move right, move left
+```
 
+Create your custom model using PyTorch.
 
-class CustomNN(torch.nn.Module):
+```python
+class CustomModel(torch.nn.Module):
     def __init__(self):
-        super(CustomNN, self).__init__()
-        self.linear = torch.nn.Linear(4, 30)
+        super(CustomModel, self).__init__()
+        self.linear = torch.nn.Linear(OBSERVATION_SPACE, 30)  # your last layer can have an arbitrary number of neurons, lazaro will handle the rest of the model for you
 
     def forward(self, x):
         return F.relu(self.linear(x))
+```
 
+Create your agent. You can select any agent and mix it with any exploration policy and any replay buffer
+algorithm.
 
+```python
 class CustomAgent(lz.agents.explorers.NoisyExplorer,
                   lz.agents.replay_buffers.NStepsPrioritizedReplayBuffer,
-                  lz.agents.loggers.TensorBoardLogger,
-                  lz.agents.DoubleDuelingDqnAgent):
+                  lz.agents.DoubleDuelingDqnAgent):  # mix any agent with any exploration policy and any replay buffer
+    
     def model_factory(self):
-        return CustomNN()
-
-
-agent = CustomAgent(action_space=2)
-agent.train(env)
-
+        return CustomModel()  # implement the model factory, which will be used for integrating your torch model into the agent
 ```
+
+Instantiate your agent and train it in your environment
+
+```python
+agent = CustomAgent(action_space=ACTION_SPACE)
+agent.train(env)
+```
+
 <p align="center">
     <img src="docs/cartpole.gif">
 </p>
