@@ -7,11 +7,11 @@ class Environment(ABC):
     last_s: T.Union[None, np.ndarray] = None
 
     @abstractmethod
-    def get_observation_space(self) -> T.Tuple[int]:
+    def get_observation_space(self) -> T.Tuple[int, ...]:
         raise NotImplementedError()
 
     @abstractmethod
-    def get_action_space(self) -> T.Tuple[int]:
+    def get_action_space(self) -> T.Tuple[int, ...]:
         raise NotImplementedError()
 
     @abstractmethod

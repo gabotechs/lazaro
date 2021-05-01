@@ -23,6 +23,7 @@ class BaseAgent(base_object.BaseObject,
                 self.device = "cuda"
         self.action_space = action_space
         self.hyper_params = hp
+        self.default_training_params = models.TrainingParams()
         self.step_callbacks: T.Dict[str, models.TStepCallback] = {}
         self.progress_callbacks: T.Dict[str, models.TProgressCallback] = {}
         self.learning_callbacks: T.Dict[str, models.TLearnCallback] = {}
