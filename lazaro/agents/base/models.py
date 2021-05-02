@@ -23,7 +23,7 @@ class HyperParams:
 
 @dataclass
 class DqnHyperParams(HyperParams):
-    lr: float = 0.01
+    lr: float = 0.0025
 
 
 @dataclass
@@ -67,7 +67,7 @@ TProgressCallback = T.Callable[[TrainingProgress], bool]
 @dataclass
 class TrainingParams:
     batch_size: int = 46
-    episodes: int = 500
+    episodes: int = 10000
 
 
 @dataclass
