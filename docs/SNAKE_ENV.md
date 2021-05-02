@@ -15,9 +15,11 @@ import random
 import typing as T
 import numpy as np
 import lazaro as lz
+import torch
+import torch.nn.functional as F
 ```
 
-We will start by defining a base class that represents an object in the game...
+Let's start by declaring a base class that represents any object in the game...
 
 ```python
 class GameObject:
@@ -28,17 +30,17 @@ class GameObject:
         self.position = position
 ```
 
-then we can make our game objects, which will be the snake and the apple
+and then make the game objects, the snake and the apple:
 
 ```python
 class Snake(GameObject):
-    HEAD = 1
-    TAIL = 2
+    HEAD = 1  # these are identifiers for populating the game's board, 
+    TAIL = 2  # 0 if there is an empty cell, 1 if there is a head in it, etc...
 
     def __init__(self):
         super(Snake, self).__init__()
         # the tail is represented with an array of relative coordinates
-        self.tail = []
+        self.tail: T.List[T.Tuple[int, int]] = []
 
     def shift_tail(self, direction: T.Tuple[int, int]):
         # if the snake moves without eating the apple, shift the tail
@@ -57,38 +59,29 @@ class Apple(GameObject):
     APPLE = 3
     
 ```
-
-We have all the game objects we need, lets build the game environment!
+Those are all the objects we need, lets build the snake game environment!
 
 For that we must inherit from ```lz.environments.Environment``` interface, and implement all
-the missing methods so that lazaro can use it to train an agent
-
+the missing methods so that lazaro can use it to train an agent.
 ```python
 class CustomEnv(lz.environments.Environment):
-    def get_observation_space(self) -> T.Tuple[int, ...]:
-        # the dimensions of the game, in this case, (width, height)
-
-    def get_action_space(self) -> T.Tuple[int, ...]:
-        # the possible actions the agent can make
-
     def reset(self) -> np.ndarray:
         # reset the game and return the state after the reset
 
-    def do_step(self, action: int) -> T.Tuple[np.ndarray, float, bool]:
-        # the core of the game, based on a received action, return the new state, the reward
-        # of taking that action at that state, and a boolean that tells if the game has ended
+    def step(self, action: int) -> T.Tuple[np.ndarray, float, bool]:
+        # the core of the game, based on a received action, return the new state, the reward and a 
+        # boolean that tells if the game has ended
 
     def render(self) -> None:
-        # for visualizing the game, here, there will only be prints
+        # for visualizing the game. Here, there will only be prints
 
     def close(self) -> None:
-        # what to do to close the game, here we dont want to do nothing in particular
+        # what to do to close the game, we dont want to do nothing in particular in this case
 ```
+Now we know how to build a custom environment.
 
-Now that we know how to build a custom environment, lets create the snake game!
-
-This is the constructor for our snake game, with all the constant variables and the
-initial state
+This is the constructor for the snake game, with all the constant variables and the
+initial state:
 ```python
 class SnakeEnv(lz.environments.Environment):
     CHANNELS = 4
@@ -116,18 +109,18 @@ class SnakeEnv(lz.environments.Environment):
         self.hunger = 0  # how hungry is the snake, if it reaches HUNGER_LIMIT, it will die
         self.steps = 0  # steps in this episode
         self.max_score = 0  # overall maximum score (apples eaten in an episode)
-        self.episode = 0
+        self.episode = 0  # total episodes played
 ```
-Implementing the environment info methods:
-```python
-    def get_observation_space(self) -> T.Tuple[int, ...]:
-        return self.SHAPE
-
-    def get_action_space(self) -> T.Tuple[int, ...]:
-        return 0, 1, 2, 3
+We will create a helper method for generating the state of the game, which will be a two-dimensional array where the
+values represent the content of the cell, (0 if cell is empty, 1 if there is a head, 2 if there is a piece of the tail, 
+3 if there is an apple):
 ```
-We will create a helper method for generating the state of the game, which will be a two-dimensional array
-with x and y coordinates of each game cell
+[[0, 0, 0, 0, 0],
+ [0, 1, 0, 3, 0],
+ [0, 2, 0, 0, 2],
+ [0, 2, 2, 0, 2],
+ [0, 0, 2, 2, 2]]
+```
 ```python
     def _render_state(self):
         # generate empty board
@@ -146,7 +139,7 @@ with x and y coordinates of each game cell
 
         return state
 ```
-We also need another helper method for retrieving an empty random position, so that
+Another helper method is also used for retrieving an empty random position, so that
 we can randomly position the snake and the apple at the start without overlapping them.
 ```python
     def _random_position(self):
@@ -158,9 +151,14 @@ we can randomly position the snake and the apple at the start without overlappin
                 return new_position
             new_position = (random.randint(0, self.SHAPE[0] - 1), random.randint(0, self.SHAPE[1] - 1))
 ```
-The most important and complex method of the environment, the one that defines the rules:
+The most important and complex method of the environment, the one that defines the rules. This is the idea:
+- based on the action taken by the agent, get the new position of the snake's head
+- check if it has gone out of limits or if it has crashed with his own tail, if that happens, return a bad reward
+- check if the snake has eaten the apple, if true, return a good reward and randomly position the apple in a new empty cell
+- check if it has died of hunger, and return a bad reward if it is dead
+- if none of the above has happened, just move the snake
 ```python
-    def do_step(self, action: int) -> T.Tuple[np.ndarray, float, bool]:
+    def step(self, action: int) -> T.Tuple[np.ndarray, float, bool]:
         self.steps += 1
         new_snake_position = (self.ACTION_TO_DIRECTION[action][0]+self.snake.position[0],
                               self.ACTION_TO_DIRECTION[action][1]+self.snake.position[1])
@@ -190,12 +188,12 @@ The most important and complex method of the environment, the one that defines t
             self.snake.shift_tail(self.ACTION_TO_DIRECTION[action])
             self.snake.set_position(new_snake_position)
             self.hunger += 1
-            if self.hunger > self.HUNGER_LIMIT:
+            if self.hunger > self.HUNGER_LIMIT:  # if has starved to death
                 return np.array(self._render_state()), self.REWARD_CRASH, True
             else:
                 return np.array(self._render_state()), 0, False
 ```
-Also a way of visualizing how the snake is performing is great
+Also, a way of visualizing how the snake is performing is great.
 ```python
     def render(self) -> None:
         p = "="*self.SHAPE[1]*2+"\n"
@@ -222,7 +220,7 @@ class CustomNN(torch.nn.Module):
         super(CustomNN, self).__init__()
         self.conv1 = torch.nn.Conv2d(SnakeEnv.CHANNELS, 16, stride=(1, 1), kernel_size=(3, 3), padding=(1, 1))
         self.conv2 = torch.nn.Conv2d(self.conv1.out_channels, 32, stride=(1, 1), kernel_size=(3, 3), padding=(1, 1))
-        self.linear = torch.nn.Linear(self.conv3.out_channels * SnakeEnv.SHAPE[0] * SnakeEnv.SHAPE[1], 512)
+        self.linear = torch.nn.Linear(self.conv2.out_channels * SnakeEnv.SHAPE[0] * SnakeEnv.SHAPE[1], 512)
 
     def forward(self, x):
         batch_size = x.shape[0]
@@ -245,7 +243,7 @@ class CustomAgent(lz.agents.explorers.NoisyExplorer,
         x = np.array([[[int(i == int(cell)) for i in range(SnakeEnv.CHANNELS)] for cell in row] for row in x])
         return torch.tensor(x.transpose((2, 0, 1)), dtype=torch.float32).unsqueeze(0)
 ```
-We have all we need, lets train the agent!
+We have all we need, lets tweak a bit the hyper parameters and train the agent!
 ```python
 env = SnakeEnv()
 agent = CustomAgent(

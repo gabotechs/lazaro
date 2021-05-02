@@ -1,6 +1,5 @@
 import typing as T
 
-import numpy as np
 import pytest
 import torch
 import torch.nn.functional as F
@@ -13,8 +12,8 @@ EXPECTED_REWARD = 25
 class NN(torch.nn.Module):
     def __init__(self):
         super(NN, self).__init__()
-        self.linear_1 = torch.nn.Linear(4, 10)
-        self.linear_2 = torch.nn.Linear(10, 100)
+        self.linear_1 = torch.nn.Linear(environments.CartPole.OBSERVATION_SPACE, 10)
+        self.linear_2 = torch.nn.Linear(self.linear_1.out_features, 100)
 
     def forward(self, x):
         return F.relu(self.linear_2(F.relu(self.linear_1(x))))
@@ -47,7 +46,7 @@ for RB in [agents.replay_buffers.RandomReplayBuffer,
 def test_agents(agent_class: T.Type[agents.AnyAgent]):
     env = environments.CartPole()
     env.visualize = False
-    agent = agent_class(action_space=len(env.get_action_space()))
+    agent = agent_class(action_space=environments.CartPole.ACTION_SPACE)
 
     record: T.List[agents.TrainingProgress] = []
 

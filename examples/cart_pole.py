@@ -8,7 +8,7 @@ env = lz.environments.CartPole()
 class CustomNN(torch.nn.Module):
     def __init__(self):
         super(CustomNN, self).__init__()
-        self.linear = torch.nn.Linear(4, 30)
+        self.linear = torch.nn.Linear(lz.environments.CartPole.OBSERVATION_SPACE, 30)
 
     def forward(self, x):
         return F.relu(self.linear(x))
@@ -22,5 +22,5 @@ class CustomAgent(lz.agents.explorers.NoisyExplorer,
         return CustomNN()
 
 
-agent = CustomAgent(action_space=2)
+agent = CustomAgent(action_space=lz.environments.CartPole.ACTION_SPACE)
 agent.train(env)

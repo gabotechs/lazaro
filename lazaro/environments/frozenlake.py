@@ -11,12 +11,6 @@ class FrozenLake(Environment):
         self.visualize: bool = True
         self.env: gym.Env = gym.make("FrozenLake-v0")
 
-    def get_observation_space(self) -> T.Tuple[int]:
-        return self.env.observation_space.n,
-
-    def get_action_space(self) -> T.Tuple[int]:
-        return tuple(range(self.env.action_space.n))
-
     @staticmethod
     def form_state(index: int) -> np.ndarray:
         s = np.zeros(16)
@@ -26,7 +20,7 @@ class FrozenLake(Environment):
     def reset(self) -> np.ndarray:
         return self.form_state(self.env.reset())
 
-    def do_step(self, action: int) -> T.Tuple[np.ndarray, float, bool]:
+    def step(self, action: int) -> T.Tuple[np.ndarray, float, bool]:
         s, r, f, _ = self.env.step(action)
         return self.form_state(s), 1 if r > 0 else (-1 if f else 0), f
 

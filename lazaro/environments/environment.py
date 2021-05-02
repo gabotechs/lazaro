@@ -1,30 +1,17 @@
 from abc import ABC, abstractmethod
-import numpy as np
 import typing as T
 
 
-class Environment(ABC):
-    last_s: T.Union[None, np.ndarray] = None
+T_S = T.TypeVar("T_S")
 
+
+class Environment(T.Generic[T_S], ABC):
     @abstractmethod
-    def get_observation_space(self) -> T.Tuple[int, ...]:
+    def reset(self) -> T_S:
         raise NotImplementedError()
 
     @abstractmethod
-    def get_action_space(self) -> T.Tuple[int, ...]:
-        raise NotImplementedError()
-
-    @abstractmethod
-    def reset(self) -> np.ndarray:
-        raise NotImplementedError()
-
-    def step(self, action: int) -> T.Tuple[np.ndarray, float, bool]:
-        s, r, f = self.do_step(action)
-        self.last_s = s
-        return s, r, f
-
-    @abstractmethod
-    def do_step(self, action: int) -> T.Tuple[np.ndarray, float, bool]:
+    def step(self, action: int) -> T.Tuple[T_S, float, bool]:
         raise NotImplementedError()
 
     @abstractmethod

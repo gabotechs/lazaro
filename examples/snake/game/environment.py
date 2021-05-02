@@ -36,12 +36,6 @@ class SnakeEnv(lz.environments.Environment):
         self.max_score = 0
         self.episode = 0
 
-    def get_observation_space(self) -> T.Tuple[int, ...]:
-        return self.SHAPE
-
-    def get_action_space(self) -> T.Tuple[int, ...]:
-        return 0, 1, 2, 3
-
     def _render_state(self):
         # generate empty board
         state = [[0 for _ in range(self.SHAPE[0])] for _ in range(self.SHAPE[1])]
@@ -59,6 +53,15 @@ class SnakeEnv(lz.environments.Environment):
 
         return state
 
+    def _random_position(self):
+        state = self._render_state()
+        new_position = (random.randint(0, self.SHAPE[0] - 1), random.randint(0, self.SHAPE[1] - 1))
+        # if there is something in the randomly selected position iterate until find an empty one
+        while True:
+            if state[new_position[0]][new_position[1]] == 0:
+                return new_position
+            new_position = (random.randint(0, self.SHAPE[0] - 1), random.randint(0, self.SHAPE[1] - 1))
+
     def reset(self) -> np.ndarray:
         self.episode += 1
         self.eaten = 0
@@ -69,16 +72,7 @@ class SnakeEnv(lz.environments.Environment):
         self.apple.set_position(self._random_position())
         return np.array(self._render_state())
 
-    def _random_position(self):
-        state = self._render_state()
-        new_position = (random.randint(0, self.SHAPE[0] - 1), random.randint(0, self.SHAPE[1] - 1))
-        # if there is something in the randomly selected position iterate until find an empty one
-        while True:
-            if state[new_position[0]][new_position[1]] == 0:
-                return new_position
-            new_position = (random.randint(0, self.SHAPE[0] - 1), random.randint(0, self.SHAPE[1] - 1))
-
-    def do_step(self, action: int) -> T.Tuple[np.ndarray, float, bool]:
+    def step(self, action: int) -> T.Tuple[np.ndarray, float, bool]:
         self.steps += 1
         new_snake_position = (self.ACTION_TO_DIRECTION[action][0]+self.snake.position[0],
                               self.ACTION_TO_DIRECTION[action][1]+self.snake.position[1])

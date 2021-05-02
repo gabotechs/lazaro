@@ -10,12 +10,6 @@ class SpaceInvadersRam(Environment):
     def __init__(self):
         self.env: gym.Env = gym.make("SpaceInvaders-ram-v0")
 
-    def get_observation_space(self) -> T.Tuple[int]:
-        return self.env.observation_space.shape
-
-    def get_action_space(self) -> T.Tuple[int]:
-        return tuple(range(self.env.action_space.n))
-
     def reset(self) -> np.ndarray:
         return self.env.reset()
 
