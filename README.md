@@ -102,15 +102,3 @@ like this:
     <img src="docs/assets/tb-charts.png">
     <img src="docs/assets/tb-graph.png">
 </p>
-
-## Citing Lazaro
-to cite this repository
-```
-@software{lazaro2021github,
-  author = {Gabriel Musat},
-  title = {Lazaro},
-  url = {https://github.com/GabrielMusat/lazaro},
-  version = {0.0.3},
-  year = {2021},
-}
-```
