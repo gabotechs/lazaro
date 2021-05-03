@@ -7,10 +7,10 @@ from .params import ReplayBufferEntry, NStepReplayBufferParams
 
 
 class NStepsReplayBuffer(ReplayBuffer, ABC):
-    def __init__(self, rp: NStepReplayBufferParams = NStepReplayBufferParams(), *args, **kwargs):
-        self.rp: NStepReplayBufferParams = rp
+    def __init__(self, replay_buffer_params: NStepReplayBufferParams = NStepReplayBufferParams(), *args, **kwargs):
+        self.rp: NStepReplayBufferParams = replay_buffer_params
         self.n_step_buffer: T.Deque[ReplayBufferEntry] = deque(maxlen=self.rp.n_step)
-        super().__init__(rp, *args, **kwargs)
+        super().__init__(replay_buffer_params, *args, **kwargs)
 
     def _get_n_step_info(self) -> ReplayBufferEntry:
         first_entry = self.n_step_buffer[0]
@@ -20,7 +20,7 @@ class NStepsReplayBuffer(ReplayBuffer, ABC):
         for transition in reversed(list(self.n_step_buffer)[:-1]):
             r, s_, final = transition.r, transition.s_, transition.final
             if self.accumulate_rewards:
-                ac_r = r + self.hyper_params.gamma * ac_r
+                ac_r = r + self.agent_params.gamma * ac_r
 
             if final:
                 ac_s_, ac_final, ac_r = (s_, final, r)
@@ -41,7 +41,6 @@ class NStepsReplayBuffer(ReplayBuffer, ABC):
         self.n_step_buffer.clear()
 
     def rp_link(self):
-        prev_gamma = self.hyper_params.gamma
-        self.hyper_params.gamma = self.hyper_params.gamma ** self.rp.n_step
-        self.log.info(f"refactoring gamma: {prev_gamma} -> {self.hyper_params.gamma}")
-
+        prev_gamma = self.agent_params.gamma
+        self.agent_params.gamma = self.agent_params.gamma ** self.rp.n_step
+        self.log.info(f"refactoring gamma: {prev_gamma} -> {self.agent_params.gamma}")

@@ -9,19 +9,19 @@ from ..explorers.base.params import RandomExplorerParams
 
 
 class RandomExplorer(Explorer, ABC):
-    def __init__(self, ep: RandomExplorerParams = RandomExplorerParams(), *args, **kwargs):
-        if not isinstance(ep, RandomExplorerParams):
+    def __init__(self, explorer_params: RandomExplorerParams = RandomExplorerParams(), *args, **kwargs):
+        if not isinstance(explorer_params, RandomExplorerParams):
             raise ValueError("argument ep must be an instance of RandomExplorerParams")
-        if not 0 <= ep.init_ep <= 1:
+        if not 0 <= explorer_params.init_ep <= 1:
             raise ValueError("initial epsilon must be between 0 and 1")
-        elif not 0 <= ep.final_ep <= 1:
+        elif not 0 <= explorer_params.final_ep <= 1:
             raise ValueError("final epsilon must be between 0 and 1")
-        elif ep.final_ep >= ep.init_ep:
+        elif explorer_params.final_ep >= explorer_params.init_ep:
             raise ValueError("final epsilon must be less than initial epsilon")
-        elif not 0 < ep.decay_ep < 1:
+        elif not 0 < explorer_params.decay_ep < 1:
             raise ValueError("decay epsilon must be between 0 and 1")
-        self.ep: RandomExplorerParams = ep
-        self.epsilon: float = ep.init_ep
+        self.ep: RandomExplorerParams = explorer_params
+        self.epsilon: float = explorer_params.init_ep
         self.arrived_to_minimum: bool = False
         super(RandomExplorer, self).__init__(*args, **kwargs)
 

@@ -36,11 +36,11 @@ class DqnNetwork(torch.nn.Module):
 class DqnAgent(BaseAgent, ABC):
     def __init__(self,
                  action_space: int,
-                 hp: DqnHyperParams = DqnHyperParams(),
+                 agent_params: DqnHyperParams = DqnHyperParams(),
                  use_gpu: bool = True):
-        super(DqnAgent, self).__init__(action_space, hp, use_gpu)
+        super(DqnAgent, self).__init__(action_space, agent_params, use_gpu)
         self.action_estimator = self.build_model().to(self.device)
-        self.optimizer = torch.optim.Adam(self.action_estimator.parameters(), lr=hp.lr)
+        self.optimizer = torch.optim.Adam(self.action_estimator.parameters(), lr=agent_params.lr)
         self.loss_f = torch.nn.MSELoss(reduction="none").to(self.device)
 
     def get_state_dict(self) -> dict:
@@ -55,14 +55,16 @@ class DqnAgent(BaseAgent, ABC):
 
     def infer(self, x: np.ndarray) -> np.ndarray:
         with torch.no_grad():
-            return self.postprocess(self.action_estimator.forward(self.preprocess(x).to(self.device)).cpu())
+            preprocessed = self.preprocess(x).unsqueeze(0).to(self.device)
+            infer = self.action_estimator.forward(preprocessed)
+            return self.postprocess(infer.cpu())
 
     def postprocess(self, t: torch.Tensor) -> np.ndarray:
         return np.array(t.squeeze(0))
 
     def learn(self, batch: T.List[ReplayBufferEntry]) -> None:
-        batch_s = torch.cat([self.preprocess(m.s) for m in batch], 0).to(self.device).requires_grad_(True)
-        batch_s_ = torch.cat([self.preprocess(m.s_) for m in batch], 0).to(self.device)
+        batch_s = torch.stack([self.preprocess(m.s) for m in batch], 0).to(self.device).requires_grad_(True)
+        batch_s_ = torch.stack([self.preprocess(m.s_) for m in batch], 0).to(self.device)
         batch_a = [m.a for m in batch]
         batch_r = torch.tensor([m.r for m in batch], dtype=torch.float32, device=self.device)
         batch_finals = torch.tensor([int(not m.final) for m in batch], device=self.device)
@@ -72,7 +74,7 @@ class DqnAgent(BaseAgent, ABC):
             actions_expected_values: torch.Tensor = self.action_estimator(batch_s_)
 
         x = torch.stack([t_s[t_a] for t_s, t_a in zip(actions_estimated_values, batch_a)])
-        y = torch.max(actions_expected_values, 1)[0] * self.hyper_params.gamma * batch_finals + batch_r
+        y = torch.max(actions_expected_values, 1)[0] * self.agent_params.gamma * batch_finals + batch_r
         element_wise_loss = self.loss_f(x, y)
         loss = (element_wise_loss * batch_weights).mean()
         self.optimizer.zero_grad()
@@ -99,7 +101,7 @@ class DqnAgent(BaseAgent, ABC):
 
             self.call_step_callbacks(TrainingStep(i, episode))
 
-            if i % self.hyper_params.learn_every == 0 and i != 0 and self.rp_get_length() >= tp.batch_size:
+            if i % self.agent_params.learn_every == 0 and i != 0 and self.rp_get_length() >= tp.batch_size:
                 batch = self.rp_sample(tp.batch_size)
                 self.learn(batch)
 

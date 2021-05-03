@@ -1,8 +1,6 @@
 import random
 import typing as T
 
-import numpy as np
-
 import lazaro as lz
 from .game_objects import Snake, Apple
 
@@ -62,7 +60,7 @@ class SnakeEnv(lz.environments.Environment):
                 return new_position
             new_position = (random.randint(0, self.SHAPE[0] - 1), random.randint(0, self.SHAPE[1] - 1))
 
-    def reset(self) -> np.ndarray:
+    def reset(self) -> T.List[T.List[int]]:
         self.episode += 1
         self.eaten = 0
         self.hunger = 0
@@ -70,22 +68,22 @@ class SnakeEnv(lz.environments.Environment):
         self.snake.clear_tail()
         self.snake.set_position(self._random_position())
         self.apple.set_position(self._random_position())
-        return np.array(self._render_state())
+        return self._render_state()
 
-    def step(self, action: int) -> T.Tuple[np.ndarray, float, bool]:
+    def step(self, action: int) -> T.Tuple[T.List[T.List[int]], float, bool]:
         self.steps += 1
         new_snake_position = (self.ACTION_TO_DIRECTION[action][0]+self.snake.position[0],
                               self.ACTION_TO_DIRECTION[action][1]+self.snake.position[1])
 
         # if snake has gone out of limits
         if not (0 <= new_snake_position[0] < self.SHAPE[0] and 0 <= new_snake_position[1] < self.SHAPE[1]):
-            return np.array(self._render_state()), self.REWARD_CRASH, True
+            return self._render_state(), self.REWARD_CRASH, True
 
         # if snake has crashed with her own tail
         prev_state = self._render_state()
         new_cell_content = prev_state[new_snake_position[0]][new_snake_position[1]]
         if new_cell_content == Snake.TAIL:
-            return np.array(prev_state), self.REWARD_CRASH, True
+            return prev_state, self.REWARD_CRASH, True
 
         # if snake has stepped into the apple
         elif new_cell_content == Apple.APPLE:
@@ -95,7 +93,7 @@ class SnakeEnv(lz.environments.Environment):
             self.eaten += 1
             self.max_score = max(self.max_score, self.eaten)
             self.hunger -= self.HUNGER_LIMIT
-            return np.array(self._render_state()), self.REWARD_EAT, False
+            return self._render_state(), self.REWARD_EAT, False
 
         # if snake has made a normal step
         else:
@@ -103,9 +101,9 @@ class SnakeEnv(lz.environments.Environment):
             self.snake.set_position(new_snake_position)
             self.hunger += 1
             if self.hunger > self.HUNGER_LIMIT:
-                return np.array(self._render_state()), self.REWARD_CRASH, True
+                return self._render_state(), self.REWARD_CRASH, True
             else:
-                return np.array(self._render_state()), 0, False
+                return self._render_state(), 0, False
 
     def render(self) -> None:
         if not self.visualize:

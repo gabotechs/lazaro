@@ -45,5 +45,5 @@ class Agent(PrioritizedReplayBuffer, tools.Agent):
 
 def test_important_transitions_are_prioritized():
     prb = PrioritizedReplayBufferParams(max_len=15, alpha=0.5, init_beta=0.9, final_beta=1.0, increase_beta=1+1e-5)
-    test_agent = Agent(rp=prb)
+    test_agent = Agent(replay_buffer_params=prb)
     is_prioritized(test_agent)

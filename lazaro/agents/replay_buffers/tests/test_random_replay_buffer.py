@@ -26,5 +26,5 @@ class Agent(RandomReplayBuffer, tools.Agent):
 
 def test_elements_retrieved_are_random():
     lrp = RandomReplayBufferParams(max_len=10)
-    test_agent = Agent(rp=lrp)
+    test_agent = Agent(replay_buffer_params=lrp)
     is_random(test_agent)

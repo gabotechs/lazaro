@@ -7,7 +7,7 @@ from ...replay_buffers import NStepRandomReplayBufferParams, ReplayBufferEntry, 
 
 
 def is_n_step(replay_buffer: NStepsReplayBuffer):
-    n_step, gamma = replay_buffer.rp.n_step, replay_buffer.hyper_params.gamma
+    n_step, gamma = replay_buffer.rp.n_step, replay_buffer.agent_params.gamma
     final_step = 6
     records = []
     for i in range(14):
@@ -33,11 +33,11 @@ class Agent(NStepsRandomReplayBuffer, tools.Agent):
 
 def test_elements_are_n_step():
     nrp = NStepRandomReplayBufferParams(max_len=15, n_step=3)
-    test_agent = Agent(rp=nrp)
+    test_agent = Agent(replay_buffer_params=nrp)
     is_n_step(test_agent)
 
 
 def test_elements_retrieved_are_random():
     nrp = NStepRandomReplayBufferParams(max_len=10, n_step=1)
-    test_agent = Agent(rp=nrp)
+    test_agent = Agent(replay_buffer_params=nrp)
     is_random(test_agent)

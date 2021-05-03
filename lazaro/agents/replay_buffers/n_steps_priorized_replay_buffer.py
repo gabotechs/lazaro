@@ -5,10 +5,12 @@ from abc import ABC
 
 
 class NStepsPrioritizedReplayBuffer(PrioritizedReplayBuffer, NStepsReplayBuffer, ABC):
-    def __init__(self, rp: NStepPrioritizedReplayBufferParams = NStepPrioritizedReplayBufferParams(), *args, **kwargs):
-        if not isinstance(rp, NStepPrioritizedReplayBufferParams):
+    def __init__(self,
+                 replay_buffer_params: NStepPrioritizedReplayBufferParams = NStepPrioritizedReplayBufferParams(),
+                 *args, **kwargs):
+        if not isinstance(replay_buffer_params, NStepPrioritizedReplayBufferParams):
             raise ValueError("argument rp must be an instance of NStepPrioritizedReplayBufferParams")
-        super(NStepsPrioritizedReplayBuffer, self).__init__(rp, *args, **kwargs)
+        super(NStepsPrioritizedReplayBuffer, self).__init__(replay_buffer_params, *args, **kwargs)
 
     def rp_link(self):
         PrioritizedReplayBuffer.rp_link(self)

@@ -4,7 +4,6 @@ from game import SnakeEnv
 from lazaro.agents import AnyAgent
 from lazaro.evolutioners import T_EParams
 
-import numpy as np
 import torch
 import torch.nn.functional as F
 import typing as T
@@ -50,8 +49,9 @@ class CustomAgent(lz.agents.explorers.NoisyExplorer,
         return CustomNN(self.params)
 
     def preprocess(self, x):
-        x = np.array([[[int(i == int(cell)) for i in range(SnakeEnv.CHANNELS)] for cell in row] for row in x])
-        return torch.tensor(x.transpose((2, 0, 1)), dtype=torch.float32).unsqueeze(0)
+        categorized_state = [[[int(i == int(cell)) for i in range(SnakeEnv.CHANNELS)] for cell in row] for row in x]
+        x = torch.tensor(categorized_state, dtype=torch.float32)
+        return x.transpose(1, 2).transpose(0, 1).unsqueeze(0)
 
 
 evolve_params: T_EParams = {
@@ -112,9 +112,5 @@ if __name__ == '__main__':
         print("result:      ", progress.results[progress.best_index])
         print("="*len(gen_msg))
 
-    agent = evoultioner.agent_factory(evolve_params, {})
-    env.visualize = True
-    agent.train(env)
-
-    # evoultioner.set_progress_callback(on_progress)
-    # evoultioner.evolve(lambda x: False)
+    evoultioner.set_progress_callback(on_progress)
+    evoultioner.evolve(lambda x: False)

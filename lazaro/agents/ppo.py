@@ -11,12 +11,12 @@ from .replay_buffers import ReplayBufferEntry
 class PpoAgent(MonteCarloA2c, ABC):
     def __init__(self,
                  action_space: int,
-                 hp: PpoHyperParams = PpoHyperParams(),
+                 agent_params: PpoHyperParams = PpoHyperParams(),
                  use_gpu: bool = True):
-        super(MonteCarloA2c, self).__init__(action_space, hp, use_gpu)
-        self.hyper_params = hp
+        super(MonteCarloA2c, self).__init__(action_space, agent_params, use_gpu)
+        self.hyper_params = agent_params
         self.actor_critic_new = self.build_model().to(self.device).eval()
-        self.actor_critic_new_optimizer = torch.optim.Adam(self.actor_critic_new.parameters(), lr=hp.lr)
+        self.actor_critic_new_optimizer = torch.optim.Adam(self.actor_critic_new.parameters(), lr=agent_params.lr)
         self.actor_critic_new.load_state_dict(self.actor_critic.state_dict())
         self.add_step_callback("ppo agent update state", self.ensure_learning_step_callback)
 
@@ -30,7 +30,7 @@ class PpoAgent(MonteCarloA2c, ABC):
             self.actor_critic.load_state_dict(self.actor_critic_new.state_dict())
 
     def learn(self, batch: T.List[ReplayBufferEntry]) -> None:
-        batch_s = torch.cat([self.preprocess(m.s) for m in batch], 0).to(self.device).requires_grad_(True)
+        batch_s = torch.stack([self.preprocess(m.s) for m in batch], 0).to(self.device).requires_grad_(True)
         batch_a = torch.tensor([m.a for m in batch], device=self.device)
         batch_rt = torch.tensor([[m.r] for m in batch], dtype=torch.float32, device=self.device)
         batch_weights = torch.tensor([m.weight for m in batch], device=self.device)

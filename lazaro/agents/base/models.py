@@ -16,13 +16,13 @@ class ReplayBufferEntry:
 
 
 @dataclass
-class HyperParams:
+class AgentParams:
     gamma: float = 0.99
     learn_every: int = 1
 
 
 @dataclass
-class DqnHyperParams(HyperParams):
+class DqnHyperParams(AgentParams):
     lr: float = 0.0025
 
 
@@ -42,7 +42,7 @@ class DoubleDuelingDqnHyperParams(DoubleDqnHyperParams):
 
 
 @dataclass
-class A2CHyperParams(HyperParams):
+class A2CHyperParams(AgentParams):
     lr: float = 0.001
 
 

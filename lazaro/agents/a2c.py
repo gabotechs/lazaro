@@ -35,11 +35,11 @@ class ActorCritic(torch.nn.Module):
 class A2cAgent(BaseAgent, ABC):
     def __init__(self,
                  action_space: int,
-                 hp: A2CHyperParams = A2CHyperParams(),
+                 agent_params: A2CHyperParams = A2CHyperParams(),
                  use_gpu: bool = True):
-        super(A2cAgent, self).__init__(action_space, hp, use_gpu)
+        super(A2cAgent, self).__init__(action_space, agent_params, use_gpu)
         self.actor_critic = self.build_model().to(self.device)
-        self.actor_critic_optimizer = torch.optim.Adam(self.actor_critic.parameters(), lr=hp.lr)
+        self.actor_critic_optimizer = torch.optim.Adam(self.actor_critic.parameters(), lr=agent_params.lr)
         self.loss_f = torch.nn.MSELoss(reduction="none").to(self.device)
 
     def get_info(self) -> dict:
@@ -57,11 +57,13 @@ class A2cAgent(BaseAgent, ABC):
 
     def infer(self, x: np.ndarray) -> np.ndarray:
         with torch.no_grad():
-            return self.postprocess(self.actor_critic.forward(self.preprocess(x).to(self.device), use_critic=False)[0].cpu())
+            preprocessed = self.preprocess(x).unsqueeze(0).to(self.device)
+            infer = self.actor_critic.forward(preprocessed, use_critic=False)
+            return self.postprocess(infer[0].cpu())
 
     def learn(self, batch: T.List[ReplayBufferEntry]) -> None:
-        batch_s = torch.cat([self.preprocess(m.s) for m in batch], 0).to(self.device).requires_grad_(True)
-        batch_s_ = torch.cat([self.preprocess(m.s_) for m in batch], 0).to(self.device)
+        batch_s = torch.stack([self.preprocess(m.s) for m in batch], 0).to(self.device).requires_grad_(True)
+        batch_s_ = torch.stack([self.preprocess(m.s_) for m in batch], 0).to(self.device)
         batch_a = torch.tensor([m.a for m in batch], device=self.device)
         batch_r = torch.tensor([[m.r] for m in batch], dtype=torch.float32, device=self.device)
         batch_finals = torch.tensor([[int(not m.final)] for m in batch], device=self.device)
@@ -70,7 +72,7 @@ class A2cAgent(BaseAgent, ABC):
         action_probabilities, state_values = self.actor_critic(batch_s)
         with torch.no_grad():
             _, next_state_values = self.actor_critic(batch_s_)
-            estimated_q_value: torch.Tensor = self.hyper_params.gamma * next_state_values * batch_finals + batch_r
+            estimated_q_value: torch.Tensor = self.agent_params.gamma * next_state_values * batch_finals + batch_r
 
         advantages: torch.Tensor = (estimated_q_value - state_values.clone().detach()).squeeze(1)
         chosen_action_log_probabilities: torch.Tensor = torch.stack(
@@ -103,7 +105,7 @@ class A2cAgent(BaseAgent, ABC):
 
             self.call_step_callbacks(TrainingStep(i, episode))
 
-            if i % self.hyper_params.learn_every == 0 and i != 0 and self.rp_get_length() >= tp.batch_size:
+            if i % self.agent_params.learn_every == 0 and i != 0 and self.rp_get_length() >= tp.batch_size:
                 batch = self.rp_sample(tp.batch_size)
                 self.learn(batch)
 

@@ -12,7 +12,7 @@ from .replay_buffers import ReplayBufferEntry
 
 class MonteCarloA2c(A2cAgent, ABC):
     def learn(self, batch: T.List[ReplayBufferEntry]) -> None:
-        batch_s = torch.cat([self.preprocess(m.s) for m in batch], 0).to(self.device).requires_grad_(True)
+        batch_s = torch.stack([self.preprocess(m.s) for m in batch], 0).to(self.device).requires_grad_(True)
         batch_a = torch.tensor([m.a for m in batch], device=self.device)
         batch_rt = torch.tensor([[m.r] for m in batch], dtype=torch.float32, device=self.device)
         batch_weights = torch.tensor([m.weight for m in batch], device=self.device)
@@ -53,7 +53,7 @@ class MonteCarloA2c(A2cAgent, ABC):
 
             self.call_step_callbacks(TrainingStep(i, episode))
 
-            if i % self.hyper_params.learn_every == 0 and i != 0 and self.rp_get_length() >= tp.batch_size:
+            if i % self.agent_params.learn_every == 0 and i != 0 and self.rp_get_length() >= tp.batch_size:
                 batch = self.rp_sample(tp.batch_size)
                 self.learn(batch)
 
@@ -61,7 +61,7 @@ class MonteCarloA2c(A2cAgent, ABC):
                 discounted_r = 0
                 reward_array = np.zeros((len(steps_record)))
                 for j, step in enumerate(steps_record[::-1]):
-                    discounted_r = step.r + self.hyper_params.gamma * discounted_r
+                    discounted_r = step.r + self.agent_params.gamma * discounted_r
                     step.r = discounted_r
                     reward_array[j] = discounted_r
 

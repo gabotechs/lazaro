@@ -8,7 +8,7 @@ class Agent(RandomExplorer, tools.Agent):
 
 def test_selected_action_is_sampled_more_frequently():
     rep = RandomExplorerParams(init_ep=0.6, final_ep=0.01, decay_ep=1e-4)
-    test_agent = Agent(ep=rep)
+    test_agent = Agent(explorer_params=rep)
     actions = list(range(5))
     chosen_actions = {}
     for _ in range(1000):
@@ -23,4 +23,3 @@ def test_selected_action_is_sampled_more_frequently():
         if a == 0:
             continue
         assert chosen_actions[0] > chosen_actions[a]
-

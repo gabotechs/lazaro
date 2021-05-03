@@ -9,12 +9,14 @@ class Agent(NStepsPrioritizedReplayBuffer, tools.Agent):
 
 
 def test_elements_are_n_step():
-    nprp = NStepPrioritizedReplayBufferParams(max_len=15, n_step=3, alpha=0.5, init_beta=0.9, final_beta=1.0, increase_beta=1e-5)
-    test_agent = Agent(rp=nprp)
+    nprp = NStepPrioritizedReplayBufferParams(max_len=15, n_step=3, alpha=0.5, init_beta=0.9,
+                                              final_beta=1.0, increase_beta=1e-5)
+    test_agent = Agent(replay_buffer_params=nprp)
     is_n_step(test_agent)
 
 
 def test_elements_retrieved_are_prioritized():
-    nprp = NStepPrioritizedReplayBufferParams(max_len=10, n_step=1, alpha=0.5, init_beta=0.9, final_beta=1.0, increase_beta=1e-5)
-    test_agent = Agent(rp=nprp)
+    nprp = NStepPrioritizedReplayBufferParams(max_len=10, n_step=1, alpha=0.5, init_beta=0.9,
+                                              final_beta=1.0, increase_beta=1e-5)
+    test_agent = Agent(replay_buffer_params=nprp)
     is_prioritized(test_agent)

@@ -45,22 +45,23 @@ class CustomModel(torch.nn.Module):
     def forward(self, x):
         return F.relu(self.linear(x))
 ```
-
 Create your agent. You can select any agent and mix it with any exploration policy and any replay buffer
 algorithm.
-
 ```python
 # mix any agent with any exploration policy and any replay buffer
 class CustomAgent(lz.agents.explorers.NoisyExplorer,
                   lz.agents.replay_buffers.NStepsPrioritizedReplayBuffer,
                   lz.agents.DoubleDuelingDqnAgent):  
+    
     # implement the model factory. It will be used to embed your torch model into the agent
     def model_factory(self):
-        return CustomModel()  
+        return CustomModel()
+    
+    # lazaro expects to receive data as torch.Tensor, so implement the preprocessing method that does this
+    def preprocess(self, x):
+        return torch.from_numpy(x.astype("float32"))
 ```
-
 Instantiate your agent and train it in your environment.
-
 ```python
 agent = CustomAgent(action_space=ACTION_SPACE)
 agent.train(env)
@@ -72,5 +73,22 @@ agent.train(env)
 
 ## Custom snake game environment
 If you want to know how to create your own environment, checkout [this cool tutorial](docs/SNAKE_ENV.md), where you will build
-the snake game from scratch in a few lines of code and train an agent on it:
+the snake game from scratch in a few lines of code and train an agent on it
+
+## Tensorboard integration
+You can visualize the learning progress and the agent's neural network graph using Tensorboard.
+It's very simple:
+```python
+class CustomAgent(lz.agents.explorers.NoisyExplorer,
+                  lz.agents.replay_buffers.NStepsPrioritizedReplayBuffer,
+                  lz.agents.loggers.TensorBoardLogger,  # <- Just add this, and voila!
+                  lz.agents.DoubleDuelingDqnAgent):  
+    
+    def model_factory(self):
+        return CustomModel()
+    
+    def preprocess(self, x):
+        return torch.from_numpy(x.astype("float32"))
+```
+
 

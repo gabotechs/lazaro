@@ -12,7 +12,7 @@ EXPECTED_REWARD = 25
 class NN(torch.nn.Module):
     def __init__(self):
         super(NN, self).__init__()
-        self.linear_1 = torch.nn.Linear(environments.CartPole.OBSERVATION_SPACE, 10)
+        self.linear_1 = torch.nn.Linear(environments.CartPole.OBSERVATION_SPACE, 100)
         self.linear_2 = torch.nn.Linear(self.linear_1.out_features, 100)
 
     def forward(self, x):
@@ -37,6 +37,9 @@ for RB in [agents.replay_buffers.RandomReplayBuffer,
             class Agent(RB, EX, AG):
                 def model_factory(self) -> torch.nn.Module:
                     return NN()
+
+                def preprocess(self, x):
+                    return torch.from_numpy(x.astype("float32"))
 
             ag: T.Type[agents.AnyAgent] = Agent
             params.append(pytest.param(ag, id=f"{AG.__name__}({EX.__name__}, {RB.__name__})"))

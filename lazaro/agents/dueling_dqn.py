@@ -36,9 +36,10 @@ class DuelingDqnNetwork(torch.nn.Module):
 class DuelingDqnAgent(DqnAgent, ABC):
     def __init__(self,
                  action_space: int,
-                 hp: DuelingDqnHyperParams = DuelingDqnHyperParams(),
+                 agent_params: DuelingDqnHyperParams = DuelingDqnHyperParams(),
                  use_gpu: bool = True):
-        super(DuelingDqnAgent, self).__init__(action_space, hp, use_gpu)
+        super(DuelingDqnAgent, self).__init__(action_space, agent_params, use_gpu)
 
-    def dqn_model_wrapper(self, model: torch.nn.Module) -> torch.nn.Module:
+    def agent_specification_model_modifier(self, model: torch.nn.Module) -> torch.nn.Module:
+        self.log.info("wrapping with dueling dqn network")
         return DuelingDqnNetwork(model, self.action_space, self.last_layer_factory)

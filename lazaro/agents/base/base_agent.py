@@ -13,7 +13,7 @@ class BaseAgent(base_object.BaseObject,
                 interfaces.ExplorerInterface,
                 interfaces.ReplayBufferInterface,
                 ABC):
-    def __init__(self, action_space: int, hp: models.HyperParams, use_gpu: bool = True):
+    def __init__(self, action_space: int, agent_params: models.AgentParams, use_gpu: bool = True):
         super(BaseAgent, self).__init__()
         self.device: str = "cpu"
         if use_gpu:
@@ -22,7 +22,7 @@ class BaseAgent(base_object.BaseObject,
             else:
                 self.device = "cuda"
         self.action_space = action_space
-        self.hyper_params = hp
+        self.agent_params = agent_params
         self.default_training_params = models.TrainingParams()
         self.step_callbacks: T.Dict[str, models.TStepCallback] = {}
         self.progress_callbacks: T.Dict[str, models.TProgressCallback] = {}
@@ -120,7 +120,7 @@ class BaseAgent(base_object.BaseObject,
             cbk(learning_step)
         self.log.debug("all learning callbacks called")
 
-    def forward_hook(self, module: torch.nn.Module, x: T.Tuple[torch.Tensor], y: torch.Tensor) -> None:
+    def forward_hook(self, module: torch.nn.Module, x: T.Tuple[torch.Tensor, ...], y: torch.Tensor) -> None:
         pass
 
     def build_model(self) -> torch.nn.Module:
@@ -133,6 +133,3 @@ class BaseAgent(base_object.BaseObject,
         model = self.agent_specification_model_modifier(model)
         self.log.info("agent specification applied correctly")
         return model
-
-    def preprocess(self, x: T.Iterable) -> torch.Tensor:
-        return torch.unsqueeze(torch.tensor(x, dtype=torch.float32), 0)

@@ -9,15 +9,17 @@ from ..replay_buffers.base.segment_trees import SumSegmentTree, MinSegmentTree
 
 
 class PrioritizedReplayBuffer(ReplayBuffer, ABC):
-    def __init__(self, rp: PrioritizedReplayBufferParams = PrioritizedReplayBufferParams(), *args, **kwargs):
-        if not isinstance(rp, PrioritizedReplayBufferParams):
+    def __init__(self,
+                 replay_buffer_params: PrioritizedReplayBufferParams = PrioritizedReplayBufferParams(),
+                 *args, **kwargs):
+        if not isinstance(replay_buffer_params, PrioritizedReplayBufferParams):
             raise ValueError("argument rp must be an instance of PrioritizedReplayBufferParams")
-        if rp.alpha < 0:
+        if replay_buffer_params.alpha < 0:
             raise ValueError("alpha must be >= 0")
 
         self.max_priority: float = 1.0
-        self.rp: PrioritizedReplayBufferParams = rp
-        self.beta: float = rp.init_beta
+        self.rp: PrioritizedReplayBufferParams = replay_buffer_params
+        self.beta: float = replay_buffer_params.init_beta
 
         tree_capacity = 1
         while tree_capacity < self.rp.max_len:
@@ -25,7 +27,7 @@ class PrioritizedReplayBuffer(ReplayBuffer, ABC):
 
         self.sum_tree = SumSegmentTree(tree_capacity)
         self.min_tree = MinSegmentTree(tree_capacity)
-        super(PrioritizedReplayBuffer, self).__init__(rp, *args, **kwargs)
+        super(PrioritizedReplayBuffer, self).__init__(replay_buffer_params, *args, **kwargs)
 
     def _increase_beta(self, *_, **__):
         self.log.debug(f"increase beta for {type(self).__name__} triggered")

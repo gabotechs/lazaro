@@ -5,9 +5,9 @@ from ...base.base_agent import BaseAgent
 
 
 class ReplayBuffer(BaseAgent, ABC):
-    def __init__(self, rp: ReplayBufferParams, *args, **kwargs):
+    def __init__(self, replay_buffer_params: ReplayBufferParams, *args, **kwargs):
         super(ReplayBuffer, self).__init__(*args, **kwargs)
-        self.rp: ReplayBufferParams = rp
+        self.rp: ReplayBufferParams = replay_buffer_params
         self.records: T.List[T.Union[None, ReplayBufferEntry]] = [None for _ in range(self.rp.max_len)]
         self.ptr = 0
         self.filled = False

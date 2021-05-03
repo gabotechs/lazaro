@@ -19,7 +19,7 @@ def test_generated_model_works():
         def forward(self, x):
             return self.linear(x)
 
-    test_agent = Agent(ep=nep)
+    test_agent = Agent(explorer_params=nep)
     model = test_agent.last_layers_model_modifier(Model())
     assert len([l for l in model.modules() if isinstance(l, torch.nn.Linear)]) == 1
     assert len([l for l in model.modules() if isinstance(l, NoisyLinear)]) == 2

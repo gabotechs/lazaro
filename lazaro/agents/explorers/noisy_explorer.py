@@ -63,10 +63,10 @@ class ModelWithNoisyLayers(torch.nn.Module):
 
 
 class NoisyExplorer(Explorer, ABC):
-    def __init__(self, ep: NoisyExplorerParams = NoisyExplorerParams(), *args, **kwargs):
-        if not isinstance(ep, NoisyExplorerParams):
+    def __init__(self, explorer_params: NoisyExplorerParams = NoisyExplorerParams(), *args, **kwargs):
+        if not isinstance(explorer_params, NoisyExplorerParams):
             raise ValueError("argument ep must be an instance of NoisyExplorerParams")
-        self.ep: NoisyExplorerParams = ep
+        self.ep: NoisyExplorerParams = explorer_params
         self.noisy_layers_reference: T.List[NoisyLinear] = []
         self.reset_count: int = 0
         super(NoisyExplorer, self).__init__(*args, **kwargs)

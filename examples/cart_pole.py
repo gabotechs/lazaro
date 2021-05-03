@@ -1,5 +1,7 @@
+import numpy as np
 import torch
 import torch.nn.functional as F
+
 import lazaro as lz
 
 env = lz.environments.CartPole()
@@ -18,6 +20,9 @@ class CustomAgent(lz.agents.explorers.NoisyExplorer,
                   lz.agents.replay_buffers.RandomReplayBuffer,
                   lz.agents.loggers.TensorBoardLogger,
                   lz.agents.MonteCarloA2c):
+    def preprocess(self, x: np.ndarray) -> torch.Tensor:
+        return torch.from_numpy(x.astype("float32"))
+
     def model_factory(self):
         return CustomNN()
 
