@@ -266,7 +266,7 @@ We have all we need, lets tweak a bit the hyper parameters and train the agent!
 ```python
 env = SnakeEnv()
 agent = CustomAgent(
-    action_space=len(env.get_action_space()),
+    action_space=len(SnakeEnv.ACTION_TO_DIRECTION),
     agent_params=lz.agents.DoubleDuelingDqnHyperParams(lr=.001)
 )
 agent.train(env, lz.agents.TrainingParams(batch_size=16))
