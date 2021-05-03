@@ -69,3 +69,8 @@ agent.train(env)
 <p align="center">
     <img src="docs/cartpole.gif">
 </p>
+
+## Custom snake game environment
+If you want to know how to create your own environment, checkout [this cool tutorial](docs/SNAKE_ENV.md), where you will build
+the snake game from scratch in a few lines of code and train an agent on it:
+
