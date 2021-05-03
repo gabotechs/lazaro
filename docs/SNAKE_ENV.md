@@ -88,7 +88,7 @@ This is the constructor for the snake game, with all the constants and the initi
 ```python
 class SnakeEnv(lz.environments.Environment):
     CHANNELS = 4
-    SHAPE = (7, 7)
+    SHAPE = (5, 5)
     RENDER_MAP = {
         0: "..",
         1: "[]",
