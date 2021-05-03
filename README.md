@@ -40,7 +40,7 @@ class CustomModel(torch.nn.Module):
         super(CustomModel, self).__init__()
         # your last layer can have an arbitrary number of output neurons, 
         # lazaro will handle the rest of the model for you
-        self.linear = torch.nn.Linear(OBSERVATION_SPACE, 30) 
+        self.linear = torch.nn.Linear(OBSERVATION_SPACE, 128) 
 
     def forward(self, x):
         return F.relu(self.linear(x))
@@ -57,7 +57,7 @@ class CustomAgent(lz.agents.explorers.NoisyExplorer,
     def model_factory(self):
         return CustomModel()
     
-    # lazaro expects to receive data as torch.Tensor, so implement the preprocessing method that does this
+    # lazaro expects to receive data as torch.Tensor
     def preprocess(self, x):
         return torch.from_numpy(x.astype("float32"))
 ```

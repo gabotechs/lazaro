@@ -10,7 +10,7 @@ env = lz.environments.CartPole()
 class CustomNN(torch.nn.Module):
     def __init__(self):
         super(CustomNN, self).__init__()
-        self.linear = torch.nn.Linear(lz.environments.CartPole.OBSERVATION_SPACE, 30)
+        self.linear = torch.nn.Linear(lz.environments.CartPole.OBSERVATION_SPACE, 128)
 
     def forward(self, x):
         return F.relu(self.linear(x))

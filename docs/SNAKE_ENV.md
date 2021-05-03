@@ -249,9 +249,6 @@ class CustomNN(torch.nn.Module):
 ```
 Now, lets embed this model into a reinforcement learning agent.
 ```python
-import torch
-
-
 class CustomAgent(lz.agents.explorers.NoisyExplorer,
                   lz.agents.replay_buffers.NStepsPrioritizedReplayBuffer,
                   lz.agents.DoubleDuelingDqnAgent):
@@ -263,14 +260,14 @@ class CustomAgent(lz.agents.explorers.NoisyExplorer,
         # which is the game object index (0, 1, 2 or 3) into a categorical array ((1,0,0,0), (0,1,0,0), (0,0,1,0), (0,0,0,1))
         categorized_state = [[[int(i == int(cell)) for i in range(SnakeEnv.CHANNELS)] for cell in row] for row in x]
         x = torch.tensor(categorized_state, dtype=torch.float32)
-        return x.transpose(1, 2).transpose(0, 1).unsqueeze(0)
+        return x.transpose(1, 2).transpose(0, 1)  # hwc -> chw
 ```
 We have all we need, lets tweak a bit the hyper parameters and train the agent!
 ```python
 env = SnakeEnv()
 agent = CustomAgent(
     action_space=len(env.get_action_space()),
-    hp=lz.agents.DoubleDuelingDqnHyperParams(lr=.001)
+    agent_params=lz.agents.DoubleDuelingDqnHyperParams(lr=.001)
 )
 agent.train(env, lz.agents.TrainingParams(batch_size=16))
 ```

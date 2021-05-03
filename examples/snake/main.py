@@ -21,19 +21,20 @@ class CustomNN(torch.nn.Module):
     def __init__(self, params: T_EParams):
         super(CustomNN, self).__init__()
         k_s_1 = params["kernel_size_1"].value
-        self.conv1 = Conv2d(SnakeEnv.CHANNELS, 16, stride=(1, 1), kernel_size=(k_s_1, k_s_1), padding=(int(k_s_1/2), int(k_s_1/2)))
+        self.conv1 = Conv2d(SnakeEnv.CHANNELS, 16, kernel_size=(k_s_1, k_s_1), padding=(int(k_s_1/2), int(k_s_1/2)))
         h, w = self.conv1.out_wh(SnakeEnv.SHAPE)
         k_s_2 = params["kernel_size_2"].value
-        self.conv2 = Conv2d(self.conv1.out_channels, 32, stride=(1, 1), kernel_size=(k_s_2, k_s_2), padding=(int(k_s_2/2), int(k_s_2/2)))
+        self.conv2 = Conv2d(self.conv1.out_channels, 32, kernel_size=(k_s_2, k_s_2), padding=(int(k_s_2/2), int(k_s_2/2)))
         h, w = self.conv2.out_wh((h, w))
         k_s_3 = params["kernel_size_3"].value
-        self.conv3 = Conv2d(self.conv1.out_channels, 64, stride=(1, 1), kernel_size=(k_s_3, k_s_3), padding=(int(k_s_3 / 2), int(k_s_3 / 2)))
-        self.linear = torch.nn.Linear(self.conv2.out_channels * h * w, params["linear_out"].value)
+        self.conv3 = Conv2d(self.conv2.out_channels, 64, kernel_size=(k_s_3, k_s_3), padding=(int(k_s_3/2), int(k_s_3/2)))
+        self.linear = torch.nn.Linear(self.conv3.out_channels * h * w, params["linear_out"].value)
 
     def forward(self, x):
         batch_size = x.shape[0]
         x = F.relu(self.conv1(x))
         x = F.relu(self.conv2(x))
+        x = F.relu(self.conv3(x))
         x = torch.reshape(x, (batch_size, -1))
         return F.relu(self.linear(x))
 
@@ -51,7 +52,7 @@ class CustomAgent(lz.agents.explorers.NoisyExplorer,
     def preprocess(self, x):
         categorized_state = [[[int(i == int(cell)) for i in range(SnakeEnv.CHANNELS)] for cell in row] for row in x]
         x = torch.tensor(categorized_state, dtype=torch.float32)
-        return x.transpose(1, 2).transpose(0, 1).unsqueeze(0)
+        return x.transpose(1, 2).transpose(0, 1)
 
 
 evolve_params: T_EParams = {
@@ -68,18 +69,18 @@ evolve_params: T_EParams = {
 
 class SnakeEvolutioner(lz.evolutioners.Evolutioner):
     def agent_factory(self, params: T_EParams, state_dict: T.Optional[dict]) -> AnyAgent:
-        hp = lz.agents.PpoHyperParams(
+        agent_params = lz.agents.PpoHyperParams(
             lr=params["lr"].value,
             gamma=params["gamma"].value,
             ensure_every=10,
             learn_every=1
         )
-        ep = lz.agents.explorers.NoisyExplorerParams(
+        explorer_params = lz.agents.explorers.NoisyExplorerParams(
             extra_layers=[],
             reset_noise_every=1,
             std_init=.5
         )
-        rp = lz.agents.replay_buffers.NStepPrioritizedReplayBufferParams(
+        replay_buffer_params = lz.agents.replay_buffers.NStepPrioritizedReplayBufferParams(
             n_step=4,
             alpha=.6,
             init_beta=.4,
@@ -87,12 +88,16 @@ class SnakeEvolutioner(lz.evolutioners.Evolutioner):
             increase_beta=1e-4,
             max_len=params["memory_len"].value
         )
-        tp = lz.agents.TrainingParams(
+        training_params = lz.agents.TrainingParams(
             batch_size=params["batch_size"].value,
             episodes=10000
         )
-        agent = CustomAgent(params=params, action_space=4, hp=hp, ep=ep, rp=rp)
-        agent.default_training_params = tp
+        agent = CustomAgent(params=params,
+                            action_space=4,
+                            agent_params=agent_params,
+                            explorer_params=explorer_params,
+                            replay_buffer_params=replay_buffer_params)
+        agent.default_training_params = training_params
         return agent
 
 

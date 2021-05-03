@@ -64,7 +64,7 @@ class AgentEventInterface(ABC):
         raise NotImplementedError()
 
     @abstractmethod
-    def preprocess(self, x: T.Iterable) -> torch.Tensor:
+    def preprocess(self, x: T.Any) -> torch.Tensor:
         raise NotImplementedError()
 
     @abstractmethod
