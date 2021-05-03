@@ -7,7 +7,12 @@
 </p>
 
 Reinforcement learning framework based on Pytorch for implementing custom deep learning models
-on custom environments using state of the art and modular reinforcement learning algorithms
+on custom environments using state of the art and modular reinforcement learning algorithms.
+
+Developing deep learning models is hard enough to also be worrying about implementing them
+correctly in the last reinforcement learning algorithm you saw in a paper. Lazaro takes that weight
+out of the shoulders of the people who work with reinforcement learning, and let developers focus
+on their custom deep learning models that solve their custom environments.
 
 # Installation
 
@@ -25,7 +30,8 @@ import lazaro as lz
 ```
 
 Choose an environment to train your model. You can create one yourself or choose one from the 
-environments repository.
+environments repository. [Here is a cool tutorial](docs/SNAKE_ENV.md) that shows how to build an
+environment yourself from scratch.
 ```python
 env = lz.environments.CartPole()
 OBSERVATION_SPACE = 4  # position, speed, angle, rotation speed 
@@ -58,7 +64,7 @@ class CustomAgent(lz.agents.explorers.NoisyExplorer,
         return CustomModel()
     
     # lazaro expects to receive data as torch.Tensor
-    def preprocess(self, x):
+    def preprocess(self, x):  # x is the raw state that the environment returns
         return torch.from_numpy(x.astype("float32"))
 ```
 Instantiate your agent and train it in your environment.
@@ -72,7 +78,7 @@ agent.train(env)
 </p>
 
 ## Custom snake game environment
-If you want to know how to create your own environment, checkout [this cool tutorial](docs/SNAKE_ENV.md), where you will build
+If you want to know how to create your own environment, checkout [this tutorial](docs/SNAKE_ENV.md), where you will build
 the snake game from scratch in a few lines of code and train an agent on it
 
 ## Tensorboard integration
@@ -96,3 +102,15 @@ like this:
     <img src="docs/assets/tb-charts.png">
     <img src="docs/assets/tb-graph.png">
 </p>
+
+## Citing Lazaro
+to cite this repository
+```
+@software{lazaro2021github,
+  author = {Gabriel Musat},
+  title = {Lazaro},
+  url = {https://github.com/GabrielMusat/lazaro},
+  version = {0.0.3},
+  year = {2021},
+}
+```
