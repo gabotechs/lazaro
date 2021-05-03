@@ -273,5 +273,5 @@ agent.train(env, lz.agents.TrainingParams(batch_size=16))
 ```
 
 <p align="center">
-    <img src="snake.gif">
+    <img src="assets/snake.gif">
 </p>

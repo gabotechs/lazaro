@@ -19,7 +19,7 @@ class CustomNN(torch.nn.Module):
 class CustomAgent(lz.agents.explorers.NoisyExplorer,
                   lz.agents.replay_buffers.RandomReplayBuffer,
                   lz.agents.loggers.TensorBoardLogger,
-                  lz.agents.MonteCarloA2c):
+                  lz.agents.DoubleDuelingDqnAgent):
     def preprocess(self, x: np.ndarray) -> torch.Tensor:
         return torch.from_numpy(x.astype("float32"))
 

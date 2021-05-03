@@ -1,5 +1,5 @@
 <p align="center">
-    <img height="200" src="./docs/lazaro.svg">
+    <img height="200" src="./docs/assets/lazaro.svg">
 </p>
 <p align="center">
     <img src="https://github.com/GabrielMusat/lazaro/actions/workflows/test.yml/badge.svg">
@@ -68,7 +68,7 @@ agent.train(env)
 ```
 
 <p align="center">
-    <img src="docs/cartpole.gif">
+    <img src="docs/assets/cartpole.gif">
 </p>
 
 ## Custom snake game environment
@@ -90,5 +90,9 @@ class CustomAgent(lz.agents.explorers.NoisyExplorer,
     def preprocess(self, x):
         return torch.from_numpy(x.astype("float32"))
 ```
-
-
+Once the training has started, you can go to the Tensorboard local uri (http://localhost:6006) and see useful info
+like this:
+<p align="center">
+    <img src="docs/assets/tb-charts.png">
+    <img src="docs/assets/tb-graph.png">
+</p>
