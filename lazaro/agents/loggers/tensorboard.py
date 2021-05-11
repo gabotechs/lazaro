@@ -127,7 +127,7 @@ class TensorBoardLogger(BaseAgent, ABC):
 
         agent = self.get_self_class_name()
         today = str(datetime.datetime.now().date())
-        now = str(datetime.datetime.now().time().strftime("%H:%M:%S"))
+        now = str(datetime.datetime.now().time().strftime("%H_%M_%S"))
         folder = ""
         for sub_folder in [base, agent, type(env).__name__, today, now]:
             folder = os.path.join(folder, sub_folder)
