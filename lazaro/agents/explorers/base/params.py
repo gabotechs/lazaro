@@ -1,5 +1,5 @@
 import typing as T
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 
 
 @dataclass
@@ -11,6 +11,6 @@ class RandomExplorerParams:
 
 @dataclass
 class NoisyExplorerParams:
-    extra_layers: T.List[int] = ()
+    extra_layers: T.List[int] = field(default_factory=list)
     reset_noise_every: int = 1
     std_init: float = 0.5

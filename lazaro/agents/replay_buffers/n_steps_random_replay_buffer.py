@@ -1,7 +1,8 @@
-from .base.n_steps_replay_buffer import NStepsReplayBuffer
-from .random_replay_buffer import RandomReplayBuffer
-from .base.params import NStepRandomReplayBufferParams
 from abc import ABC
+
+from .base.n_steps_replay_buffer import NStepsReplayBuffer
+from .base.params import NStepRandomReplayBufferParams
+from .random_replay_buffer import RandomReplayBuffer
 
 
 class NStepsRandomReplayBuffer(NStepsReplayBuffer, RandomReplayBuffer, ABC):

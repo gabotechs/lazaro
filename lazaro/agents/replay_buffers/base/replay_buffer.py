@@ -1,5 +1,6 @@
-from abc import ABC
 import typing as T
+from abc import ABC
+
 from .params import ReplayBufferEntry, ReplayBufferParams
 from ...base.base_agent import BaseAgent
 

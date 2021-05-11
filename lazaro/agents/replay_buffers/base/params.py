@@ -1,7 +1,7 @@
-from dataclasses import dataclass
 import typing as T
+from dataclasses import dataclass
+
 import numpy as np
-import torch
 
 
 @dataclass
@@ -13,11 +13,6 @@ class ReplayBufferEntry:
     final: bool
     index: T.Union[None, int] = None
     weight: int = 1
-
-
-@dataclass
-class MemoryReplayBufferEntry(ReplayBufferEntry):
-    m: torch.Tensor = None
 
 
 @dataclass

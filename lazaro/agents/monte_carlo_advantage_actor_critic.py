@@ -4,10 +4,10 @@ from abc import ABC
 import numpy as np
 import torch
 
-from ..environments import Environment
 from .a2c import A2cAgent
 from .base.models import TrainingProgress, LearningStep, TrainingStep, TrainingParams
 from .replay_buffers import ReplayBufferEntry
+from ..environments import Environment
 
 
 class MonteCarloA2c(A2cAgent, ABC):

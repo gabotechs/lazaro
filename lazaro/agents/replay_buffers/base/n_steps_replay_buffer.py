@@ -2,8 +2,8 @@ import typing as T
 from abc import ABC
 from collections import deque
 
-from .replay_buffer import ReplayBuffer
 from .params import ReplayBufferEntry, NStepReplayBufferParams
+from .replay_buffer import ReplayBuffer
 
 
 class NStepsReplayBuffer(ReplayBuffer, ABC):

@@ -1,7 +1,8 @@
 import random
-from .base.replay_buffer import ReplayBuffer
-from .base.params import RandomReplayBufferParams
 from abc import ABC
+
+from .base.params import RandomReplayBufferParams
+from .base.replay_buffer import ReplayBuffer
 
 
 class RandomReplayBuffer(ReplayBuffer, ABC):

@@ -1,14 +1,15 @@
+import asyncio
+import random
 import typing as T
 from abc import ABC, abstractmethod
-import random
+
 import numpy as np
-import asyncio
 import torch
 
-from ..agents import AnyAgent
-from ..environments import Environment
 from .individual import Individual
 from .models import EvolutionProgress, EvolutionerParams, T_EParams, EvolvingFloat, EvolvingBool, EvolvingInt
+from ..agents import AnyAgent
+from ..environments import Environment
 
 
 class Evolutioner(ABC):

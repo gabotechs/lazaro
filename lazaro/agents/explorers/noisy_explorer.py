@@ -1,9 +1,10 @@
 import math
 import typing as T
+from abc import ABC
+
+import numpy as np
 import torch
 import torch.nn.functional as F
-import numpy as np
-from abc import ABC
 
 from .base.explorer import Explorer
 from .base.params import NoisyExplorerParams

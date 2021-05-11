@@ -1,7 +1,8 @@
-from .base.params import NStepPrioritizedReplayBufferParams
-from .base.n_steps_replay_buffer import NStepsReplayBuffer
-from .priorized_replay_buffer import PrioritizedReplayBuffer
 from abc import ABC
+
+from .base.n_steps_replay_buffer import NStepsReplayBuffer
+from .base.params import NStepPrioritizedReplayBufferParams
+from .priorized_replay_buffer import PrioritizedReplayBuffer
 
 
 class NStepsPrioritizedReplayBuffer(PrioritizedReplayBuffer, NStepsReplayBuffer, ABC):

@@ -1,5 +1,5 @@
-from abc import ABC, abstractmethod
 import typing as T
+from abc import ABC, abstractmethod
 
 T_entry = T.TypeVar("T_entry")
 
