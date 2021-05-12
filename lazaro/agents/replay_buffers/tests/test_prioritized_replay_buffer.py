@@ -1,7 +1,8 @@
 import numpy as np
 
 from . import tools
-from ...replay_buffers import PrioritizedReplayBuffer, PrioritizedReplayBufferParams, ReplayBufferEntry
+from ...replay_buffers import PrioritizedReplayBuffer, PrioritizedReplayBufferParams
+from ...base.models import ReplayBufferEntry
 
 
 def is_prioritized(replay_buffer: PrioritizedReplayBuffer):

@@ -1,18 +1,30 @@
 import typing as T
 from dataclasses import dataclass
 
-import numpy as np
+import torch
+
+T_S = T.TypeVar("T_S")
 
 
 @dataclass
-class ReplayBufferEntry:
-    s: np.ndarray
-    s_: np.ndarray
+class ReplayBufferEntry(T.Generic[T_S]):
+    s: T_S
+    s_: T_S
     a: int
     r: float
     final: bool
     index: T.Union[None, int] = None
     weight: int = 1
+
+
+@dataclass
+class LearningBatch:
+    s: T.Union[torch.Tensor, T.Tuple[torch.Tensor, ...]]
+    s_: T.Union[torch.Tensor, T.Tuple[torch.Tensor, ...]]
+    a: torch.Tensor
+    r: torch.Tensor
+    final: torch.Tensor
+    weight: torch.Tensor
 
 
 @dataclass

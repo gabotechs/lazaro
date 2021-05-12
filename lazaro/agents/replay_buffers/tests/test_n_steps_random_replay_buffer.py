@@ -3,7 +3,8 @@ import numpy as np
 from . import tools
 from .test_random_replay_buffer import is_random
 from ..base.n_steps_replay_buffer import NStepsReplayBuffer
-from ...replay_buffers import NStepRandomReplayBufferParams, ReplayBufferEntry, NStepsRandomReplayBuffer
+from ...replay_buffers import NStepRandomReplayBufferParams, NStepsRandomReplayBuffer
+from ...base.models import ReplayBufferEntry
 
 
 def is_n_step(replay_buffer: NStepsReplayBuffer):

@@ -1,7 +1,8 @@
 import numpy as np
 
 from . import tools
-from ...replay_buffers import RandomReplayBuffer, RandomReplayBufferParams, ReplayBufferEntry
+from ...replay_buffers import RandomReplayBuffer, RandomReplayBufferParams
+from ...base.models import ReplayBufferEntry
 
 
 def is_random(replay_buffer: RandomReplayBuffer):

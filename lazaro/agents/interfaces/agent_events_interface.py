@@ -65,7 +65,7 @@ class AgentEventInterface(ABC):
         raise NotImplementedError()
 
     @abstractmethod
-    def preprocess(self, x: T.Any) -> torch.Tensor:
+    def preprocess(self, x: T.Any) -> T.Union[torch.Tensor, T.Tuple[torch.Tensor, ...]]:
         raise NotImplementedError()
 
     @abstractmethod
@@ -73,11 +73,19 @@ class AgentEventInterface(ABC):
         raise NotImplementedError()
 
     @abstractmethod
-    def infer(self, *args) -> T.Any:
+    def act(self, *args) -> T.Iterable:
         raise NotImplementedError()
 
     @abstractmethod
-    def learn(self, batch: T.List[T.Any]) -> None:
+    def infer(self, preprocessed: T.Union[torch.Tensor, T.Tuple[torch.Tensor, ...]]) -> torch.Tensor:
+        raise NotImplementedError()
+
+    @abstractmethod
+    def learn(self, entries: T.List[models.ReplayBufferEntry]) -> None:
+        raise NotImplementedError()
+
+    @abstractmethod
+    def form_learning_batch(self, batch: T.List[models.ReplayBufferEntry]) -> models.LearningBatch:
         raise NotImplementedError()
 
     @abstractmethod

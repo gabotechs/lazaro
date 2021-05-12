@@ -1,18 +1,4 @@
-import typing as T
 from dataclasses import dataclass
-
-import numpy as np
-
-
-@dataclass
-class ReplayBufferEntry:
-    s: np.ndarray
-    s_: np.ndarray
-    a: int
-    r: float
-    final: bool
-    index: T.Union[None, int] = None
-    weight: int = 1
 
 
 @dataclass

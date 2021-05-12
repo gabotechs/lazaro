@@ -51,7 +51,7 @@ class BaseAgent(base_object.BaseObject,
         self.log.info("preprocessing is correct")
         self.log.info("testing inference...")
         try:
-            self.infer(s)
+            self.act(s)
         except Exception as e:
             self.log.error("error while testing inference")
             raise e
@@ -133,3 +133,28 @@ class BaseAgent(base_object.BaseObject,
         model = self.agent_specification_model_modifier(model)
         self.log.info("agent specification applied correctly")
         return model
+
+    def act(self, x):
+        with torch.no_grad():
+            preprocessed = self.preprocess(x)
+            if type(preprocessed) == tuple:
+                preprocessed = tuple(p.unsqueeze(0).to(self.device) for p in preprocessed)
+            else:
+                preprocessed = preprocessed.unsqueeze(0).to(self.device)
+            infer = self.infer(preprocessed)
+            return self.postprocess(infer.cpu())
+
+    def form_learning_batch(self, batch: T.List[models.ReplayBufferEntry]) -> models.LearningBatch:
+        state_is_tuple = type(batch[0].s) == tuple
+        if state_is_tuple:
+            tuple_len = len(batch[0].s)
+            batch_s = tuple(torch.stack([self.preprocess(m.s[i]) for m in batch], 0).to(self.device).requires_grad_(True) for i in range(tuple_len))
+            batch_s_ = tuple(torch.stack([self.preprocess(m.s_[i]) for m in batch], 0).to(self.device) for i in range(tuple_len))
+        else:
+            batch_s = torch.stack([self.preprocess(m.s) for m in batch], 0).to(self.device).requires_grad_(True)
+            batch_s_ = torch.stack([self.preprocess(m.s_) for m in batch], 0).to(self.device)
+        batch_a = torch.tensor([m.a for m in batch], device=self.device)
+        batch_r = torch.tensor([m.r for m in batch], dtype=torch.float32, device=self.device)
+        batch_finals = torch.tensor([int(not m.final) for m in batch], device=self.device)
+        batch_weights = torch.tensor([m.weight for m in batch], device=self.device)
+        return models.LearningBatch(batch_s, batch_s_, batch_a, batch_r, batch_finals, batch_weights)

@@ -1,7 +1,8 @@
 import typing as T
 from abc import ABC
 
-from .params import ReplayBufferEntry, ReplayBufferParams
+from ...base.models import ReplayBufferEntry
+from .params import ReplayBufferParams
 from ...base.base_agent import BaseAgent
 
 

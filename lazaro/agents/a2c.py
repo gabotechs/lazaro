@@ -7,9 +7,8 @@ import torch.nn.functional as F
 
 from ..environments import Environment
 from .base.base_agent import BaseAgent
-from .base.models import A2CHyperParams, TrainingProgress, TrainingParams, LearningStep, TrainingStep
+from .base.models import A2CHyperParams, TrainingProgress, TrainingParams, LearningStep, TrainingStep, ReplayBufferEntry
 from .explorers.noisy_explorer import NoisyLinear
-from .replay_buffers import ReplayBufferEntry
 
 
 class ActorCritic(torch.nn.Module):
@@ -55,35 +54,29 @@ class A2cAgent(BaseAgent, ABC):
     def postprocess(self, t: torch.Tensor) -> np.ndarray:
         return np.array(t.squeeze(0))
 
-    def infer(self, x: np.ndarray) -> np.ndarray:
-        with torch.no_grad():
-            preprocessed = self.preprocess(x).unsqueeze(0).to(self.device)
-            infer = self.actor_critic.forward(preprocessed, use_critic=False)
-            return self.postprocess(infer[0].cpu())
+    def infer(self, preprocessed: T.Union[torch.Tensor, T.Tuple[torch.Tensor, ...]]) -> torch.Tensor:
+        return self.actor_critic.forward(preprocessed, use_critic=False)[0]
 
-    def learn(self, batch: T.List[ReplayBufferEntry]) -> None:
-        batch_s = torch.stack([self.preprocess(m.s) for m in batch], 0).to(self.device).requires_grad_(True)
-        batch_s_ = torch.stack([self.preprocess(m.s_) for m in batch], 0).to(self.device)
-        batch_a = torch.tensor([m.a for m in batch], device=self.device)
-        batch_r = torch.tensor([[m.r] for m in batch], dtype=torch.float32, device=self.device)
-        batch_finals = torch.tensor([[int(not m.final)] for m in batch], device=self.device)
-        batch_weights = torch.tensor([m.weight for m in batch], device=self.device)
+    def learn(self, entries: T.List[ReplayBufferEntry]) -> None:
+        batch = self.form_learning_batch(entries)
+        batch.final = batch.final.unsqueeze(1)
+        batch.r = batch.r.unsqueeze(1)
 
-        action_probabilities, state_values = self.actor_critic(batch_s)
+        action_probabilities, state_values = self.actor_critic(batch.s)
         with torch.no_grad():
-            _, next_state_values = self.actor_critic(batch_s_)
-            estimated_q_value: torch.Tensor = self.agent_params.gamma * next_state_values * batch_finals + batch_r
+            _, next_state_values = self.actor_critic(batch.s_)
+            estimated_q_value: torch.Tensor = self.agent_params.gamma * next_state_values * batch.final + batch.r
 
         advantages: torch.Tensor = (estimated_q_value - state_values.clone().detach()).squeeze(1)
         chosen_action_log_probabilities: torch.Tensor = torch.stack(
-            [torch.distributions.Categorical(p).log_prob(a) for p, a in zip(action_probabilities, batch_a)])
-        actor_loss: torch.Tensor = -chosen_action_log_probabilities * advantages * batch_weights
-        critic_loss: torch.Tensor = self.loss_f(state_values, estimated_q_value) * batch_weights
+            [torch.distributions.Categorical(p).log_prob(a) for p, a in zip(action_probabilities, batch.a)])
+        actor_loss: torch.Tensor = -chosen_action_log_probabilities * advantages * batch.weight
+        critic_loss: torch.Tensor = self.loss_f(state_values, estimated_q_value) * batch.weight
         loss = (actor_loss + critic_loss).mean()
         self.actor_critic_optimizer.zero_grad()
         loss.backward()
         self.actor_critic_optimizer.step()
-        self.call_learn_callbacks(LearningStep(batch, [v.item() for v in state_values], [v.item() for v in estimated_q_value]))
+        self.call_learn_callbacks(LearningStep(entries, [v.item() for v in state_values], [v.item() for v in estimated_q_value]))
 
     def train(self, env: Environment, tp: TrainingParams = None) -> None:
         if tp is None:
@@ -95,7 +88,7 @@ class A2cAgent(BaseAgent, ABC):
         steps_survived = 0
         accumulated_reward = 0
         while True:
-            estimated_rewards = self.infer(s)
+            estimated_rewards = self.act(s)
             def choosing_f(x): return torch.distributions.Categorical(torch.tensor(x)).sample().item()
             a = self.ex_choose(list(estimated_rewards), choosing_f)
             s_, r, final = env.step(a)

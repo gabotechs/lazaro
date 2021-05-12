@@ -2,9 +2,9 @@ import random
 import typing as T
 from abc import ABC
 
-from .base.params import ReplayBufferEntry, PrioritizedReplayBufferParams
+from .base.params import PrioritizedReplayBufferParams
 from .base.replay_buffer import ReplayBuffer
-from ..base.models import LearningStep
+from ..base.models import LearningStep, ReplayBufferEntry
 from ..replay_buffers.base.segment_trees import SumSegmentTree, MinSegmentTree
 
 

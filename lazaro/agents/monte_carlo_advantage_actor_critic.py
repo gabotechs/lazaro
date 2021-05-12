@@ -5,30 +5,27 @@ import numpy as np
 import torch
 
 from .a2c import A2cAgent
-from .base.models import TrainingProgress, LearningStep, TrainingStep, TrainingParams
-from .replay_buffers import ReplayBufferEntry
+from .base.models import TrainingProgress, LearningStep, TrainingStep, TrainingParams, ReplayBufferEntry
 from ..environments import Environment
 
 
 class MonteCarloA2c(A2cAgent, ABC):
-    def learn(self, batch: T.List[ReplayBufferEntry]) -> None:
-        batch_s = torch.stack([self.preprocess(m.s) for m in batch], 0).to(self.device).requires_grad_(True)
-        batch_a = torch.tensor([m.a for m in batch], device=self.device)
-        batch_rt = torch.tensor([[m.r] for m in batch], dtype=torch.float32, device=self.device)
-        batch_weights = torch.tensor([m.weight for m in batch], device=self.device)
+    def learn(self, entries: T.List[ReplayBufferEntry]) -> None:
+        batch = self.form_learning_batch(entries)
+        batch.r = batch.r.unsqueeze(1)
 
-        action_probabilities, state_values = self.actor_critic(batch_s)
+        action_probabilities, state_values = self.actor_critic(batch.s)
 
-        advantages: torch.Tensor = (batch_rt - state_values.clone().detach()).squeeze(1)
+        advantages: torch.Tensor = (batch.r - state_values.clone().detach()).squeeze(1)
         chosen_action_log_probabilities: torch.Tensor = torch.stack(
-            [torch.distributions.Categorical(p).log_prob(a) for p, a in zip(action_probabilities, batch_a)])
-        actor_loss: torch.Tensor = -chosen_action_log_probabilities * advantages * batch_weights
-        critic_loss: torch.Tensor = self.loss_f(state_values, batch_rt) * batch_weights
+            [torch.distributions.Categorical(p).log_prob(a) for p, a in zip(action_probabilities, batch.a)])
+        actor_loss: torch.Tensor = -chosen_action_log_probabilities * advantages * batch.weight
+        critic_loss: torch.Tensor = self.loss_f(state_values, batch.r) * batch.weight
         loss = (actor_loss + critic_loss).mean()
         self.actor_critic_optimizer.zero_grad()
         loss.backward()
         self.actor_critic_optimizer.step()
-        self.call_learn_callbacks(LearningStep(batch, [v.item() for v in state_values], [v.item() for v in batch_rt]))
+        self.call_learn_callbacks(LearningStep(entries, [v.item() for v in state_values], [v.item() for v in batch.r]))
 
     def train(self, env: Environment, tp: TrainingParams = None) -> None:
         if tp is None:
@@ -43,7 +40,7 @@ class MonteCarloA2c(A2cAgent, ABC):
         accumulated_reward = 0
         steps_record: T.List[ReplayBufferEntry] = []
         while True:
-            estimated_rewards = self.infer(s)
+            estimated_rewards = self.act(s)
             def choosing_f(x): return torch.distributions.Categorical(torch.tensor(x)).sample().item()
             a = self.ex_choose(list(estimated_rewards), choosing_f)
             s_, r, final = env.step(a)

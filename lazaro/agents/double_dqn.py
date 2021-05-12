@@ -5,9 +5,8 @@ import numpy as np
 import torch
 
 from ..environments import Environment
-from .base.models import DoubleDqnHyperParams, TrainingProgress, LearningStep, TrainingStep, TrainingParams
+from .base.models import DoubleDqnHyperParams, TrainingProgress, LearningStep, TrainingStep, TrainingParams, ReplayBufferEntry
 from .dqn import DqnAgent
-from .replay_buffers import ReplayBufferEntry
 
 
 class DoubleDqnAgent(DqnAgent, ABC):
@@ -27,25 +26,21 @@ class DoubleDqnAgent(DqnAgent, ABC):
     def ensure_learning(self) -> None:
         self.action_evaluator.load_state_dict(self.action_estimator.state_dict())
 
-    def learn(self, batch: T.List[ReplayBufferEntry]) -> None:
-        batch_s = torch.stack([self.preprocess(m.s) for m in batch], 0).to(self.device).requires_grad_(True)
-        batch_s_ = torch.stack([self.preprocess(m.s_) for m in batch], 0).to(self.device)
-        batch_a = [m.a for m in batch]
-        batch_r = torch.tensor([m.r for m in batch], dtype=torch.float32, device=self.device)
-        batch_finals = torch.tensor([int(not m.final) for m in batch], device=self.device)
-        batch_weights = torch.tensor([m.weight for m in batch], device=self.device)
-        actions_estimated_values: torch.Tensor = self.action_estimator(batch_s)
-        with torch.no_grad():
-            actions_expected_values: torch.Tensor = self.action_evaluator(batch_s_)
+    def learn(self, entries: T.List[ReplayBufferEntry]) -> None:
+        batch = self.form_learning_batch(entries)
 
-        x = torch.stack([t_s[t_a] for t_s, t_a in zip(actions_estimated_values, batch_a)])
-        y = torch.max(actions_expected_values, 1)[0] * self.agent_params.gamma * batch_finals + batch_r
+        actions_estimated_values: torch.Tensor = self.action_estimator(batch.s)
+        with torch.no_grad():
+            actions_expected_values: torch.Tensor = self.action_evaluator(batch.s_)
+
+        x = torch.stack([t_s[t_a.item()] for t_s, t_a in zip(actions_estimated_values, batch.a)])
+        y = torch.max(actions_expected_values, 1)[0] * self.agent_params.gamma * batch.final + batch.r
         element_wise_loss = self.loss_f(x, y)
-        loss = (element_wise_loss * batch_weights).mean()
+        loss = (element_wise_loss * batch.weight).mean()
         self.optimizer.zero_grad()
         loss.backward()
         self.optimizer.step()
-        self.call_learn_callbacks(LearningStep(batch, [v.item() for v in x], [v.item() for v in y]))
+        self.call_learn_callbacks(LearningStep(entries, [v.item() for v in x], [v.item() for v in y]))
 
     def train(self, env: Environment, tp: TrainingParams = None) -> None:
         if tp is None:
@@ -57,7 +52,7 @@ class DoubleDqnAgent(DqnAgent, ABC):
         steps_survived = 0
         accumulated_reward = 0
         while True:
-            estimated_rewards = self.infer(s)
+            estimated_rewards = self.act(s)
             a = self.ex_choose(list(estimated_rewards), lambda x: np.argmax(estimated_rewards).item())
             s_, r, final = env.step(a)
             self.rp_add(ReplayBufferEntry(s, s_, a, r, final))
