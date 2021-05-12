@@ -145,11 +145,12 @@ class BaseAgent(base_object.BaseObject,
             return self.postprocess(infer.cpu())
 
     def form_learning_batch(self, batch: T.List[models.ReplayBufferEntry]) -> models.LearningBatch:
-        state_is_tuple = type(batch[0].s) == tuple
-        if state_is_tuple:
-            tuple_len = len(batch[0].s)
-            batch_s = tuple(torch.stack([self.preprocess(m.s[i]) for m in batch], 0).to(self.device).requires_grad_(True) for i in range(tuple_len))
-            batch_s_ = tuple(torch.stack([self.preprocess(m.s_[i]) for m in batch], 0).to(self.device) for i in range(tuple_len))
+        preprocessed_sample = self.preprocess(batch[0].s)
+        if type(preprocessed_sample) == tuple:
+            p_batch_s = [self.preprocess(entry.s) for entry in batch]
+            p_batch_s_ = [self.preprocess(entry.s_) for entry in batch]
+            batch_s = tuple(torch.stack([p_s[i] for p_s in p_batch_s], 0).to(self.device).requires_grad_(True) for i in range(len(preprocessed_sample)))
+            batch_s_ = tuple(torch.stack([p_s_[i] for p_s_ in p_batch_s_], 0).to(self.device) for i in range(len(preprocessed_sample)))
         else:
             batch_s = torch.stack([self.preprocess(m.s) for m in batch], 0).to(self.device).requires_grad_(True)
             batch_s_ = torch.stack([self.preprocess(m.s_) for m in batch], 0).to(self.device)
